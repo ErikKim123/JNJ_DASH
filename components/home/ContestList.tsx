@@ -14,7 +14,7 @@ export async function ContestList() {
           {e instanceof Error ? e.message : String(e)}
         </p>
         <p className="text-ink2 text-xs mt-3">
-          .env.local에 GOOGLE_SHEETS_API_KEY와 CONTEST_LIST_SHEET_ID가 설정되어 있는지 확인하세요.
+          환경변수 CONTEST_LIST_SHEET_ID가 설정되어 있는지 확인하세요 (로컬: .env.local · Vercel: Project Settings → Environment Variables).
         </p>
       </div>
     );

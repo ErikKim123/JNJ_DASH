@@ -47,7 +47,7 @@ function ErrorScreen({ title, message }: { title: string; message: string }) {
         {message}
       </pre>
       <p className="text-xs text-ink2 mt-3">
-        .env.local에 GOOGLE_SHEETS_API_KEY와 CONTEST_LIST_SHEET_ID가 설정되어 있는지 확인하세요.
+        환경변수 CONTEST_LIST_SHEET_ID가 설정되어 있는지 확인하세요 (로컬: .env.local · Vercel: Project Settings → Environment Variables).
       </p>
     </main>
   );
