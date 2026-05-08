@@ -6,12 +6,21 @@
 //   2. savePairingSnapshot(...): 파일에 JSON 저장
 //   3. clearPairingSnapshot(...): 파일 삭제 (운영자가 시트에서 재로드 요청 시)
 //
-// 저장 위치: data/snapshots/{contestId}-{round}-pairing.json
+// 저장 위치:
+//   - 로컬: <project>/data/snapshots/
+//   - Vercel: /tmp/jnj-dash-snapshots/  (서버리스의 빌드 디렉토리는 읽기 전용,
+//     /tmp만 쓰기 가능. 인스턴스별이라 cold start 시 사라지지만 RAND() 락 용도로는 충분)
+// 쓰기 실패 시에는 throw하지 않고 경고 로그만 남겨 요청 자체는 살림.
 import { promises as fs } from 'fs';
 import path from 'path';
 import type { Pair, RoundKey } from './types';
 
-const SNAPSHOT_DIR = path.join(process.cwd(), 'data', 'snapshots');
+// Vercel/AWS Lambda 등 서버리스 환경 감지. process.cwd()가 읽기 전용일 수 있음.
+const IS_SERVERLESS = !!(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+
+const SNAPSHOT_DIR = IS_SERVERLESS
+  ? path.join('/tmp', 'jnj-dash-snapshots')
+  : path.join(process.cwd(), 'data', 'snapshots');
 
 function snapshotPath(contestId: string, round: RoundKey): string {
   // contestId 안전 문자만 통과 (JNJ-001 형식). 경로 주입 방지.
@@ -44,14 +53,28 @@ export async function savePairingSnapshot(
   round: RoundKey,
   pairs: Pair[]
 ): Promise<PairingSnapshot> {
-  await fs.mkdir(SNAPSHOT_DIR, { recursive: true });
   const snapshot: PairingSnapshot = {
     contestId,
     round,
     pairs,
     savedAt: new Date().toISOString(),
   };
-  await fs.writeFile(snapshotPath(contestId, round), JSON.stringify(snapshot, null, 2), 'utf8');
+  try {
+    await fs.mkdir(SNAPSHOT_DIR, { recursive: true });
+    await fs.writeFile(snapshotPath(contestId, round), JSON.stringify(snapshot, null, 2), 'utf8');
+  } catch (e) {
+    // 읽기 전용 FS(EROFS) / 권한 부족(EACCES) — 락 기능은 약화되지만 요청은 살림.
+    // 페어링은 시트에서 박제(combined.gs)되었다면 어차피 매번 같은 값이 옴.
+    const code = (e as NodeJS.ErrnoException).code;
+    if (code === 'EROFS' || code === 'EACCES' || code === 'EPERM') {
+      console.warn(
+        `[snapshot] write failed (${code}) — skipping persistence. ` +
+          'On Vercel this is expected for non-/tmp paths.'
+      );
+      return snapshot;
+    }
+    throw e;
+  }
   return snapshot;
 }
 
@@ -63,7 +86,9 @@ export async function clearPairingSnapshot(
     await fs.unlink(snapshotPath(contestId, round));
     return true;
   } catch (e) {
-    if ((e as NodeJS.ErrnoException).code === 'ENOENT') return false;
+    const code = (e as NodeJS.ErrnoException).code;
+    if (code === 'ENOENT') return false;
+    if (code === 'EROFS' || code === 'EACCES' || code === 'EPERM') return false;
     throw e;
   }
 }
