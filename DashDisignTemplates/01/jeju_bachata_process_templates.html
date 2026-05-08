@@ -1,0 +1,1774 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bachata J&J · Process Screen Templates</title>
+<style>
+:root {
+  --bg: #0F1018;
+  --bg2: #1A1B26;
+  --panel: #1F2030;
+  --border: #2D2E42;
+  --ink: #E8E6DA;
+  --ink2: #9A98A8;
+  --accent: #FFD56B;
+  --accent2: #C68F3C;
+  --green: #4ADE80;
+  --red: #F87171;
+  --blue: #60A5FA;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--bg); color: var(--ink); font-family: -apple-system, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif; font-size: 14px; line-height: 1.55; }
+body { min-height: 100vh; padding: 24px; }
+.container { max-width: 1480px; margin: 0 auto; }
+
+header { border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 12px; }
+header h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.3px; }
+header h1 .accent { color: var(--accent); }
+header .meta { font-size: 12px; color: var(--ink2); font-family: ui-monospace, monospace; letter-spacing: 0.5px; }
+
+.round-nav { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.round-btn { font-family: inherit; padding: 14px 22px; background: var(--panel); border: 1px solid var(--border); color: var(--ink2); border-radius: 10px; cursor: pointer; transition: all 0.15s; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 180px; }
+.round-btn:hover { border-color: var(--accent2); color: var(--ink); }
+.round-btn.active { border-color: var(--accent); background: linear-gradient(180deg, var(--panel) 0%, rgba(255, 213, 107, 0.08) 100%); color: var(--ink); }
+.round-btn .ko { font-size: 16px; font-weight: 600; letter-spacing: -0.2px; }
+.round-btn .en { font-size: 10px; letter-spacing: 1.5px; font-family: ui-monospace, monospace; opacity: 0.7; }
+.round-btn .count { font-size: 10px; color: var(--accent); font-family: ui-monospace, monospace; letter-spacing: 0.5px; }
+
+.process-nav { display: flex; gap: 4px; margin-bottom: 20px; padding: 6px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; flex-wrap: wrap; }
+.process-btn { font-family: inherit; font-size: 11px; padding: 9px 14px; background: transparent; border: 1px solid transparent; color: var(--ink2); border-radius: 6px; cursor: pointer; transition: all 0.15s; letter-spacing: 1px; text-transform: uppercase; font-weight: 500; flex: 1; min-width: 90px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.process-btn:hover { color: var(--ink); background: var(--bg2); }
+.process-btn.active { background: var(--accent); color: #1A1612; font-weight: 600; }
+.process-btn.active .ko { color: #4A3818; }
+.process-btn .ko { font-size: 10px; opacity: 0.8; letter-spacing: 0.5px; }
+.process-btn .arrow { display: flex; align-items: center; color: var(--ink2); margin: 0 -2px; padding: 0 4px; user-select: none; }
+
+main { display: grid; grid-template-columns: 1.65fr 1fr; gap: 20px; }
+@media (max-width: 1100px) { main { grid-template-columns: 1fr; } }
+
+.preview-panel, .editor-panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+
+.panel-head { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.panel-head h2 { font-size: 13px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink2); }
+.panel-head h2 .ph-name { color: var(--ink); margin-left: 6px; }
+.panel-head .badge { font-size: 10px; padding: 4px 9px; background: var(--accent); color: #1A1612; border-radius: 4px; font-weight: 600; letter-spacing: 0.5px; }
+.panel-head .badge.live { background: var(--red); color: #fff; }
+.panel-head .badge.green { background: var(--green); color: #0F1018; }
+.panel-head .badge.blue { background: var(--blue); color: #0F1018; }
+
+.preview-body { padding: 18px; background: #000; display: flex; align-items: center; justify-content: center; min-height: 400px; }
+.preview-body svg { width: 100%; height: auto; max-width: 100%; display: block; border-radius: 4px; }
+
+.preview-actions { padding: 12px 18px; border-top: 1px solid var(--border); display: flex; gap: 8px; flex-wrap: wrap; background: var(--bg2); }
+.btn { font-family: inherit; font-size: 12px; padding: 8px 14px; border-radius: 6px; border: 1px solid var(--border); background: var(--panel); color: var(--ink); cursor: pointer; letter-spacing: 0.3px; transition: all 0.15s; }
+.btn:hover { background: var(--bg2); border-color: var(--accent2); }
+.btn.primary { background: var(--accent); color: #1A1612; border-color: var(--accent); font-weight: 600; }
+.btn.primary:hover { background: #FFE491; }
+
+.editor-body { padding: 18px; max-height: 720px; overflow-y: auto; }
+.field-group { margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px dashed var(--border); }
+.field-group:last-child { border-bottom: none; margin-bottom: 0; }
+.field-group h3 { font-size: 11px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink2); margin-bottom: 10px; }
+.field { margin-bottom: 10px; }
+.field label { display: block; font-size: 11px; color: var(--ink2); margin-bottom: 4px; font-family: ui-monospace, monospace; letter-spacing: 0.5px; }
+.field input[type="text"] { width: 100%; padding: 8px 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 5px; color: var(--ink); font-family: inherit; font-size: 13px; transition: border-color 0.15s; }
+.field input[type="text"]:focus { outline: none; border-color: var(--accent); }
+.field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.empty-state { padding: 24px; text-align: center; color: var(--ink2); font-size: 12px; font-family: ui-monospace, monospace; }
+
+.docs { margin-top: 30px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 22px; }
+.docs h2 { font-size: 15px; margin-bottom: 14px; letter-spacing: -0.2px; }
+.flow-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--bg); border-radius: 8px; margin-bottom: 8px; font-size: 12px; font-family: ui-monospace, monospace; flex-wrap: wrap; }
+.flow-row .flow-label { color: var(--accent); font-weight: 600; min-width: 56px; }
+.flow-row .flow-step { padding: 3px 8px; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; color: var(--ink); }
+.flow-row .flow-arrow { color: var(--ink2); }
+
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px); padding: 12px 24px; background: var(--green); color: #0F1018; border-radius: 8px; font-size: 13px; font-weight: 500; opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 100; }
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+footer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--border); text-align: center; font-size: 11px; color: var(--ink2); font-family: ui-monospace, monospace; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div>
+      <h1>Bachata J&amp;J · <span class="accent">Process Screen Templates</span></h1>
+      <p class="meta">17 templates · Preliminary 7 + Semi-Final 7 + Grand Final 3 · Art Deco × Jeju · viewBox 1280×720</p>
+    </div>
+    <div class="meta" id="header-meta">round: PRELIMINARY · process: PREP</div>
+  </header>
+
+  <nav class="round-nav" id="round-nav">
+    <button class="round-btn active" data-round="prelim">
+      <span class="ko">PRELIMINARY</span>
+      <span class="en">7 PROCESSES · ROUND 1</span>
+      <span class="count">10 LEADERS · 10 FOLLOWERS</span>
+    </button>
+    <button class="round-btn" data-round="semi">
+      <span class="ko">SEMI-FINAL</span>
+      <span class="en">7 PROCESSES · ROUND 2</span>
+      <span class="count">5 LEADERS · 5 FOLLOWERS</span>
+    </button>
+    <button class="round-btn" data-round="final">
+      <span class="ko">GRAND FINAL</span>
+      <span class="en">3 PROCESSES · ROUND 3</span>
+      <span class="count">TOP 3 + TOP 3</span>
+    </button>
+  </nav>
+
+  <nav class="process-nav" id="process-nav"></nav>
+
+  <main>
+    <section class="preview-panel">
+      <div class="panel-head">
+        <h2>Live Preview · <span class="ph-name" id="screen-title">Preliminary · Prep</span></h2>
+        <span class="badge" id="screen-badge">PREP</span>
+      </div>
+      <div class="preview-body" id="preview"></div>
+      <div class="preview-actions">
+        <button class="btn primary" id="btn-download-svg">⬇ Download SVG</button>
+        <button class="btn" id="btn-copy-svg">Copy SVG</button>
+        <button class="btn" id="btn-download-json">⬇ Download JSON</button>
+        <button class="btn" id="btn-reset">Reset to defaults</button>
+      </div>
+    </section>
+
+    <section class="editor-panel">
+      <div class="panel-head">
+        <h2>Data Editor</h2>
+        <span class="badge">JSON</span>
+      </div>
+      <div class="editor-body" id="editor"></div>
+    </section>
+  </main>
+
+  <section class="docs">
+    <h2>Process Flow</h2>
+    <div class="flow-row">
+      <span class="flow-label">PRELIMINARY</span>
+      <span class="flow-step">Prep</span><span class="flow-arrow">→</span>
+      <span class="flow-step">Pairing</span><span class="flow-arrow">→</span>
+      <span class="flow-step">Open</span><span class="flow-arrow">→</span>
+      <span class="flow-step">Live</span><span class="flow-arrow">→</span>
+      <span class="flow-step">Wrap-up</span><span class="flow-arrow">→</span>
+      <span class="flow-step">Close</span><span class="flow-arrow">→</span>
+      <span class="flow-step">Result</span>
+    </div>
+    <div class="flow-row">
+      <span class="flow-label">SEMI-FINAL</span>
+      <span class="flow-step">Prep</span><span class="flow-arrow">→</span>
+      <span class="flow-step">Pairing</span><span class="flow-arrow">→</span>
+      <span class="flow-step">Open</span><span class="flow-arrow">→</span>
+      <span class="flow-step">Live</span><span class="flow-arrow">→</span>
+      <span class="flow-step">Wrap-up</span><span class="flow-arrow">→</span>
+      <span class="flow-step">Close</span><span class="flow-arrow">→</span>
+      <span class="flow-step">Result</span>
+    </div>
+    <div class="flow-row">
+      <span class="flow-label">GRAND FINAL</span>
+      <span class="flow-step">Prep</span><span class="flow-arrow">→</span>
+      <span class="flow-step">Wrap-up</span><span class="flow-arrow">→</span>
+      <span class="flow-step">Result</span>
+    </div>
+  </section>
+
+  <footer>BACHATA JACK &amp; JILL · PROCESS SCREEN TEMPLATES · ART DECO × JEJU · v1.0</footer>
+</div>
+
+<div class="toast" id="toast">Copied</div>
+
+<script>
+/* ============================================================
+   COMMON SVG BUILDING BLOCKS
+   ============================================================ */
+
+const COMMON_DEFS = `
+  <radialGradient id="bgr" cx="0.5" cy="0.42" r="0.95">
+    <stop offset="0" stop-color="#1B4232"/>
+    <stop offset="0.45" stop-color="#0F2C20"/>
+    <stop offset="1" stop-color="#040C08"/>
+  </radialGradient>
+  <linearGradient id="goldg" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#FFEBA0"/>
+    <stop offset="0.5" stop-color="#FFD56B"/>
+    <stop offset="1" stop-color="#C68F3C"/>
+  </linearGradient>
+  <linearGradient id="goldgh" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#9C7C2C" stop-opacity="0"/>
+    <stop offset="0.5" stop-color="#FFD56B"/>
+    <stop offset="1" stop-color="#9C7C2C" stop-opacity="0"/>
+  </linearGradient>
+  <radialGradient id="sgw" cx="0.5" cy="0.5" r="0.5">
+    <stop offset="0" stop-color="#FFFAE0"/>
+    <stop offset="0.25" stop-color="#FFD56B" stop-opacity="0.95"/>
+    <stop offset="0.7" stop-color="#FFD56B" stop-opacity="0.25"/>
+    <stop offset="1" stop-color="#FFD56B" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="palmg" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#FFD56B"/>
+    <stop offset="0.5" stop-color="#D4AF37"/>
+    <stop offset="1" stop-color="#9C7C2C"/>
+  </linearGradient>
+  <linearGradient id="silverg" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#F0F0F2"/>
+    <stop offset="0.5" stop-color="#C0C0C8"/>
+    <stop offset="1" stop-color="#7A7A82"/>
+  </linearGradient>
+  <linearGradient id="bronzeg" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#E89F65"/>
+    <stop offset="0.5" stop-color="#B07050"/>
+    <stop offset="1" stop-color="#6E4030"/>
+  </linearGradient>
+  <linearGradient id="liveg" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#FF8B8B"/>
+    <stop offset="1" stop-color="#D04040"/>
+  </linearGradient>
+  <radialGradient id="hxg" cx="0.5" cy="0.5" r="0.5">
+    <stop offset="0" stop-color="#1A4030"/>
+    <stop offset="1" stop-color="#0A2018"/>
+  </radialGradient>
+  <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+    <feGaussianBlur stdDeviation="3" result="blur"/>
+    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+`;
+
+const BG_LAYER = `
+  <rect width="1280" height="720" fill="url(#bgr)"/>
+  <g fill="none" stroke-linecap="round" opacity="0.55">
+    <path d="M 110 -30 Q 160 200 80 400 T 130 750" stroke="url(#goldg)" stroke-width="11" opacity="0.5"/>
+    <path d="M 1170 -30 Q 1120 220 1200 420 T 1150 750" stroke="url(#goldg)" stroke-width="11" opacity="0.5"/>
+    <path d="M 50 -30 Q 100 220 30 460 T 80 750" stroke="url(#goldg)" stroke-width="6" opacity="0.3"/>
+    <path d="M 1230 -30 Q 1180 220 1250 460 T 1200 750" stroke="url(#goldg)" stroke-width="6" opacity="0.3"/>
+  </g>
+`;
+
+const PALM_LAYER = `
+  <g opacity="0.5">
+    <g transform="translate(80 540)">
+      <path d="M 5 0 Q 3 -80 6 -160 Q 9 -220 12 -270" stroke="url(#palmg)" stroke-width="4" fill="none"/>
+      <g fill="url(#palmg)">
+        <path d="M 12 -270 Q -25 -290 -65 -278 Q -38 -282 -2 -266 Q 5 -267 12 -270 Z"/>
+        <path d="M 12 -270 Q 50 -295 85 -282 Q 56 -286 22 -267 Z"/>
+        <path d="M 12 -270 Q -10 -315 -28 -345 Q -2 -325 14 -278 Z"/>
+        <path d="M 12 -270 Q 34 -315 48 -348 Q 28 -325 18 -278 Z"/>
+        <path d="M 5 -266 Q -42 -252 -68 -232 Q -36 -255 -2 -262 Z"/>
+        <path d="M 12 -270 Q 56 -255 80 -238 Q 48 -258 18 -264 Z"/>
+      </g>
+    </g>
+    <g transform="translate(1200 540)">
+      <path d="M -5 0 Q -3 -80 -6 -160 Q -9 -220 -12 -270" stroke="url(#palmg)" stroke-width="4" fill="none"/>
+      <g fill="url(#palmg)">
+        <path d="M -12 -270 Q 25 -290 65 -278 Q 38 -282 2 -266 Q -5 -267 -12 -270 Z"/>
+        <path d="M -12 -270 Q -50 -295 -85 -282 Q -56 -286 -22 -267 Z"/>
+        <path d="M -12 -270 Q 10 -315 28 -345 Q 2 -325 -14 -278 Z"/>
+        <path d="M -12 -270 Q -34 -315 -48 -348 Q -28 -325 -18 -278 Z"/>
+        <path d="M -5 -266 Q 42 -252 68 -232 Q 36 -255 2 -262 Z"/>
+        <path d="M -12 -270 Q -56 -255 -80 -238 Q -48 -258 -18 -264 Z"/>
+      </g>
+    </g>
+  </g>
+`;
+
+const FRAME_LAYER = `
+  <rect x="22" y="22" width="1236" height="676" fill="none" stroke="#D4AF37" stroke-width="2"/>
+  <rect x="34" y="34" width="1212" height="652" fill="none" stroke="#D4AF37" stroke-width="0.6" opacity="0.55"/>
+  <g fill="#D4AF37">
+    <polygon points="22,22 124,22 112,34 46,34 34,46 34,112 22,124"/>
+    <g transform="translate(1280 0) scale(-1 1)"><polygon points="22,22 124,22 112,34 46,34 34,46 34,112 22,124"/></g>
+    <g transform="translate(0 720) scale(1 -1)"><polygon points="22,22 124,22 112,34 46,34 34,46 34,112 22,124"/></g>
+    <g transform="translate(1280 720) scale(-1 -1)"><polygon points="22,22 124,22 112,34 46,34 34,46 34,112 22,124"/></g>
+  </g>
+  <g fill="#D4AF37" opacity="0.8">
+    <circle cx="640" cy="32" r="3.5"/>
+    <circle cx="640" cy="688" r="3.5"/>
+    <circle cx="32" cy="360" r="3.5"/>
+    <circle cx="1248" cy="360" r="3.5"/>
+  </g>
+`;
+
+/* helper: deco divider */
+function divider(y, w = 380) {
+  const half = w / 2;
+  return `
+    <g transform="translate(640 ${y})">
+      <line x1="${-half}" y1="0" x2="${half}" y2="0" stroke="url(#goldgh)" stroke-width="1"/>
+      <g fill="#D4AF37">
+        <circle cx="0" cy="0" r="3"/>
+        <circle cx="${-half - 8}" cy="0" r="2" opacity="0.6"/>
+        <circle cx="${half + 8}" cy="0" r="2" opacity="0.6"/>
+        <path d="M -16 -5 L 0 0 L -16 5 Z" opacity="0.7"/>
+        <path d="M 16 -5 L 0 0 L 16 5 Z" opacity="0.7"/>
+      </g>
+    </g>
+  `;
+}
+
+/* helper: standard header block (festival + event title region) */
+function topHeader() {
+  return `
+    <text x="640" y="78" text-anchor="middle" font-family="Georgia, serif" font-size="14" letter-spacing="6" fill="#D4AF37">{{festival_header}}</text>
+    ${divider(96, 320)}
+  `;
+}
+
+/* helper: decorative bottom seal */
+function bottomSeal() {
+  return `
+    <g transform="translate(640 660)">
+      <line x1="-180" y1="0" x2="-30" y2="0" stroke="url(#goldgh)" stroke-width="0.8"/>
+      <line x1="30" y1="0" x2="180" y2="0" stroke="url(#goldgh)" stroke-width="0.8"/>
+      <text text-anchor="middle" y="4" font-family="Georgia, serif" font-style="italic" font-size="13" fill="#D4AF37" letter-spacing="2">{{tagline}}</text>
+    </g>
+  `;
+}
+
+/* helper: wrap any content SVG with shared shell */
+function shell(content) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+  <defs>${COMMON_DEFS}</defs>
+  ${BG_LAYER}
+  ${PALM_LAYER}
+  ${FRAME_LAYER}
+  ${content}
+</svg>`;
+}
+
+/* helper: top sunburst decoration (rotating slowly), used on title screens */
+function sunburstTop(cx = 640, cy = 110, scale = 1) {
+  // 16 long rays + 16 short rays alternating
+  let rays = '';
+  const baseR1 = 12 * scale;
+  const longR2 = 56 * scale;
+  const shortR2 = 36 * scale;
+  for (let i = 0; i < 32; i++) {
+    const ang = (i * 11.25) * Math.PI / 180;
+    const isLong = i % 2 === 0;
+    const r2 = isLong ? longR2 : shortR2;
+    const w = isLong ? 1.4 : 0.8;
+    const op = isLong ? 0.95 : 0.6;
+    const x1 = (Math.cos(ang) * baseR1).toFixed(1);
+    const y1 = (Math.sin(ang) * baseR1).toFixed(1);
+    const x2 = (Math.cos(ang) * r2).toFixed(1);
+    const y2 = (Math.sin(ang) * r2).toFixed(1);
+    rays += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="url(#goldg)" stroke-width="${w}" opacity="${op}"/>`;
+  }
+  return `
+    <g transform="translate(${cx} ${cy})">
+      <circle r="${(64 * scale).toFixed(1)}" fill="url(#sgw)" opacity="0.85"/>
+      <g>
+        <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="60s" repeatCount="indefinite"/>
+        ${rays}
+      </g>
+      <circle r="${(9 * scale).toFixed(1)}" fill="#FFEBA0">
+        <animate attributeName="r" values="${(9 * scale).toFixed(1)};${(11 * scale).toFixed(1)};${(9 * scale).toFixed(1)}" dur="2.4s" repeatCount="indefinite"/>
+      </circle>
+      <circle r="${(3 * scale).toFixed(1)}" fill="#FFFAE0"/>
+    </g>
+  `;
+}
+
+/* helper: hexagonal name frame (pointy-top), with optional fade-in delay and personal number */
+function hexagonFrame(cx, cy, nameKey, size = 38, animDelay = 0, nameFontSize = 18, numKey = null) {
+  const outer = [];
+  const inner = [];
+  for (let i = 0; i < 6; i++) {
+    const a = (i * 60 - 30) * Math.PI / 180;
+    outer.push(`${(cx + Math.cos(a) * size).toFixed(1)},${(cy + Math.sin(a) * size).toFixed(1)}`);
+    inner.push(`${(cx + Math.cos(a) * (size - 6)).toFixed(1)},${(cy + Math.sin(a) * (size - 6)).toFixed(1)}`);
+  }
+  const nameY = cy + size + nameFontSize + 6;
+  const numFontSize = Math.max(9, nameFontSize * 0.55);
+  const numY = nameY + nameFontSize * 0.85;
+  const numTextEl = numKey
+    ? `<text x="${cx}" y="${numY.toFixed(1)}" text-anchor="middle" font-family="ui-monospace, monospace" font-size="${numFontSize.toFixed(1)}" letter-spacing="2" fill="#9C7C2C" font-weight="500">${numKey}</text>`
+    : '';
+  return `
+    <g opacity="0">
+      <animate attributeName="opacity" values="0;1" dur="0.6s" begin="${animDelay.toFixed(2)}s" fill="freeze"/>
+      <polygon points="${outer.join(' ')}" fill="url(#hxg)" stroke="url(#goldg)" stroke-width="1.6"/>
+      <polygon points="${inner.join(' ')}" fill="none" stroke="#D4AF37" stroke-width="0.5" opacity="0.55"/>
+      <text x="${cx}" y="${nameY.toFixed(1)}" text-anchor="middle" font-family="'Gulim', '굴림', sans-serif" font-size="${nameFontSize}" letter-spacing="2" fill="#FFEBA0" font-weight="700">${nameKey}</text>
+      ${numTextEl}
+    </g>
+  `;
+}
+
+/* helper: trophy icon with rays, for result center */
+function trophyIcon(cx = 640, cy = 420, scale = 1) {
+  return `
+    <g transform="translate(${cx} ${cy}) scale(${scale})">
+      <!-- rays behind trophy -->
+      <g stroke="url(#goldg)" stroke-width="1" opacity="0.5">
+        ${Array.from({length: 12}).map((_, i) => {
+          const ang = (i * 30 - 90) * Math.PI / 180;
+          const x1 = (Math.cos(ang) * 78).toFixed(1);
+          const y1 = (Math.sin(ang) * 78).toFixed(1);
+          const x2 = (Math.cos(ang) * 110).toFixed(1);
+          const y2 = (Math.sin(ang) * 110).toFixed(1);
+          return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
+        }).join('')}
+      </g>
+      <circle r="60" fill="url(#sgw)" opacity="0.5"/>
+      <!-- handles -->
+      <path d="M -34 -18 Q -58 -18 -58 8 Q -58 30 -38 32" fill="none" stroke="url(#goldg)" stroke-width="3.5" stroke-linecap="round"/>
+      <path d="M 34 -18 Q 58 -18 58 8 Q 58 30 38 32" fill="none" stroke="url(#goldg)" stroke-width="3.5" stroke-linecap="round"/>
+      <!-- cup body -->
+      <path d="M -36 -22 L 36 -22 Q 36 36 0 42 Q -36 36 -36 -22 Z" fill="url(#goldg)" stroke="#9C7C2C" stroke-width="0.8"/>
+      <ellipse cx="0" cy="-22" rx="38" ry="6" fill="url(#goldg)" stroke="#9C7C2C" stroke-width="0.6"/>
+      <ellipse cx="0" cy="-22" rx="30" ry="4" fill="#9C7C2C" opacity="0.4"/>
+      <!-- shine on cup -->
+      <path d="M -22 -16 Q -28 6 -22 30" stroke="#FFFAE0" stroke-width="2.6" fill="none" stroke-linecap="round" opacity="0.7"/>
+      <!-- stem and base -->
+      <rect x="-10" y="42" width="20" height="14" fill="url(#goldg)"/>
+      <rect x="-30" y="56" width="60" height="8" rx="1" fill="url(#goldg)" stroke="#9C7C2C" stroke-width="0.5"/>
+      <rect x="-36" y="64" width="72" height="6" rx="1" fill="url(#goldg)" stroke="#9C7C2C" stroke-width="0.5"/>
+    </g>
+  `;
+}
+
+/* helper: cities footer (festival cities list with star bookends) — ribbon style */
+function citiesFooter() {
+  return `
+    <g transform="translate(640 660)">
+      <line x1="-380" y1="-14" x2="-100" y2="-14" stroke="url(#goldgh)" stroke-width="0.5" opacity="0.7"/>
+      <line x1="100" y1="-14" x2="380" y2="-14" stroke="url(#goldgh)" stroke-width="0.5" opacity="0.7"/>
+      <text text-anchor="middle" y="4" font-family="Georgia, serif" font-style="italic" font-size="13" fill="#D4AF37" letter-spacing="2">{{tagline}}</text>
+    </g>
+  `;
+}
+
+/* helper: hero header — sunburst + star-flanked festival header (matches reference image) */
+function heroHeader() {
+  return `
+    ${sunburstTop(640, 110, 1)}
+    <g transform="translate(640 212)">
+      <text text-anchor="middle" font-family="Georgia, serif" font-size="14" letter-spacing="6" fill="#D4AF37">{{festival_header}}</text>
+      <text x="-228" y="-3" text-anchor="middle" font-family="Georgia, serif" font-size="14" fill="#D4AF37">★</text>
+      <text x="228" y="-3" text-anchor="middle" font-family="Georgia, serif" font-size="14" fill="#D4AF37">★</text>
+    </g>
+    ${divider(232, 320)}
+  `;
+}
+
+/* ============================================================
+   PER-PHASE CONTENT BLOCKS
+   ============================================================ */
+
+/* ---- PREP ---- */
+function prepContent(roundLabel, totalCount) {
+  return shell(`
+    ${heroHeader()}
+
+    <text x="640" y="288" text-anchor="middle" font-family="Georgia, serif" font-size="20" letter-spacing="10" fill="#FFD56B" font-style="italic">{{stage_label}}</text>
+
+    <!-- giant title -->
+    <text x="640" y="386" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="84" letter-spacing="8" fill="url(#goldg)">{{round_title}}</text>
+    <text x="640" y="430" text-anchor="middle" font-family="Georgia, serif" font-size="22" letter-spacing="12" fill="#E8E6DA" opacity="0.85">{{round_subtitle}}</text>
+
+    <!-- hourglass with continuously falling sand -->
+    <g transform="translate(640 526)">
+      <!-- frame rails (top & bottom) -->
+      <rect x="-44" y="-42" width="88" height="3" fill="url(#goldg)"/>
+      <rect x="-44" y="39" width="88" height="3" fill="url(#goldg)"/>
+      <!-- top bulb (sand sloping down) -->
+      <path d="M -38 -36 L 38 -36 L 38 -28 L 30 -28 Q 28 -8 0 0 Q -28 -8 -30 -28 L -38 -28 Z" fill="url(#goldg)" opacity="0.95"/>
+      <!-- bottom bulb (sand pile growing — animated rx/ry) -->
+      <path d="M -38 36 L 38 36 L 38 28 L 30 28 Q 28 8 0 0 Q -28 8 -30 28 L -38 28 Z" fill="url(#goldg)" opacity="0.95"/>
+      <!-- thin sand stream in neck (subtle pulse) -->
+      <line x1="0" y1="-2" x2="0" y2="14" stroke="#FFEBA0" stroke-width="0.7" opacity="0.5">
+        <animate attributeName="opacity" values="0.3;0.8;0.3" dur="0.9s" repeatCount="indefinite"/>
+      </line>
+      <!-- falling sand particles (3 staggered) -->
+      <circle r="1.8" fill="#FFEBA0">
+        <animate attributeName="cy" values="-2;14" dur="0.9s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.85;1" dur="0.9s" repeatCount="indefinite"/>
+      </circle>
+      <circle r="1.5" fill="#FFEBA0">
+        <animate attributeName="cy" values="-2;14" dur="0.9s" begin="0.3s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.85;1" dur="0.9s" begin="0.3s" repeatCount="indefinite"/>
+      </circle>
+      <circle r="1.3" fill="#FFEBA0">
+        <animate attributeName="cy" values="-2;14" dur="0.9s" begin="0.6s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.85;1" dur="0.9s" begin="0.6s" repeatCount="indefinite"/>
+      </circle>
+      <!-- accumulating sand pile in bottom bulb (grows then resets) -->
+      <ellipse cx="0" cy="22" rx="3" ry="1.5" fill="#FFEBA0" opacity="0.85">
+        <animate attributeName="rx" values="3;14;3" dur="6s" repeatCount="indefinite"/>
+        <animate attributeName="ry" values="1.5;3.5;1.5" dur="6s" repeatCount="indefinite"/>
+      </ellipse>
+      <!-- top sand surface receding (shrinks) -->
+      <ellipse cx="0" cy="-32" rx="14" ry="2.5" fill="#0F2C20" opacity="0.5">
+        <animate attributeName="rx" values="3;14;3" dur="6s" repeatCount="indefinite"/>
+      </ellipse>
+    </g>
+
+    <!-- meta strip (participants), no countdown -->
+    <g transform="translate(640 612)">
+      <line x1="-300" y1="0" x2="-110" y2="0" stroke="url(#goldgh)" stroke-width="0.7"/>
+      <line x1="110" y1="0" x2="300" y2="0" stroke="url(#goldgh)" stroke-width="0.7"/>
+      <text text-anchor="middle" y="6" font-family="Georgia, serif" font-size="15" letter-spacing="6" fill="#D4AF37">{{participants}}</text>
+    </g>
+
+    ${citiesFooter()}
+  `);
+}
+
+/* ---- PAIRING (20 pairs) ---- */
+function pairingContent20() {
+  // 2-column layout: pairs 1-10 (left) and 11-20 (right). Much more vertical space per row.
+  const rowsPerCol = 10;
+  const rowH = 42;
+  const startY = 232;
+  const cols = [
+    { cx: 320, start: 1,  end: 10 },
+    { cx: 960, start: 11, end: 20 }
+  ];
+
+  let body = '';
+  for (const col of cols) {
+    for (let i = col.start; i <= col.end; i++) {
+      const rowIdx = i - col.start;            // 0..9 within column
+      const y = startY + rowIdx * rowH;
+      const delay = (rowIdx * 0.05).toFixed(2);
+      const isStripe = rowIdx % 2 === 1;       // alternate every other row
+      const stripe = isStripe
+        ? `<rect x="${col.cx - 250}" y="${y - 20}" width="500" height="40" rx="4" fill="#0F2C20" opacity="0.55"/>`
+        : '';
+      body += `
+        ${stripe}
+        <g transform="translate(${col.cx} ${y})" opacity="0">
+          <animate attributeName="opacity" values="0;1" dur="0.5s" begin="${delay}s" fill="freeze"/>
+          <!-- leader number badge (left) -->
+          <g transform="translate(-228 0)">
+            <rect x="-26" y="-13" width="52" height="26" rx="13" fill="url(#goldg)" opacity="0.2"/>
+            <rect x="-26" y="-13" width="52" height="26" rx="13" fill="none" stroke="#9C7C2C" stroke-width="0.9"/>
+            <text y="5" text-anchor="middle" font-family="ui-monospace, monospace" font-size="12.5" letter-spacing="1" fill="#FFD56B" font-weight="700">{{leader_num_${i}}}</text>
+          </g>
+          <!-- leader name -->
+          <text x="-90" y="8" text-anchor="end" font-family="'Gulim', '굴림', sans-serif" font-size="22" font-weight="700" fill="#FFEBA0">{{leader_${i}}}</text>
+          <!-- pair number circle -->
+          <line x1="-58" y1="0" x2="-22" y2="0" stroke="#9C7C2C" stroke-width="0.7" opacity="0.7"/>
+          <circle r="17" fill="none" stroke="url(#goldg)" stroke-width="1.4"/>
+          <circle r="11" fill="url(#goldg)" opacity="0.22"/>
+          <text y="6" text-anchor="middle" font-family="Georgia, serif" font-size="15" font-weight="700" fill="#FFD56B">${i.toString().padStart(2, '0')}</text>
+          <line x1="22" y1="0" x2="58" y2="0" stroke="#9C7C2C" stroke-width="0.7" opacity="0.7"/>
+          <!-- follower name -->
+          <text x="90" y="8" text-anchor="start" font-family="'Gulim', '굴림', sans-serif" font-size="22" font-weight="700" fill="#FFEBA0">{{follower_${i}}}</text>
+          <!-- follower number badge (right) -->
+          <g transform="translate(228 0)">
+            <rect x="-26" y="-13" width="52" height="26" rx="13" fill="url(#goldg)" opacity="0.2"/>
+            <rect x="-26" y="-13" width="52" height="26" rx="13" fill="none" stroke="#9C7C2C" stroke-width="0.9"/>
+            <text y="5" text-anchor="middle" font-family="ui-monospace, monospace" font-size="12.5" letter-spacing="1" fill="#FFD56B" font-weight="700">{{follower_num_${i}}}</text>
+          </g>
+        </g>
+      `;
+    }
+  }
+
+  // Subtle vertical divider between the two columns
+  const dividerTop = startY - 26;
+  const dividerBottom = startY + (rowsPerCol - 1) * rowH + 22;
+  const verticalDivider = `<line x1="640" y1="${dividerTop}" x2="640" y2="${dividerBottom}" stroke="#D4AF37" stroke-width="0.5" opacity="0.35" stroke-dasharray="2 6"/>`;
+
+  // Column headers (LEADER · PAIR · FOLLOWER) above each column
+  const colHeaders = cols.map(col => `
+    <g transform="translate(${col.cx} 200)">
+      <text x="-100" y="0" text-anchor="end" font-family="ui-monospace, monospace" font-size="10" letter-spacing="4" fill="#D4AF37">{{label_leader}}</text>
+      <text x="0" y="0" text-anchor="middle" font-family="ui-monospace, monospace" font-size="10" letter-spacing="4" fill="#9A98A8">PAIR</text>
+      <text x="100" y="0" text-anchor="start" font-family="ui-monospace, monospace" font-size="10" letter-spacing="4" fill="#D4AF37">{{label_follower}}</text>
+      <line x1="-200" y1="14" x2="200" y2="14" stroke="url(#goldgh)" stroke-width="0.5" opacity="0.6"/>
+    </g>
+  `).join('');
+
+  return shell(`
+    ${topHeader()}
+    <text x="640" y="146" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="36" letter-spacing="10" fill="url(#goldg)">{{round_title}}</text>
+    <text x="640" y="176" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="15" letter-spacing="6" fill="#E8E6DA" opacity="0.85">{{stage_label}}</text>
+
+    ${colHeaders}
+
+    ${verticalDivider}
+
+    ${body}
+
+    ${citiesFooter()}
+  `);
+}
+
+/* ---- PAIRING (10 pairs) ---- */
+function pairingContent10() {
+  let rows = '';
+  const rowH = 40;
+  const groupGap = 10;     // bigger gap between the two groups of 5
+  const startY = 230;
+  for (let i = 1; i <= 10; i++) {
+    const groupOffset = i > 5 ? groupGap : 0;
+    const y = startY + (i - 1) * rowH + groupOffset;
+    const delay = (i * 0.07).toFixed(2);
+    const isStripe = i % 2 === 0;
+    const stripe = isStripe
+      ? `<rect x="100" y="${y - 19}" width="1080" height="38" rx="5" fill="#0F2C20" opacity="0.6"/>`
+      : '';
+    rows += `
+      ${stripe}
+      <g transform="translate(0 ${y})" opacity="0">
+        <animate attributeName="opacity" values="0;1" dur="0.5s" begin="${delay}s" fill="freeze"/>
+        <!-- leader number badge (left) -->
+        <g transform="translate(140 0)">
+          <rect x="-32" y="-15" width="64" height="30" rx="15" fill="url(#goldg)" opacity="0.22"/>
+          <rect x="-32" y="-15" width="64" height="30" rx="15" fill="none" stroke="#9C7C2C" stroke-width="1"/>
+          <text y="6" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" letter-spacing="1" fill="#FFD56B" font-weight="700">{{leader_num_${i}}}</text>
+        </g>
+        <!-- leader name -->
+        <text x="340" y="10" text-anchor="end" font-family="'Gulim', '굴림', sans-serif" font-size="28" font-weight="700" fill="#FFEBA0">{{leader_${i}}}</text>
+        <!-- pair number circle -->
+        <g transform="translate(640 0)">
+          <line x1="-186" y1="0" x2="-26" y2="0" stroke="#9C7C2C" stroke-width="0.8" opacity="0.7"/>
+          <circle r="22" fill="none" stroke="url(#goldg)" stroke-width="1.6"/>
+          <circle r="14" fill="url(#goldg)" opacity="0.22"/>
+          <text y="8" text-anchor="middle" font-family="Georgia, serif" font-size="20" font-weight="700" fill="#FFD56B">${i.toString().padStart(2, '0')}</text>
+          <line x1="26" y1="0" x2="186" y2="0" stroke="#9C7C2C" stroke-width="0.8" opacity="0.7"/>
+        </g>
+        <!-- follower name -->
+        <text x="940" y="10" text-anchor="start" font-family="'Gulim', '굴림', sans-serif" font-size="28" font-weight="700" fill="#FFEBA0">{{follower_${i}}}</text>
+        <!-- follower number badge (right) -->
+        <g transform="translate(1140 0)">
+          <rect x="-32" y="-15" width="64" height="30" rx="15" fill="url(#goldg)" opacity="0.22"/>
+          <rect x="-32" y="-15" width="64" height="30" rx="15" fill="none" stroke="#9C7C2C" stroke-width="1"/>
+          <text y="6" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" letter-spacing="1" fill="#FFD56B" font-weight="700">{{follower_num_${i}}}</text>
+        </g>
+      </g>
+    `;
+  }
+  // Mid-separator between rows 5 and 6 (visual grouping of 5+5)
+  const midSepY = startY + 5 * rowH + Math.floor(groupGap / 2) - 5;
+  const midSep = `
+    <line x1="180" y1="${midSepY}" x2="540" y2="${midSepY}" stroke="#D4AF37" stroke-width="0.5" opacity="0.5" stroke-dasharray="4 5"/>
+    <line x1="740" y1="${midSepY}" x2="1100" y2="${midSepY}" stroke="#D4AF37" stroke-width="0.5" opacity="0.5" stroke-dasharray="4 5"/>
+    <text x="640" y="${midSepY + 4}" text-anchor="middle" font-family="Georgia, serif" font-size="11" fill="#D4AF37" opacity="0.65">✦</text>
+  `;
+  return shell(`
+    ${topHeader()}
+    <text x="640" y="146" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="36" letter-spacing="10" fill="url(#goldg)">{{round_title}}</text>
+    <text x="640" y="176" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="15" letter-spacing="6" fill="#E8E6DA" opacity="0.85">{{stage_label}}</text>
+
+    <!-- column labels -->
+    <g transform="translate(0 206)">
+      <text x="340" y="0" text-anchor="end" font-family="ui-monospace, monospace" font-size="11" letter-spacing="5" fill="#D4AF37">{{label_leader}}</text>
+      <text x="640" y="0" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" letter-spacing="5" fill="#9A98A8">PAIR</text>
+      <text x="940" y="0" text-anchor="start" font-family="ui-monospace, monospace" font-size="11" letter-spacing="5" fill="#D4AF37">{{label_follower}}</text>
+      <line x1="120" y1="14" x2="540" y2="14" stroke="url(#goldgh)" stroke-width="0.5" opacity="0.6"/>
+      <line x1="740" y1="14" x2="1160" y2="14" stroke="url(#goldgh)" stroke-width="0.5" opacity="0.6"/>
+    </g>
+
+    ${midSep}
+    ${rows}
+
+    ${citiesFooter()}
+  `);
+}
+
+/* ---- PAIRING (5 pairs) ---- */
+function pairingContent5() {
+  let rows = '';
+  const rowH = 60;
+  const startY = 260;
+  for (let i = 1; i <= 5; i++) {
+    const y = startY + (i - 1) * rowH;
+    const delay = (i * 0.1).toFixed(2);
+    rows += `
+      <g transform="translate(0 ${y})" opacity="0">
+        <animate attributeName="opacity" values="0;1" dur="0.6s" begin="${delay}s" fill="freeze"/>
+        <text x="240" y="0" text-anchor="end" font-family="Georgia, serif" font-size="30" font-weight="500" fill="#FFEBA0">{{leader_${i}}}</text>
+        <text x="240" y="22" text-anchor="end" font-family="ui-monospace, monospace" font-size="11" letter-spacing="3" fill="#9C7C2C">{{leader_num_${i}}}</text>
+        <g transform="translate(640 -4)">
+          <line x1="-200" y1="0" x2="-30" y2="0" stroke="#9C7C2C" stroke-width="0.7" opacity="0.7"/>
+          <circle r="22" fill="none" stroke="url(#goldg)" stroke-width="1.4"/>
+          <circle r="14" fill="url(#goldg)" opacity="0.18"/>
+          <text y="7" text-anchor="middle" font-family="Georgia, serif" font-size="20" font-weight="600" fill="#FFD56B">${i.toString().padStart(2, '0')}</text>
+          <line x1="30" y1="0" x2="200" y2="0" stroke="#9C7C2C" stroke-width="0.7" opacity="0.7"/>
+        </g>
+        <text x="1040" y="0" text-anchor="start" font-family="Georgia, serif" font-size="30" font-weight="500" fill="#FFEBA0">{{follower_${i}}}</text>
+        <text x="1040" y="22" text-anchor="start" font-family="ui-monospace, monospace" font-size="11" letter-spacing="3" fill="#9C7C2C">{{follower_num_${i}}}</text>
+      </g>
+    `;
+  }
+  return shell(`
+    ${topHeader()}
+    <text x="640" y="160" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="44" letter-spacing="12" fill="url(#goldg)">{{round_title}}</text>
+    <text x="640" y="194" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="16" letter-spacing="6" fill="#E8E6DA" opacity="0.85">{{stage_label}}</text>
+
+    <g transform="translate(0 234)">
+      <text x="240" y="0" text-anchor="end" font-family="ui-monospace, monospace" font-size="12" letter-spacing="5" fill="#D4AF37">{{label_leader}}</text>
+      <text x="640" y="0" text-anchor="middle" font-family="ui-monospace, monospace" font-size="12" letter-spacing="5" fill="#9A98A8">PAIR</text>
+      <text x="1040" y="0" text-anchor="start" font-family="ui-monospace, monospace" font-size="12" letter-spacing="5" fill="#D4AF37">{{label_follower}}</text>
+    </g>
+
+    ${rows}
+
+    ${citiesFooter()}
+  `);
+}
+
+/* ---- OPEN ---- */
+function openContent() {
+  return shell(`
+    ${topHeader()}
+
+    <!-- sunburst -->
+    <g transform="translate(640 360)" opacity="0.85">
+      <circle r="190" fill="url(#sgw)"/>
+      <g stroke="url(#goldg)" stroke-width="0.8" opacity="0.5">
+        <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="80s" repeatCount="indefinite"/>
+        ${Array.from({length: 24}).map((_, i) => {
+          const ang = (i * 15) * Math.PI / 180;
+          const x1 = Math.cos(ang) * 160;
+          const y1 = Math.sin(ang) * 160;
+          const x2 = Math.cos(ang) * 250;
+          const y2 = Math.sin(ang) * 250;
+          return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"/>`;
+        }).join('')}
+      </g>
+    </g>
+
+    <!-- center crest -->
+    <g transform="translate(640 360)">
+      <circle r="86" fill="#0F2C20" stroke="url(#goldg)" stroke-width="2"/>
+      <circle r="78" fill="none" stroke="#D4AF37" stroke-width="0.6" opacity="0.6"/>
+      <text y="-12" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="13" letter-spacing="5" fill="#FFD56B">NOW</text>
+      <text y="18" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="34" letter-spacing="10" fill="#FFEBA0">OPEN</text>
+      <text y="44" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="11" letter-spacing="3" fill="#D4AF37" opacity="0.8">the journey begins</text>
+    </g>
+
+    <!-- grand title -->
+    <text x="640" y="190" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="58" letter-spacing="10" fill="url(#goldg)">{{round_title}}</text>
+
+    <!-- bottom callout -->
+    <text x="640" y="568" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="20" letter-spacing="3" fill="#FFEBA0">{{open_quote}}</text>
+    <text x="640" y="600" text-anchor="middle" font-family="ui-monospace, monospace" font-size="12" letter-spacing="6" fill="#D4AF37">{{open_subline}}</text>
+
+    ${bottomSeal()}
+  `);
+}
+
+/* ---- LIVE ---- */
+function liveContent() {
+  // Generic "going live" — no specific dancer names
+  return shell(`
+    <!-- LIVE indicator (top-left, inside frame) -->
+    <g transform="translate(80 80)">
+      <rect x="0" y="0" width="100" height="36" rx="4" fill="url(#liveg)"/>
+      <circle cx="16" cy="18" r="6" fill="#fff">
+        <animate attributeName="opacity" values="1;0.3;1" dur="1.2s" repeatCount="indefinite"/>
+      </circle>
+      <text x="32" y="24" font-family="ui-monospace, monospace" font-size="15" font-weight="bold" letter-spacing="3" fill="#fff">LIVE</text>
+    </g>
+    <text x="200" y="103" font-family="Georgia, serif" font-style="italic" font-size="13" letter-spacing="4" fill="#9A98A8">{{stage_label}}</text>
+
+    <!-- round title (top-right) -->
+    <text x="1200" y="103" text-anchor="end" font-family="Georgia, serif" font-weight="bold" font-size="20" letter-spacing="6" fill="#FFD56B">{{round_title}}</text>
+
+    <!-- "ON STAGE" callout -->
+    <g transform="translate(640 200)">
+      <line x1="-110" y1="0" x2="-40" y2="0" stroke="url(#goldgh)" stroke-width="0.8"/>
+      <line x1="40" y1="0" x2="110" y2="0" stroke="url(#goldgh)" stroke-width="0.8"/>
+      <text y="6" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" letter-spacing="8" fill="#D4AF37">— ON STAGE —</text>
+    </g>
+
+    <!-- giant LIVE seal with pulsing rings -->
+    <g transform="translate(640 410)">
+      <!-- expanding pulse ring 1 -->
+      <circle r="160" fill="none" stroke="url(#liveg)" stroke-width="2.4" opacity="0.4">
+        <animate attributeName="r" values="155;195;155" dur="2.4s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.4;0;0.4" dur="2.4s" repeatCount="indefinite"/>
+      </circle>
+      <!-- expanding pulse ring 2 -->
+      <circle r="170" fill="none" stroke="url(#liveg)" stroke-width="1.8" opacity="0.3">
+        <animate attributeName="r" values="160;205;160" dur="2.4s" begin="0.8s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.3;0;0.3" dur="2.4s" begin="0.8s" repeatCount="indefinite"/>
+      </circle>
+
+      <!-- main filled circle -->
+      <circle r="148" fill="#0F2C20" stroke="url(#goldg)" stroke-width="2.5"/>
+      <circle r="134" fill="none" stroke="#D4AF37" stroke-width="0.6" opacity="0.6"/>
+
+      <!-- BIG LIVE text in seal -->
+      <text y="26" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="84" letter-spacing="16" fill="url(#goldg)">LIVE</text>
+    </g>
+
+    <!-- bottom message -->
+    <text x="640" y="610" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="22" letter-spacing="4" fill="#FFEBA0">{{live_message}}</text>
+
+    ${citiesFooter()}
+  `);
+}
+
+/* ---- WRAPUP ---- */
+function wrapupContent() {
+  return shell(`
+    ${topHeader()}
+    <text x="640" y="160" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="22" letter-spacing="8" fill="#FFD56B">{{stage_label}}</text>
+
+    <!-- giant title -->
+    <text x="640" y="280" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="68" letter-spacing="6" fill="url(#goldg)">{{wrap_title}}</text>
+    <text x="640" y="328" text-anchor="middle" font-family="Georgia, serif" font-size="26" letter-spacing="14" fill="#E8E6DA" opacity="0.85">{{wrap_subtitle}}</text>
+
+    <!-- judges' table emblem -->
+    <g transform="translate(640 440)" opacity="0.95">
+      <!-- octagonal seal -->
+      <polygon points="-60,-30 -30,-60 30,-60 60,-30 60,30 30,60 -30,60 -60,30"
+        fill="none" stroke="url(#goldg)" stroke-width="2"/>
+      <polygon points="-50,-22 -22,-50 22,-50 50,-22 50,22 22,50 -22,50 -50,22"
+        fill="none" stroke="#D4AF37" stroke-width="0.6" opacity="0.6"/>
+      <!-- pen / quill icon -->
+      <g fill="url(#goldg)">
+        <path d="M -22 18 L 18 -22 L 26 -14 L -14 26 Z"/>
+        <path d="M -14 26 L -22 18 L -28 32 Z" fill="#FFEBA0"/>
+        <circle cx="14" cy="-18" r="3" fill="#FFEBA0"/>
+      </g>
+    </g>
+
+    <!-- animated dots -->
+    <g transform="translate(640 540)" fill="#FFD56B">
+      <circle cx="-30" cy="0" r="5">
+        <animate attributeName="opacity" values="0.3;1;0.3" dur="1.4s" begin="0s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="0" cy="0" r="5">
+        <animate attributeName="opacity" values="0.3;1;0.3" dur="1.4s" begin="0.2s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="30" cy="0" r="5">
+        <animate attributeName="opacity" values="0.3;1;0.3" dur="1.4s" begin="0.4s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+    <text x="640" y="585" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="14" letter-spacing="4" fill="#9A98A8">{{wrap_message}}</text>
+
+    ${bottomSeal()}
+  `);
+}
+
+/* ---- CLOSE ---- */
+function closeContent() {
+  return shell(`
+    ${topHeader()}
+    <text x="640" y="160" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="22" letter-spacing="8" fill="#FFD56B">{{stage_label}}</text>
+
+    <!-- check seal -->
+    <g transform="translate(640 360)">
+      <!-- outer ornate ring -->
+      <circle r="118" fill="none" stroke="url(#goldg)" stroke-width="2.4"/>
+      <circle r="106" fill="none" stroke="#D4AF37" stroke-width="0.6" opacity="0.6"/>
+      <circle r="92" fill="none" stroke="url(#goldg)" stroke-width="1.4"/>
+      <!-- inner panel -->
+      <circle r="80" fill="#0F2C20"/>
+      <!-- ribbon points -->
+      <g fill="url(#goldg)">
+        ${Array.from({length: 16}).map((_, i) => {
+          const ang = (i * 22.5) * Math.PI / 180;
+          const x = Math.cos(ang) * 118;
+          const y = Math.sin(ang) * 118;
+          return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.4"/>`;
+        }).join('')}
+      </g>
+      <!-- checkmark -->
+      <path d="M -32 4 L -10 28 L 32 -22" fill="none" stroke="url(#goldg)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+
+    <!-- title -->
+    <text x="640" y="540" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="50" letter-spacing="6" fill="url(#goldg)">{{close_title}}</text>
+    <text x="640" y="582" text-anchor="middle" font-family="Georgia, serif" font-size="20" letter-spacing="8" fill="#E8E6DA" opacity="0.85">{{close_subtitle}}</text>
+    <text x="640" y="616" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="14" letter-spacing="4" fill="#D4AF37">{{close_message}}</text>
+
+    ${bottomSeal()}
+  `);
+}
+
+/* ---- RESULT (Preliminary/Semi-Final — qualified list, hexagon style matching reference image) ---- */
+function resultListContent(count) {
+  // Pick layout based on count
+  let cfg;
+  if (count <= 3) {
+    cfg = { namesPerRow: 3, hexSize: 56, spacingX: 168, rowH: 0,   nameSize: 22, startY: 410 };
+  } else if (count <= 6) {
+    cfg = { namesPerRow: 3, hexSize: 42, spacingX: 124, rowH: 144, nameSize: 17, startY: 350 };
+  } else { // 7..10
+    cfg = { namesPerRow: 5, hexSize: 30, spacingX: 76,  rowH: 116, nameSize: 14, startY: 320 };
+  }
+  const totalRows = Math.ceil(count / cfg.namesPerRow);
+
+  // Center X for each side (leader column / follower column)
+  // For count<=6 (narrower clusters) keep wide spacing; for count<=10 (wider rows) push columns slightly outward
+  const leaderCx   = count <= 6 ? 320 : 280;
+  const followerCx = count <= 6 ? 960 : 1000;
+
+  let leaderHexes = '';
+  let followerHexes = '';
+
+  for (let i = 1; i <= count; i++) {
+    const row = Math.floor((i - 1) / cfg.namesPerRow);
+    const colInRow = (i - 1) % cfg.namesPerRow;
+    const itemsThisRow = (row < totalRows - 1) ? cfg.namesPerRow : (count - row * cfg.namesPerRow);
+    const rowOffsetX = -((itemsThisRow - 1) / 2) * cfg.spacingX;
+    const x = rowOffsetX + colInRow * cfg.spacingX;
+    const y = cfg.startY + row * cfg.rowH;
+    const delay = i * 0.12;
+    leaderHexes   += hexagonFrame(leaderCx + x,   y, `{{result_leader_${i}}}`,   cfg.hexSize, delay,        cfg.nameSize, `{{result_leader_num_${i}}}`);
+    followerHexes += hexagonFrame(followerCx + x, y, `{{result_follower_${i}}}`, cfg.hexSize, delay + 0.04, cfg.nameSize, `{{result_follower_num_${i}}}`);
+  }
+
+  // Trophy vertical center: average of all hex Y values (centered between top and bottom hex rows)
+  const trophyY = totalRows === 1
+    ? cfg.startY
+    : cfg.startY + ((totalRows - 1) * cfg.rowH) / 2;
+  const trophyScale = count <= 3 ? 1.1 : count <= 6 ? 0.95 : 0.78;
+
+  // Column header sits ~60px above first hex row
+  const headerY = cfg.startY - 60;
+
+  return shell(`
+    ${topHeader()}
+    <text x="640" y="156" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="50" letter-spacing="10" fill="url(#goldg)">{{result_title}}</text>
+    <text x="640" y="190" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="17" letter-spacing="6" fill="#E8E6DA" opacity="0.9">{{result_subtitle}}</text>
+
+    <!-- column headers -->
+    <g transform="translate(0 ${headerY})">
+      <text x="${leaderCx}" y="0" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" letter-spacing="6" fill="#D4AF37">{{label_leader}}</text>
+      <text x="${followerCx}" y="0" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" letter-spacing="6" fill="#D4AF37">{{label_follower}}</text>
+      <line x1="${leaderCx - 90}"   y1="14" x2="${leaderCx + 90}"   y2="14" stroke="url(#goldgh)" stroke-width="0.5"/>
+      <line x1="${followerCx - 90}" y1="14" x2="${followerCx + 90}" y2="14" stroke="url(#goldgh)" stroke-width="0.5"/>
+    </g>
+
+    <!-- trophy in center between leader/follower columns -->
+    ${trophyIcon(640, trophyY, trophyScale)}
+
+    ${leaderHexes}
+    ${followerHexes}
+
+    ${citiesFooter()}
+  `);
+}
+
+/* ---- FINAL · PAIRING (manual, just announces "PAIRING") ---- */
+function finalPairingContent() {
+  return shell(`
+    ${topHeader()}
+
+    <text x="640" y="216" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="22" letter-spacing="10" fill="#FFD56B">{{stage_label}}</text>
+
+    <!-- soft radial glow behind the title -->
+    <g transform="translate(640 410)">
+      <circle r="280" fill="url(#sgw)" opacity="0.4"/>
+    </g>
+
+    <!-- big PAIRING title with subtle pulse -->
+    <g>
+      <animate attributeName="opacity" values="0.92;1;0.92" dur="3s" repeatCount="indefinite"/>
+      <text x="640" y="438" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="118" letter-spacing="24" fill="url(#goldg)">{{round_title}}</text>
+    </g>
+
+    <!-- decorative ornament below title -->
+    <g transform="translate(640 510)">
+      <line x1="-220" y1="0" x2="-30" y2="0" stroke="url(#goldgh)" stroke-width="0.7"/>
+      <line x1="30" y1="0" x2="220" y2="0" stroke="url(#goldgh)" stroke-width="0.7"/>
+      <text x="0" y="7" text-anchor="middle" font-family="Georgia, serif" font-size="20" fill="#D4AF37">✦</text>
+    </g>
+
+    <!-- twinkling sparkles flanking the title -->
+    <g fill="#FFEBA0">
+      <circle cx="200" cy="420" r="2">
+        <animate attributeName="opacity" values="0;1;0" dur="2.4s" begin="0s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="1080" cy="420" r="2">
+        <animate attributeName="opacity" values="0;1;0" dur="2.4s" begin="0.8s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="280" cy="370" r="1.6">
+        <animate attributeName="opacity" values="0;1;0" dur="2.4s" begin="1.4s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="1000" cy="370" r="1.6">
+        <animate attributeName="opacity" values="0;1;0" dur="2.4s" begin="0.4s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="280" cy="480" r="1.6">
+        <animate attributeName="opacity" values="0;1;0" dur="2.4s" begin="1.0s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="1000" cy="480" r="1.6">
+        <animate attributeName="opacity" values="0;1;0" dur="2.4s" begin="2.0s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+
+    ${citiesFooter()}
+  `);
+}
+
+/* ---- FINAL · PREP ---- */
+function finalPrepContent() {
+  return shell(`
+    ${heroHeader()}
+
+    <text x="640" y="288" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="20" letter-spacing="10" fill="#FFD56B">{{stage_label}}</text>
+
+    <!-- crown with rotating ray halo + gentle bob + twinkling sparkles -->
+    <g transform="translate(640 380)">
+      <!-- soft halo glow behind -->
+      <circle r="100" fill="url(#sgw)" opacity="0.35"/>
+      <!-- rotating ray halo behind crown -->
+      <g opacity="0.55">
+        <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="36s" repeatCount="indefinite"/>
+        ${Array.from({length: 16}).map((_, i) => {
+          const ang = (i * 22.5) * Math.PI / 180;
+          const isLong = i % 2 === 0;
+          const r1 = 78;
+          const r2 = isLong ? 124 : 98;
+          const w = isLong ? 1.4 : 0.7;
+          const x1 = (Math.cos(ang) * r1).toFixed(1);
+          const y1 = (Math.sin(ang) * r1).toFixed(1);
+          const x2 = (Math.cos(ang) * r2).toFixed(1);
+          const y2 = (Math.sin(ang) * r2).toFixed(1);
+          return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="url(#goldg)" stroke-width="${w}"/>`;
+        }).join('')}
+      </g>
+      <!-- crown (gentle vertical bob) -->
+      <g>
+        <animateTransform attributeName="transform" type="translate" values="0 0; 0 -5; 0 0" dur="3.2s" repeatCount="indefinite"/>
+        <g fill="url(#goldg)">
+          <animate attributeName="opacity" values="0.92;1;0.92" dur="2.6s" repeatCount="indefinite"/>
+          <path d="M -64 24 L -64 -8 L -40 18 L -20 -32 L 0 16 L 20 -32 L 40 18 L 64 -8 L 64 24 Z"/>
+          <rect x="-68" y="24" width="136" height="14"/>
+          <circle cx="-64" cy="-12" r="5"/>
+          <circle cx="0" cy="-38" r="6"/>
+          <circle cx="64" cy="-12" r="5"/>
+        </g>
+        <g fill="#0F2C20">
+          <circle cx="-30" cy="32" r="2"/>
+          <circle cx="0" cy="32" r="2"/>
+          <circle cx="30" cy="32" r="2"/>
+        </g>
+      </g>
+      <!-- twinkling sparkles around the crown -->
+      <g fill="#FFEBA0">
+        <circle cx="-92" cy="-44" r="2">
+          <animate attributeName="opacity" values="0;1;0" dur="2s" begin="0s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="98" cy="-30" r="1.8">
+          <animate attributeName="opacity" values="0;1;0" dur="2s" begin="0.6s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="-110" cy="20" r="1.6">
+          <animate attributeName="opacity" values="0;1;0" dur="2s" begin="1.2s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="106" cy="44" r="1.6">
+          <animate attributeName="opacity" values="0;1;0" dur="2s" begin="0.4s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="0" cy="-72" r="2.2">
+          <animate attributeName="opacity" values="0;1;0" dur="2.4s" begin="0.9s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="-50" cy="60" r="1.4">
+          <animate attributeName="opacity" values="0;1;0" dur="2.4s" begin="1.5s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="56" cy="64" r="1.4">
+          <animate attributeName="opacity" values="0;1;0" dur="2.4s" begin="0.2s" repeatCount="indefinite"/>
+        </circle>
+      </g>
+    </g>
+
+    <text x="640" y="510" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="76" letter-spacing="12" fill="url(#goldg)">{{round_title}}</text>
+    <text x="640" y="552" text-anchor="middle" font-family="Georgia, serif" font-size="20" letter-spacing="14" fill="#E8E6DA" opacity="0.85">{{round_subtitle}}</text>
+
+    <!-- meta strip -->
+    <g transform="translate(640 612)">
+      <line x1="-300" y1="0" x2="-110" y2="0" stroke="url(#goldgh)" stroke-width="0.7"/>
+      <line x1="110" y1="0" x2="300" y2="0" stroke="url(#goldgh)" stroke-width="0.7"/>
+      <text text-anchor="middle" y="6" font-family="Georgia, serif" font-size="15" letter-spacing="6" fill="#D4AF37">{{participants}}</text>
+    </g>
+
+    ${citiesFooter()}
+  `);
+}
+
+/* ---- FINAL · WRAPUP ---- */
+function finalWrapupContent() {
+  return shell(`
+    ${topHeader()}
+    <text x="640" y="160" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="22" letter-spacing="10" fill="#FFD56B">{{stage_label}}</text>
+
+    <text x="640" y="270" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="62" letter-spacing="6" fill="url(#goldg)">{{wrap_title}}</text>
+    <text x="640" y="316" text-anchor="middle" font-family="Georgia, serif" font-size="24" letter-spacing="14" fill="#E8E6DA" opacity="0.9">{{wrap_subtitle}}</text>
+
+    <!-- ornate medallion with spinning star + halo + sparkles -->
+    <g transform="translate(640 450)">
+      <!-- soft halo glow -->
+      <circle r="92" fill="url(#sgw)" opacity="0.45"/>
+
+      <!-- rotating ray halo behind medallion -->
+      <g opacity="0.55">
+        <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="22s" repeatCount="indefinite"/>
+        ${Array.from({length: 16}).map((_, i) => {
+          const ang = (i * 22.5) * Math.PI / 180;
+          const isLong = i % 2 === 0;
+          const r1 = 76;
+          const r2 = isLong ? 116 : 94;
+          const w = isLong ? 1.4 : 0.7;
+          const x1 = (Math.cos(ang) * r1).toFixed(1);
+          const y1 = (Math.sin(ang) * r1).toFixed(1);
+          const x2 = (Math.cos(ang) * r2).toFixed(1);
+          const y2 = (Math.sin(ang) * r2).toFixed(1);
+          return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="url(#goldg)" stroke-width="${w}"/>`;
+        }).join('')}
+      </g>
+
+      <!-- ornate ring (medallion outer body) -->
+      <circle r="72" fill="#0F2C20" stroke="url(#goldg)" stroke-width="2.4"/>
+      <circle r="62" fill="none" stroke="#D4AF37" stroke-width="0.6" opacity="0.6"/>
+      <!-- decorative stud points around ring -->
+      <g fill="url(#goldg)">
+        ${Array.from({length: 12}).map((_, i) => {
+          const ang = (i * 30) * Math.PI / 180;
+          const x = (Math.cos(ang) * 72).toFixed(1);
+          const y = (Math.sin(ang) * 72).toFixed(1);
+          return `<circle cx="${x}" cy="${y}" r="2"/>`;
+        }).join('')}
+      </g>
+
+      <!-- center star (slowly counter-rotates) -->
+      <g fill="url(#goldg)">
+        <animateTransform attributeName="transform" type="rotate" from="0" to="-360" dur="36s" repeatCount="indefinite"/>
+        <path d="M 0 -42 L 10 -14 L 40 -14 L 16 4 L 25 32 L 0 16 L -25 32 L -16 4 L -40 -14 L -10 -14 Z"/>
+        <circle r="6" fill="#FFFAE0"/>
+      </g>
+    </g>
+
+    <!-- twinkling sparkles around medallion -->
+    <g fill="#FFEBA0" transform="translate(640 450)">
+      <circle cx="-130" cy="-60" r="2">
+        <animate attributeName="opacity" values="0;1;0" dur="1.8s" begin="0s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="138" cy="-46" r="1.6">
+        <animate attributeName="opacity" values="0;1;0" dur="1.8s" begin="0.5s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="-148" cy="36" r="1.6">
+        <animate attributeName="opacity" values="0;1;0" dur="1.8s" begin="1s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="142" cy="62" r="1.4">
+        <animate attributeName="opacity" values="0;1;0" dur="1.8s" begin="0.3s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+
+    <!-- animated dots -->
+    <g transform="translate(640 558)" fill="#FFD56B">
+      <circle cx="-32" cy="0" r="5">
+        <animate attributeName="opacity" values="0.3;1;0.3" dur="1.4s" begin="0s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="0" cy="0" r="5">
+        <animate attributeName="opacity" values="0.3;1;0.3" dur="1.4s" begin="0.2s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="32" cy="0" r="5">
+        <animate attributeName="opacity" values="0.3;1;0.3" dur="1.4s" begin="0.4s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+    <text x="640" y="606" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="15" letter-spacing="4" fill="#9A98A8">{{wrap_message}}</text>
+
+    ${bottomSeal()}
+  `);
+}
+
+/* ---- FINAL · RESULT (Champions — hexagon style with trophy & crown, matching reference image) ---- */
+function finalResultContent() {
+  // Per side: column label + 3 hexagons in a row (2nd | 1st-larger-with-crown | 3rd) + rank tags
+  const champCol = (xCenter, side) => {
+    const prefix = side === 'L' ? 'champ_leader' : 'champ_follower';
+    const sideLabel = side === 'L' ? '{{label_leader}}' : '{{label_follower}}';
+    const dly = side === 'L' ? 0 : 0.08;
+    return `
+      <g transform="translate(${xCenter} 0)">
+        <!-- column label -->
+        <text x="0" y="378" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" letter-spacing="6" fill="#D4AF37">${sideLabel}</text>
+        <line x1="-110" y1="392" x2="110" y2="392" stroke="url(#goldgh)" stroke-width="0.5"/>
+
+        <!-- crown above 1st (animated glow) -->
+        <g transform="translate(0 432)">
+          <g fill="url(#goldg)">
+            <animate attributeName="opacity" values="0.85;1;0.85" dur="2.6s" repeatCount="indefinite"/>
+            <path d="M -28 8 L -28 -8 L -14 8 L 0 -18 L 14 8 L 28 -8 L 28 8 Z"/>
+            <rect x="-30" y="8" width="60" height="5"/>
+            <circle cx="-28" cy="-12" r="2.5"/>
+            <circle cx="0" cy="-22" r="3"/>
+            <circle cx="28" cy="-12" r="2.5"/>
+          </g>
+        </g>
+
+        <!-- 2nd place hexagon (left) -->
+        ${hexagonFrame(-105, 502, `{{${prefix}_2}}`, 36, dly + 0.45, 16, `{{${prefix}_num_2}}`)}
+        <text x="-105" y="600" text-anchor="middle" font-family="ui-monospace, monospace" font-size="10" letter-spacing="5" fill="#C0C0C8">2ND</text>
+
+        <!-- 1st place hexagon (champion) — center, larger -->
+        ${hexagonFrame(0, 502, `{{${prefix}_1}}`, 52, dly + 0.2, 20, `{{${prefix}_num_1}}`)}
+        <text x="0" y="624" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" letter-spacing="6" fill="#FFD56B">CHAMPION · 1ST</text>
+
+        <!-- 3rd place hexagon (right) -->
+        ${hexagonFrame(105, 502, `{{${prefix}_3}}`, 36, dly + 0.65, 16, `{{${prefix}_num_3}}`)}
+        <text x="105" y="600" text-anchor="middle" font-family="ui-monospace, monospace" font-size="10" letter-spacing="5" fill="#B07050">3RD</text>
+      </g>
+    `;
+  };
+
+  return shell(`
+    ${heroHeader()}
+
+    <!-- title -->
+    <text x="640" y="296" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="54" letter-spacing="12" fill="url(#goldg)">{{result_title}}</text>
+    <text x="640" y="328" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="15" letter-spacing="6" fill="#E8E6DA" opacity="0.9">{{result_subtitle}}</text>
+
+    <!-- center trophy between leader/follower columns -->
+    ${trophyIcon(640, 488, 0.95)}
+
+    ${champCol(280, 'L')}
+    ${champCol(1000, 'F')}
+
+    ${citiesFooter()}
+  `);
+}
+
+/* ============================================================
+   TEMPLATE REGISTRY · all 17 screens
+   ============================================================ */
+
+const TEMPLATES = {
+  prelim: {
+    prep: {
+      title: 'Preliminary · Prep',
+      svg: prepContent('PRELIMINARY', 20),
+      data: {
+        festival_header: '13TH JEJU LATIN CULTURE FESTIVAL',
+        stage_label: 'PRELIMINARY ROUND',
+        round_title: 'PREPARING',
+        round_subtitle: 'Get ready · take your places',
+        participants: '20 LEADERS  ·  20 FOLLOWERS',
+        tagline: '✦ Latin Motion · Jeju · Bangkok · Vietnam · Gangnam · San Francisco ✦'
+      }
+    },
+    pairing: {
+      title: 'Preliminary · Pairing',
+      svg: pairingContent20(),
+      data: {
+        festival_header: '13TH JEJU LATIN CULTURE FESTIVAL',
+        stage_label: 'PRELIMINARY ROUND',
+        round_title: 'RANDOM PAIRING',
+        label_leader: 'LEADER',
+        label_follower: 'FOLLOWER',
+        leader_1: 'MONIKA',  leader_num_1: 'L01', follower_1: 'SOFIA',   follower_num_1: 'F01',
+        leader_2: 'PINKY',   leader_num_2: 'L02', follower_2: 'LARA',    follower_num_2: 'F02',
+        leader_3: 'NUNO',    leader_num_3: 'L03', follower_3: 'YUNA',    follower_num_3: 'F03',
+        leader_4: 'CARMEN',  leader_num_4: 'L04', follower_4: 'ANNA',    follower_num_4: 'F04',
+        leader_5: '시우',    leader_num_5: 'L05', follower_5: 'MAYA',    follower_num_5: 'F05',
+        leader_6: 'RAFA',    leader_num_6: 'L06', follower_6: 'RIN',     follower_num_6: 'F06',
+        leader_7: 'JOSE',    leader_num_7: 'L07', follower_7: '서연',    follower_num_7: 'F07',
+        leader_8: '민준',  leader_num_8: 'L08', follower_8: 'NORA',    follower_num_8: 'F08',
+        leader_9: 'KEVIN',   leader_num_9: 'L09', follower_9: 'CLARA',   follower_num_9: 'F09',
+        leader_10:'MARCO',   leader_num_10:'L10', follower_10:'IVY',     follower_num_10:'F10',
+        leader_11:'LUIS',    leader_num_11:'L11', follower_11:'JADE',    follower_num_11:'F11',
+        leader_12:'TOM',     leader_num_12:'L12', follower_12:'MIRA',    follower_num_12:'F12',
+        leader_13:'IVAN',    leader_num_13:'L13', follower_13:'LENA',    follower_num_13:'F13',
+        leader_14:'SAM',     leader_num_14:'L14', follower_14:'ZOE',     follower_num_14:'F14',
+        leader_15:'OMAR',    leader_num_15:'L15', follower_15:'KIRA',    follower_num_15:'F15',
+        leader_16:'NIKO',    leader_num_16:'L16', follower_16:'TARA',    follower_num_16:'F16',
+        leader_17:'PABLO',   leader_num_17:'L17', follower_17:'MILA',    follower_num_17:'F17',
+        leader_18:'JAMES',   leader_num_18:'L18', follower_18:'ELLA',    follower_num_18:'F18',
+        leader_19:'RUBEN',   leader_num_19:'L19', follower_19:'NINA',    follower_num_19:'F19',
+        leader_20:'지우',     leader_num_20:'L20', follower_20:'HANA',    follower_num_20:'F20',
+        tagline: '✦ Random Draw · Preliminary Pairing Sheet ✦'
+      }
+    },
+    open: {
+      title: 'Preliminary · Open',
+      svg: openContent(),
+      data: {
+        festival_header: '13TH JEJU LATIN CULTURE FESTIVAL',
+        round_title: 'PRELIMINARY ROUND',
+        open_quote: '"Let the rhythm guide you."',
+        open_subline: 'LET THE DANCE BEGIN',
+        tagline: '✦ Bachata Jack & Jill · Pro Division · 2026.6.18 — 22 ✦'
+      }
+    },
+    live: {
+      title: 'Preliminary · Live',
+      svg: liveContent(),
+      data: {
+        festival_header: '13TH JEJU LATIN CULTURE FESTIVAL',
+        stage_label: 'PRELIMINARY ROUND',
+        round_title: 'PRELIMINARY',
+        live_message: 'The stage belongs to the dancers',
+        tagline: '✦ Live from Jeju Main Stage ✦'
+      }
+    },
+    wrapup: {
+      title: 'Preliminary · Calculate Total',
+      svg: wrapupContent(),
+      data: {
+        festival_header: '13TH JEJU LATIN CULTURE FESTIVAL',
+        stage_label: 'PRELIMINARY ROUND',
+        wrap_title: 'CALCULATING TOTAL',
+        wrap_subtitle: 'IN PROGRESS',
+        wrap_message: 'Please stand by — results coming up shortly',
+        tagline: '✦ Judges deliberating · Please stand by ✦'
+      }
+    },
+    close: {
+      title: 'Preliminary · Close',
+      svg: closeContent(),
+      data: {
+        festival_header: '13TH JEJU LATIN CULTURE FESTIVAL',
+        stage_label: 'PRELIMINARY ROUND',
+        close_title: 'ROUND COMPLETE',
+        close_subtitle: 'PRELIMINARY · CLOSED',
+        close_message: 'Thank you to all dancers',
+        tagline: '✦ Results coming next · Stay tuned ✦'
+      }
+    },
+    result: {
+      title: 'Preliminary · Result',
+      svg: resultListContent(10),
+      data: {
+        festival_header: '13TH JEJU LATIN CULTURE FESTIVAL',
+        result_title: 'QUALIFIED',
+        result_subtitle: 'ADVANCING TO SEMI-FINAL',
+        label_leader: 'LEADER',
+        label_follower: 'FOLLOWER',
+        result_leader_1:  'NUNO',   result_leader_num_1:  'L03',
+        result_leader_2:  'CARMEN', result_leader_num_2:  'L04',
+        result_leader_3:  '시우',   result_leader_num_3:  'L05',
+        result_leader_4:  'MARCO',  result_leader_num_4:  'L10',
+        result_leader_5:  'KEVIN',  result_leader_num_5:  'L09',
+        result_leader_6:  '민준',   result_leader_num_6:  'L17',
+        result_leader_7:  'OMAR',   result_leader_num_7:  'L15',
+        result_leader_8:  'IVAN',   result_leader_num_8:  'L13',
+        result_leader_9:  'JAMES',  result_leader_num_9:  'L18',
+        result_leader_10: '지우',   result_leader_num_10: 'L16',
+        result_follower_1:  'YUNA',  result_follower_num_1:  'F03',
+        result_follower_2:  'ANNA',  result_follower_num_2:  'F04',
+        result_follower_3:  'MAYA',  result_follower_num_3:  'F05',
+        result_follower_4:  'CLARA', result_follower_num_4:  'F09',
+        result_follower_5:  'IVY',   result_follower_num_5:  'F10',
+        result_follower_6:  'MILA',  result_follower_num_6:  'F17',
+        result_follower_7:  '서연',  result_follower_num_7:  'F15',
+        result_follower_8:  'LENA',  result_follower_num_8:  'F13',
+        result_follower_9:  'ELLA',  result_follower_num_9:  'F18',
+        result_follower_10: 'TARA',  result_follower_num_10: 'F16',
+        tagline: '✦ See you at the Semi-Final ✦'
+      }
+    }
+  },
+
+  semi: {
+    prep: {
+      title: 'Semi-Final · Prep',
+      svg: prepContent('SEMI-FINAL', 10),
+      data: {
+        festival_header: '13TH JEJU LATIN CULTURE FESTIVAL',
+        stage_label: 'SEMI-FINAL ROUND',
+        round_title: 'PREPARING',
+        round_subtitle: 'Top 10 · take the stage',
+        participants: '10 LEADERS  ·  10 FOLLOWERS',
+        tagline: '✦ Top 10 dancers compete · One semi-final stage ✦'
+      }
+    },
+    pairing: {
+      title: 'Semi-Final · Pairing',
+      svg: pairingContent10(),
+      data: {
+        festival_header: '13TH JEJU LATIN CULTURE FESTIVAL',
+        stage_label: 'SEMI-FINAL ROUND',
+        round_title: 'RANDOM PAIRING',
+        label_leader: 'LEADER',
+        label_follower: 'FOLLOWER',
+        leader_1:  'NUNO',   leader_num_1:  'L03', follower_1:  'YUNA',  follower_num_1:  'F03',
+        leader_2:  '민준',   leader_num_2:  'L17', follower_2:  'ANNA',  follower_num_2:  'F04',
+        leader_3:  '시우',   leader_num_3:  'L05', follower_3:  '서연',  follower_num_3:  'F15',
+        leader_4:  'MARCO',  leader_num_4:  'L10', follower_4:  'ELLA',  follower_num_4:  'F18',
+        leader_5:  'KEVIN',  leader_num_5:  'L09', follower_5:  'IVY',   follower_num_5:  'F10',
+        leader_6:  'CARMEN', leader_num_6:  'L04', follower_6:  'MAYA',  follower_num_6:  'F05',
+        leader_7:  '지우',   leader_num_7:  'L16', follower_7:  'MILA',  follower_num_7:  'F17',
+        leader_8:  'OMAR',   leader_num_8:  'L15', follower_8:  'LENA',  follower_num_8:  'F13',
+        leader_9:  'JAMES',  leader_num_9:  'L18', follower_9:  'TARA',  follower_num_9:  'F16',
+        leader_10: 'IVAN',   leader_num_10: 'L13', follower_10: 'CLARA', follower_num_10: 'F09',
+        tagline: '✦ Random Draw · Semi-Final Pairing Sheet ✦'
+      }
+    },
+    open: {
+      title: 'Semi-Final · Open',
+      svg: openContent(),
+      data: {
+        festival_header: '13TH JEJU LATIN CULTURE FESTIVAL',
+        round_title: 'SEMI-FINAL ROUND',
+        open_quote: '"Now the dance gets serious."',
+        open_subline: 'ONLY THE BEST REMAIN',
+        tagline: '✦ Top 10 dancers · One Stage ✦'
+      }
+    },
+    live: {
+      title: 'Semi-Final · Live',
+      svg: liveContent(),
+      data: {
+        festival_header: '13TH JEJU LATIN CULTURE FESTIVAL',
+        stage_label: 'SEMI-FINAL ROUND',
+        round_title: 'SEMI-FINAL',
+        live_message: 'Five pairs · One unforgettable stage',
+        tagline: '✦ Live from Jeju Main Stage ✦'
+      }
+    },
+    wrapup: {
+      title: 'Semi-Final · Calculate Total',
+      svg: wrapupContent(),
+      data: {
+        festival_header: '13TH JEJU LATIN CULTURE FESTIVAL',
+        stage_label: 'SEMI-FINAL ROUND',
+        wrap_title: 'CALCULATING TOTAL',
+        wrap_subtitle: 'IN PROGRESS',
+        wrap_message: 'Determining the finalists',
+        tagline: '✦ Top 3 leaders & followers will advance ✦'
+      }
+    },
+    close: {
+      title: 'Semi-Final · Close',
+      svg: closeContent(),
+      data: {
+        festival_header: '13TH JEJU LATIN CULTURE FESTIVAL',
+        stage_label: 'SEMI-FINAL ROUND',
+        close_title: 'ROUND COMPLETE',
+        close_subtitle: 'SEMI-FINAL · CLOSED',
+        close_message: 'A magnificent performance from all dancers',
+        tagline: '✦ Finalists will be announced shortly ✦'
+      }
+    },
+    result: {
+      title: 'Semi-Final · Result',
+      svg: resultListContent(5),
+      data: {
+        festival_header: '13TH JEJU LATIN CULTURE FESTIVAL',
+        result_title: 'FINALISTS',
+        result_subtitle: 'ADVANCING TO GRAND FINAL',
+        label_leader: 'LEADER',
+        label_follower: 'FOLLOWER',
+        result_leader_1: 'NUNO',   result_leader_num_1: 'L03',
+        result_leader_2: 'CARMEN', result_leader_num_2: 'L04',
+        result_leader_3: '시우',   result_leader_num_3: 'L05',
+        result_leader_4: 'MARCO',  result_leader_num_4: 'L10',
+        result_leader_5: 'KEVIN',  result_leader_num_5: 'L09',
+        result_follower_1: 'YUNA',  result_follower_num_1: 'F03',
+        result_follower_2: 'ANNA',  result_follower_num_2: 'F04',
+        result_follower_3: 'MAYA',  result_follower_num_3: 'F05',
+        result_follower_4: 'CLARA', result_follower_num_4: 'F09',
+        result_follower_5: 'IVY',   result_follower_num_5: 'F10',
+        tagline: '✦ See you at the Grand Final ✦'
+      }
+    }
+  },
+
+  final: {
+    prep: {
+      title: 'Grand Final · Prep',
+      svg: finalPrepContent(),
+      data: {
+        festival_header: '13TH JEJU LATIN CULTURE FESTIVAL',
+        stage_label: 'GRAND FINAL',
+        round_title: 'GRAND FINAL',
+        round_subtitle: 'The crown awaits',
+        participants: 'TOP 3 LEADERS  ·  TOP 3 FOLLOWERS',
+        tagline: '✦ Six dancers · One crown each · Champions made tonight ✦'
+      }
+    },
+    pairing: {
+      title: 'Grand Final · Pairing',
+      svg: finalPairingContent(),
+      data: {
+        festival_header: '13TH JEJU LATIN CULTURE FESTIVAL',
+        stage_label: 'GRAND FINAL',
+        round_title: 'PAIRING',
+        tagline: '✦ Bachata Jack & Jill · Pro Division · Champions made tonight ✦'
+      }
+    },
+    open: {
+      title: 'Grand Final · Open',
+      svg: openContent(),
+      data: {
+        festival_header: '13TH JEJU LATIN CULTURE FESTIVAL',
+        round_title: 'GRAND FINAL',
+        open_quote: '"This is the moment we have been waiting for."',
+        open_subline: 'THE CROWN AWAITS',
+        tagline: '✦ The Final Stage · Jeju 2026 ✦'
+      }
+    },
+    live: {
+      title: 'Grand Final · Live',
+      svg: liveContent(),
+      data: {
+        festival_header: '13TH JEJU LATIN CULTURE FESTIVAL',
+        stage_label: 'GRAND FINAL',
+        round_title: 'GRAND FINAL',
+        live_message: 'Champions are made on this stage',
+        tagline: '✦ Live from Jeju Main Stage · Grand Final ✦'
+      }
+    },
+    wrapup: {
+      title: 'Grand Final · Calculate Total',
+      svg: finalWrapupContent(),
+      data: {
+        festival_header: '13TH JEJU LATIN CULTURE FESTIVAL',
+        stage_label: 'GRAND FINAL',
+        wrap_title: 'CALCULATING TOTAL',
+        wrap_subtitle: 'IN PROGRESS',
+        wrap_message: 'Determining the champions',
+        tagline: '✦ The crown awaits ✦'
+      }
+    },
+    result: {
+      title: 'Grand Final · Result · CHAMPIONS',
+      svg: finalResultContent(),
+      data: {
+        festival_header: '13TH JEJU LATIN CULTURE FESTIVAL',
+        result_title: 'CHAMPIONS',
+        result_subtitle: 'JEJU 2026 · GRAND FINAL',
+        label_leader: 'LEADER',
+        label_follower: 'FOLLOWER',
+        champ_leader_1: 'NUNO',   champ_leader_num_1: 'L03',
+        champ_leader_2: 'CARMEN', champ_leader_num_2: 'L04',
+        champ_leader_3: '시우',   champ_leader_num_3: 'L05',
+        champ_follower_1: 'YUNA', champ_follower_num_1: 'F03',
+        champ_follower_2: 'ANNA', champ_follower_num_2: 'F04',
+        champ_follower_3: 'MAYA', champ_follower_num_3: 'F05',
+        tagline: '✦ Bachata Jack & Jill · Pro Division · Champions of Jeju 2026 ✦'
+      }
+    }
+  }
+};
+
+const PROCESS_LABELS = {
+  prelim: [
+    {key: 'prep',    label: 'PREP'},
+    {key: 'pairing', label: 'PAIRING'},
+    {key: 'open',    label: 'OPEN'},
+    {key: 'live',    label: 'LIVE'},
+    {key: 'wrapup',  label: 'CALCULATE TOTAL'},
+    {key: 'close',   label: 'CLOSE'},
+    {key: 'result',  label: 'RESULT'}
+  ],
+  semi: [
+    {key: 'prep',    label: 'PREP'},
+    {key: 'pairing', label: 'PAIRING'},
+    {key: 'open',    label: 'OPEN'},
+    {key: 'live',    label: 'LIVE'},
+    {key: 'wrapup',  label: 'CALCULATE TOTAL'},
+    {key: 'close',   label: 'CLOSE'},
+    {key: 'result',  label: 'RESULT'}
+  ],
+  final: [
+    {key: 'prep',    label: 'PREP'},
+    {key: 'pairing', label: 'PAIRING'},
+    {key: 'open',    label: 'OPEN'},
+    {key: 'live',    label: 'LIVE'},
+    {key: 'wrapup',  label: 'CALCULATE TOTAL'},
+    {key: 'result',  label: 'RESULT'}
+  ]
+};
+
+const ROUND_LABELS = {
+  prelim: 'PRELIMINARY',
+  semi: 'SEMI-FINAL',
+  final: 'GRAND FINAL'
+};
+
+const BADGE_STYLE = {
+  prep: '',
+  pairing: 'blue',
+  open: 'green',
+  live: 'live',
+  wrapup: '',
+  close: 'green',
+  result: ''
+};
+
+/* ============================================================
+   STATE & RENDER
+   ============================================================ */
+
+let currentRound = 'prelim';
+let currentProcess = 'prep';
+let workingData = {}; // mutable copy of current template's data
+
+function getTpl() { return TEMPLATES[currentRound][currentProcess]; }
+
+function renderProcessNav() {
+  const nav = document.getElementById('process-nav');
+  const procs = PROCESS_LABELS[currentRound];
+  let html = '';
+  procs.forEach((p, idx) => {
+    if (idx > 0) html += '<span class="arrow">→</span>';
+    html += `<button class="process-btn ${currentProcess === p.key ? 'active' : ''}" data-process="${p.key}">
+      <span>${p.label}</span>
+    </button>`;
+  });
+  nav.innerHTML = html;
+  nav.querySelectorAll('.process-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentProcess = btn.dataset.process;
+      // ensure process exists in this round
+      if (!TEMPLATES[currentRound][currentProcess]) currentProcess = PROCESS_LABELS[currentRound][0].key;
+      loadWorkingData();
+      renderProcessNav();
+      renderEverything();
+    });
+  });
+}
+
+function loadWorkingData() {
+  const tpl = getTpl();
+  workingData = JSON.parse(JSON.stringify(tpl.data));
+}
+
+function xmlEscape(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function renderTemplate(svg, data) {
+  return svg.replace(/\{\{(\w+)\}\}/g, (_, k) => xmlEscape(data[k] ?? ''));
+}
+
+function renderPreview() {
+  const tpl = getTpl();
+  document.getElementById('preview').innerHTML = renderTemplate(tpl.svg, workingData);
+}
+
+function renderEditor() {
+  const editor = document.getElementById('editor');
+  const keys = Object.keys(workingData);
+  // group: identity, labels, content, tagline
+  const identityKeys = keys.filter(k => k === 'festival_header' || k === 'stage_label' || k === 'round_title' || k === 'round_subtitle');
+  const titleKeys = keys.filter(k => /^(open|wrap|close|result)_/.test(k) && !/(leader|follower)/.test(k));
+  const labelKeys = keys.filter(k => /^label_/.test(k) || k === 'countdown' || k === 'countdown_label' || k === 'participants' || k === 'current_pair' || k === 'pair_progress' || k === 'next_pair_label' || k === 'wrap_message' || k === 'close_message');
+  const dancerKeys = keys.filter(k => /^(leader|follower|result_leader|result_follower|champ_leader|champ_follower|current_leader|current_follower)/.test(k));
+  const taglineKeys = keys.filter(k => k === 'tagline');
+  const otherKeys = keys.filter(k =>
+    !identityKeys.includes(k) && !titleKeys.includes(k) && !labelKeys.includes(k) && !dancerKeys.includes(k) && !taglineKeys.includes(k)
+  );
+
+  const buildGroup = (heading, ks, twoCol) => {
+    if (ks.length === 0) return '';
+    const inner = ks.map(k => `
+      <div class="field">
+        <label>${k}</label>
+        <input type="text" data-field="${k}" value="${escapeAttr(workingData[k] ?? '')}">
+      </div>
+    `).join('');
+    return `<div class="field-group"><h3>${heading}</h3>${twoCol ? `<div class="field-grid">${inner}</div>` : inner}</div>`;
+  };
+
+  let html = '';
+  html += buildGroup('Festival Identity', identityKeys, false);
+  html += buildGroup('Phase Content', titleKeys, false);
+  html += buildGroup('Labels & Meta', labelKeys, false);
+  html += buildGroup('Dancers', dancerKeys, true);
+  html += buildGroup('Other', otherKeys, false);
+  html += buildGroup('Tagline', taglineKeys, false);
+
+  editor.innerHTML = html || '<div class="empty-state">No fields</div>';
+
+  editor.querySelectorAll('input[data-field]').forEach(input => {
+    input.addEventListener('input', () => {
+      workingData[input.dataset.field] = input.value;
+      renderPreview();
+    });
+  });
+}
+
+function escapeAttr(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
+
+function renderEverything() {
+  const tpl = getTpl();
+  document.getElementById('screen-title').textContent = tpl.title;
+  const badgeKey = BADGE_STYLE[currentProcess] ?? '';
+  const badge = document.getElementById('screen-badge');
+  badge.className = 'badge ' + badgeKey;
+  const procLabel = PROCESS_LABELS[currentRound].find(p => p.key === currentProcess);
+  badge.textContent = procLabel ? procLabel.label : currentProcess.toUpperCase();
+  document.getElementById('header-meta').textContent = `round: ${ROUND_LABELS[currentRound].toUpperCase()} · process: ${(procLabel ? procLabel.label : currentProcess.toUpperCase())}`;
+  renderEditor();
+  renderPreview();
+}
+
+/* round nav */
+document.querySelectorAll('.round-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.round-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentRound = btn.dataset.round;
+    // pick first available process in this round
+    const procs = PROCESS_LABELS[currentRound];
+    if (!procs.find(p => p.key === currentProcess)) {
+      currentProcess = procs[0].key;
+    }
+    loadWorkingData();
+    renderProcessNav();
+    renderEverything();
+  });
+});
+
+/* actions */
+document.getElementById('btn-reset').addEventListener('click', () => {
+  loadWorkingData();
+  renderEverything();
+  showToast('Defaults restored');
+});
+
+document.getElementById('btn-copy-svg').addEventListener('click', async () => {
+  const tpl = getTpl();
+  const rendered = renderTemplate(tpl.svg, workingData);
+  try {
+    await navigator.clipboard.writeText(rendered);
+    showToast('SVG copied to clipboard');
+  } catch {
+    showToast('Copy failed');
+  }
+});
+
+document.getElementById('btn-download-svg').addEventListener('click', () => {
+  const tpl = getTpl();
+  const rendered = '<?xml version="1.0" encoding="UTF-8"?>\n' + renderTemplate(tpl.svg, workingData);
+  downloadFile(rendered, `bachata-${currentRound}-${currentProcess}-${Date.now()}.svg`, 'image/svg+xml');
+  showToast('SVG download started');
+});
+
+document.getElementById('btn-download-json').addEventListener('click', () => {
+  downloadFile(JSON.stringify(workingData, null, 2), `bachata-${currentRound}-${currentProcess}-${Date.now()}.json`, 'application/json');
+  showToast('JSON download started');
+});
+
+function downloadFile(content, filename, type) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+/* boot */
+loadWorkingData();
+renderProcessNav();
+renderEverything();
+</script>
+</body>
+</html>

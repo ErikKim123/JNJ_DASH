@@ -1,0 +1,68 @@
+
+/*****************************************************************
+
+== 젝앤질 대회 프로그램 ==
+1. 개요 (Overview)
+1.1 목적
+대회 단계별(예선/준결승/결승) 댄스 컴페티션 채점 앱을 구축한다.
+
+1.2 배경
+현재 댄스 컴페티션 현장에서는 번호 배정, 파트너 매칭, 심사 집계 등 대부분의 운영 
+업무를 수작업으로 처리하고 있다. 이로 인해 인적 오류 발생, 운영 시간 증가, 심사 
+공정성 문제가 반복적으로 제기된다. 본 시스템은 이 문제를 해소하고 운영 효율성과 
+참가자 경험을 모두 향상시키기 위해 기획되었다
+
+1.3 목표
+채점자(심사위원)의 채점 입력 및 즉시 집계자료를 대형모니터 화면에 출력하면 되는 화면 앱이다
+
+2. 사용자 및 이해관계자
+2.1 주요 사용자
+
+각 라운드에서 참가자를 평가 : 예선랜덤 / 예선결과 / 본선랜덤 / 본선결과 / 결승결과 에 결과를 큰 화면에 표출
+
+
+예선업무프로세스 : Prep->Pairing(3.1예선랜덤시트)->Open->Live->Calculate Total->Close->Result(4.예선통과시트)
+본선업무프로세스 : Prep->Pairing(4.1본선랜덤시트)->Open->Live->Calculate Total->Close->Result(5.본선통과시트)
+결승업무프로세스 : Prep->Pairing(참조없고 'Pairing' 표출-사람직접 매칭함 자동없음)->Open->Live->Calculate Total->Result(6.결승시트)
+
+
+
+ - 필수 필요사황 
+ [데이터 참조]
+
+ 대회목록시트 : https://docs.google.com/spreadsheets/d/1bRclkuN8fuSfhoSrRUEtBjPPx6TePofxojE72qHV6iU/edit?gid=2102151233#gid=2102151233
+ 대회 001 원본시트 : https://docs.google.com/spreadsheets/d/1gzX4kidjg4J6Qj5g1ANX9ibdeGaK_KkLTgU6xoQVn80/edit?gid=1162828405#gid=1162828405
+ 대회 002 원본시트 : https://docs.google.com/spreadsheets/d/1yHpSMCUvqZNqdH2i28jBI0MCFrOaDrhU_jjZFQreHbw/edit?gid=1162828405#gid=1162828405
+ 대회 003 원본시트 : https://docs.google.com/spreadsheets/d/1cqFFHZfFn6ZEFeHZRvHXHhtOdBeinNLRGQ5TNeMtFG8/edit?gid=1162828405#gid=1162828405
+                   
+
+ 구글시프레드 시트로 업무를 정리함. 이 시트를 중심으로 화면을 구성하면됨
+ 예선 Pairing은 3.1예선랜덤시트에서 자료를 가져와서 표출  , 예선 Result는 4.예선통과시트에서 자료를 가져와서 표출
+ 본선 Pairing은 4.1예선랜덤시트에서 자료를 가져와서 표출  , 본선 Result는 5.본선통과시트에서 자료를 가져와서 표출
+ 결승 Result(6.결승시트에서 자료를 가져와서 표출)
+
+
+
+ [사이트 구조와 설명]
+ HOME : 홈은 대회를 선택하게 해줘 (1.대회정보시트 참고)
+    + 대시보드 : 상단메뉴 프로세스 스텝버튼 (작게표시)
+                중앙 화면 : 디자인은 DashDisignTemplates 폴더 참고 (대회 001 원본시트에 디자인 템플릿 번호를 보고 1이면 1번폴더 디자인 적용 )
+                   예선 메뉴 누르면 표출할 정보는 예선업무프로세스에 있는 디자인된 화면이 스텝별로 누를때 마다 표출되면 된다. / Pairing(3.1예선랜덤시트에서 자료를 가져와서 표출 ) , Result(4.예선통과시트에서 자료를 가져와서 표출)
+                   본선 메뉴 누르면 표출할 정보는 본선업무프로세스에 있는 디자인된 화면이 스텝별로 누를때 마다 표출되면 된다. / Pairing(4.1본선랜덤시트에서 자료를 가져와서 표출 ) , Result(5.본선통과시트에서 자료를 가져와서 표출)
+                   결승 메뉴 누르면 표출할 정보는 결승업무프로세스에 있는 디자인된 화면이 스텝별로 누를때 마다 표출되면 된다. / Result(6.결승시트에서 자료를 가져와서 표출)
+   
+프레임워크 & 런타임
+    Next.js 15 — App Router 기반 풀스택 프레임워크
+    React 19 — UI 라이브러리
+    언어
+    TypeScript 5.3 — 정적 타입 언어
+
+배포
+    Vercel — 최근 커밋 이력으로 보아 Vercel 배포 (Next.js)
+
+디자인 참고
+     DashDisignTemplates 폴더 내용 참조
+
+디자인 적용
+     1.대회정보 시트에 디자인 템플릿 번호를 보고 대시디자인템플릿 선택 적용
+     

@@ -1,0 +1,31 @@
+node_modules/
+.next/
+out/
+build/
+.DS_Store
+*.log
+
+# env
+.env
+.env.local
+.env.*.local
+
+# editor
+.vscode/
+.idea/
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# 페어링 스냅샷 (런타임 데이터, 환경별로 다름)
+data/snapshots/
+
+# 디자인 원본 (PSD/AI/PDF — 대용량, 런타임 미사용)
+DashDisignTemplates/02/
+
+# bkit 플러그인 로컬 상태
+.bkit/
+
+# Claude Code 로컬 설정
+.claude/

@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html, body {
+  background: #0F1018;
+  color: #E8E6DA;
+  /* 한글 = 굴림 / Latin = system fallback */
+  font-family: -apple-system, "SF Pro Text", "Helvetica Neue", 'Gulim', '굴림', system-ui, sans-serif;
+}
