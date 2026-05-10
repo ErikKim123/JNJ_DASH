@@ -7,10 +7,14 @@ export function pairingSvg20(): string {
   const rowsPerCol = 10;
   const rowH = 42;
   const startY = 232;
+  // 컬럼 중심을 바깥으로 살짝 이동(320→300, 960→980)해 번호 배지 ↔ 이름 사이 여유 확보.
   const cols = [
-    { cx: 320, start: 1, end: 10 },
-    { cx: 960, start: 11, end: 20 },
+    { cx: 300, start: 1, end: 10 },
+    { cx: 980, start: 11, end: 20 },
   ];
+  const NUM_OFFSET = 256;
+  const NAME_OFFSET = 100;
+  const NAME_SIZE = 20;
 
   let body = '';
   for (const col of cols) {
@@ -20,25 +24,25 @@ export function pairingSvg20(): string {
       const delay = (rowIdx * 0.05).toFixed(2);
       const isStripe = rowIdx % 2 === 1;
       const stripe = isStripe
-        ? `<rect x="${col.cx - 250}" y="${y - 20}" width="500" height="40" rx="4" fill="#0F2C20" opacity="0.55"/>`
+        ? `<rect x="${col.cx - 290}" y="${y - 20}" width="580" height="40" rx="4" fill="#0F2C20" opacity="0.55"/>`
         : '';
       body += `
         ${stripe}
         <g transform="translate(${col.cx} ${y})" opacity="0">
           <animate attributeName="opacity" values="0;1" dur="0.5s" begin="${delay}s" fill="freeze"/>
-          <g transform="translate(-228 0)">
+          <g transform="translate(-${NUM_OFFSET} 0)">
             <rect x="-26" y="-13" width="52" height="26" rx="13" fill="url(#goldg)" opacity="0.2"/>
             <rect x="-26" y="-13" width="52" height="26" rx="13" fill="none" stroke="#9C7C2C" stroke-width="0.9"/>
             <text y="5" text-anchor="middle" font-family="ui-monospace, monospace" font-size="12.5" letter-spacing="1" fill="#FFD56B" font-weight="700">{{leader_num_${i}}}</text>
           </g>
-          <text x="-90" y="8" text-anchor="end" font-family="'Gulim', '굴림', sans-serif" font-size="22" font-weight="700" fill="#FFEBA0">{{leader_${i}}}</text>
+          <text x="-${NAME_OFFSET}" y="7" text-anchor="end" font-family="'Gulim', '굴림', sans-serif" font-size="${NAME_SIZE}" font-weight="700" fill="#FFEBA0">{{leader_${i}}}</text>
           <line x1="-58" y1="0" x2="-22" y2="0" stroke="#9C7C2C" stroke-width="0.7" opacity="0.7"/>
           <circle r="17" fill="none" stroke="url(#goldg)" stroke-width="1.4"/>
           <circle r="11" fill="url(#goldg)" opacity="0.22"/>
           <text y="6" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-size="15" font-weight="700" fill="#FFD56B">${i.toString().padStart(2, '0')}</text>
           <line x1="22" y1="0" x2="58" y2="0" stroke="#9C7C2C" stroke-width="0.7" opacity="0.7"/>
-          <text x="90" y="8" text-anchor="start" font-family="'Gulim', '굴림', sans-serif" font-size="22" font-weight="700" fill="#FFEBA0">{{follower_${i}}}</text>
-          <g transform="translate(228 0)">
+          <text x="${NAME_OFFSET}" y="7" text-anchor="start" font-family="'Gulim', '굴림', sans-serif" font-size="${NAME_SIZE}" font-weight="700" fill="#FFEBA0">{{follower_${i}}}</text>
+          <g transform="translate(${NUM_OFFSET} 0)">
             <rect x="-26" y="-13" width="52" height="26" rx="13" fill="url(#goldg)" opacity="0.2"/>
             <rect x="-26" y="-13" width="52" height="26" rx="13" fill="none" stroke="#9C7C2C" stroke-width="0.9"/>
             <text y="5" text-anchor="middle" font-family="ui-monospace, monospace" font-size="12.5" letter-spacing="1" fill="#FFD56B" font-weight="700">{{follower_num_${i}}}</text>

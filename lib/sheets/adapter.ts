@@ -231,7 +231,11 @@ async function getQualifiers(
   range: string
 ): Promise<{ leaders: ResultEntry[]; followers: ResultEntry[] }> {
   const cols = DEFAULT_QUALIFIER_COLUMNS;
-  const { values } = await getSheetRange(spreadsheetId, range);
+  // 통과자 시트 + 참가자 사진 맵 병렬 조회 (결승과 동일한 폴백 전략)
+  const [{ values }, photoMap] = await Promise.all([
+    getSheetRange(spreadsheetId, range),
+    getParticipantPhotoMap(spreadsheetId),
+  ]);
   const rows = QUALIFIER_HAS_HEADER ? values.slice(1) : values;
 
   const leaders: ResultEntry[] = [];
@@ -242,10 +246,14 @@ async function getQualifiers(
     const role = cell(row, cols.role);
     if (!num || !name || !role) continue;
 
+    // 1순위: 통과 시트 B열 사진 → 2순위: 3.참가자 시트 사진 → 3순위: 빈 문자열
+    const photo =
+      normalizePhotoUrl(cell(row, cols.photo)) || photoMap.get(num) || '';
+
     if (role === QUALIFIER_ROLE_LEADER) {
-      leaders.push({ idx: leaders.length + 1, name, num });
+      leaders.push({ idx: leaders.length + 1, name, num, photo });
     } else if (role === QUALIFIER_ROLE_FOLLOWER) {
-      followers.push({ idx: followers.length + 1, name, num });
+      followers.push({ idx: followers.length + 1, name, num, photo });
     }
   }
   return { leaders, followers };

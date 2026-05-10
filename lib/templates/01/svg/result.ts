@@ -6,13 +6,14 @@ export function resultListSvg(count: number): string {
   if (count <= 3) {
     cfg = { namesPerRow: 3, hexSize: 56, spacingX: 168, rowH: 0, nameSize: 22, startY: 410 };
   } else if (count <= 6) {
-    cfg = { namesPerRow: 3, hexSize: 42, spacingX: 124, rowH: 144, nameSize: 17, startY: 350 };
+    cfg = { namesPerRow: 3, hexSize: 42, spacingX: 134, rowH: 150, nameSize: 17, startY: 348 };
   } else {
-    cfg = { namesPerRow: 5, hexSize: 30, spacingX: 76, rowH: 116, nameSize: 14, startY: 320 };
+    // 예선 10명 case — 좌우 여백 ~40px 확보, 인접 이름과도 균형 잡힌 spacing.
+    cfg = { namesPerRow: 5, hexSize: 30, spacingX: 110, rowH: 124, nameSize: 14, startY: 316 };
   }
   const totalRows = Math.ceil(count / cfg.namesPerRow);
-  const leaderCx = count <= 6 ? 320 : 280;
-  const followerCx = count <= 6 ? 960 : 1000;
+  const leaderCx = count <= 6 ? 320 : 290;
+  const followerCx = count <= 6 ? 960 : 990;
 
   let leaderHexes = '';
   let followerHexes = '';
@@ -24,8 +25,8 @@ export function resultListSvg(count: number): string {
     const x = rowOffsetX + colInRow * cfg.spacingX;
     const y = cfg.startY + row * cfg.rowH;
     const delay = i * 0.12;
-    leaderHexes += hexagonFrame(leaderCx + x, y, `{{result_leader_${i}}}`, cfg.hexSize, delay, cfg.nameSize, `{{result_leader_num_${i}}}`);
-    followerHexes += hexagonFrame(followerCx + x, y, `{{result_follower_${i}}}`, cfg.hexSize, delay + 0.04, cfg.nameSize, `{{result_follower_num_${i}}}`);
+    leaderHexes += hexagonFrame(leaderCx + x, y, `{{result_leader_${i}}}`, cfg.hexSize, delay, cfg.nameSize, `{{result_leader_num_${i}}}`, `{{result_leader_photo_${i}}}`);
+    followerHexes += hexagonFrame(followerCx + x, y, `{{result_follower_${i}}}`, cfg.hexSize, delay + 0.04, cfg.nameSize, `{{result_follower_num_${i}}}`, `{{result_follower_photo_${i}}}`);
   }
 
   const trophyY = totalRows === 1 ? cfg.startY : cfg.startY + ((totalRows - 1) * cfg.rowH) / 2;

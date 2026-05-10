@@ -133,6 +133,7 @@ export const PAIRING_HAS_HEADER = true;
 // A 참가# | B 사진 | C 팀명/참가자명 | D 대표자명 | E 장르 | F 부문 | G 연령대 | H 소속 | I 역할 | J ☑통과
 export interface QualifierSheetColumns {
   num: number;          // A: 참가번호
+  photo: number;        // B: 사진 URL (비어있으면 3.참가자 시트로 폴백)
   teamName: number;     // C: 팀명/참가자명
   representative: number; // D: 대표자
   role: number;         // I: "리더" / "팔로워"
@@ -141,6 +142,7 @@ export interface QualifierSheetColumns {
 
 export const DEFAULT_QUALIFIER_COLUMNS: QualifierSheetColumns = {
   num: 0,
+  photo: 1,
   teamName: 2,
   representative: 3,
   role: 8,
