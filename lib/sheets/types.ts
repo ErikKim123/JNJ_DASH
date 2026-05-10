@@ -92,6 +92,8 @@ export interface ResultEntry {
   idx: number;
   name: string;
   num: string;
+  /** 참가자 사진 URL — 시트 사진 컬럼에서 읽음. 비어있으면 빈 문자열. */
+  photo?: string;
 }
 
 export interface ResultData {

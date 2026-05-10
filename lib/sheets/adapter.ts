@@ -16,6 +16,8 @@ import {
   QUALIFIER_ROLE_FOLLOWER,
   DEFAULT_FINAL_RESULT_COLUMNS,
   FINAL_RESULT_HAS_HEADER,
+  DEFAULT_PARTICIPANT_COLUMNS,
+  PARTICIPANT_HAS_HEADER,
   pairingLocator,
   resultLocator,
   SHEET_LOCATORS,
@@ -49,6 +51,43 @@ function cell(row: string[] | undefined, idx: number, fallback = ''): string {
 function safeInt(v: string, fallback = 0): number {
   const n = Number.parseInt(v, 10);
   return Number.isFinite(n) ? n : fallback;
+}
+
+/**
+ * 사진 URL 정규화. 운영팀이 다양한 형식으로 붙여넣어도 외부 사이트에서 임베드 가능한 URL로 변환.
+ *  - 빈 문자열은 그대로 빈 문자열 반환
+ *  - =IMAGE("url") 수식 텍스트가 들어와도 인용부호 안의 URL만 추출
+ *  - Google Drive 공유 링크(/file/d/ID/view, ?id=ID, uc?id=ID) → lh3.googleusercontent.com/d/ID
+ *    ↑ uc?export=view 는 CORP 헤더(same-site)로 외부 임베드 차단 — googleusercontent CDN이 유일하게 hotlinking 허용
+ *  - 그 외 일반 URL은 그대로 반환
+ */
+function normalizePhotoUrl(raw: string): string {
+  if (!raw) return '';
+  let v = raw.trim();
+  if (!v) return '';
+
+  // =IMAGE("url", ...) 수식이 텍스트로 보이는 경우 (gviz가 수식 원본을 반환할 때)
+  const imageFormulaMatch = v.match(/^=IMAGE\(\s*["']([^"']+)["']/i);
+  if (imageFormulaMatch) v = imageFormulaMatch[1];
+
+  // Google Drive 다양한 공유 형식 → lh3.googleusercontent.com CDN URL 로 변환
+  // 예: https://drive.google.com/file/d/FILE_ID/view?usp=sharing
+  // 예: https://drive.google.com/open?id=FILE_ID
+  // 예: https://drive.google.com/uc?id=FILE_ID 또는 ?export=view&id=FILE_ID
+  // 예: https://drive.google.com/thumbnail?id=FILE_ID
+  if (v.includes('drive.google.com')) {
+    const fileIdMatch =
+      v.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) ?? v.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (fileIdMatch) {
+      return `https://lh3.googleusercontent.com/d/${fileIdMatch[1]}`;
+    }
+  }
+
+  // 절대 URL이 아니면 빈 문자열로 — 파일명/잘못된 텍스트가 들어와도 깨진 이미지 placeholder 회피.
+  // 허용: http://, https://, data:image
+  if (!/^(https?:\/\/|data:image\/)/i.test(v)) return '';
+
+  return v;
 }
 
 // ─── Contest list ───────────────────────────────────────────────────────────
@@ -213,15 +252,46 @@ async function getQualifiers(
 }
 
 /**
+ * 3.참가자 시트에서 참가번호 → 사진 URL 맵을 빌드.
+ * 시트 사진 컬럼이 비어있거나 셀 안에 박힌 이미지(gviz로 못 읽음)이면 빈 문자열로 폴백.
+ * 시트 조회 실패 시 빈 맵 반환 (사진 없이 결과는 정상 표출되도록).
+ */
+async function getParticipantPhotoMap(spreadsheetId: string): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  try {
+    const range = locatorToRange(SHEET_LOCATORS.participants);
+    const { values } = await getSheetRange(spreadsheetId, range);
+    const cols = DEFAULT_PARTICIPANT_COLUMNS;
+    const rows = PARTICIPANT_HAS_HEADER ? values.slice(1) : values;
+    for (const row of rows) {
+      const num = cell(row, cols.num);
+      const photo = normalizePhotoUrl(cell(row, cols.photo));
+      if (!num) continue;
+      // 헤더 행이 데이터 영역에 또 있을 수도 있어, 숫자 형식이 아니면 스킵
+      if (!/^\d+$/.test(num)) continue;
+      if (photo) map.set(num, photo);
+    }
+  } catch {
+    // 참가자 시트 없거나 권한 문제 — 사진 없이 진행
+  }
+  return map;
+}
+
+/**
  * 결승 시트 → 리더/팔로워 1~3등 추출
  * K열(finalRank) 값 예: "리더 1", "리더 2", "팔로워 1"
+ * 사진 URL은 6.결승 B열에 직접 들어있으면 그것을 쓰고, 비어있으면 3.참가자 시트의 같은 참가번호 사진으로 폴백.
  */
 async function getFinalResults(
   spreadsheetId: string,
   range: string
 ): Promise<{ leaders: ResultEntry[]; followers: ResultEntry[] }> {
   const cols = DEFAULT_FINAL_RESULT_COLUMNS;
-  const { values } = await getSheetRange(spreadsheetId, range);
+  // 결승 시트 + 참가자 사진 맵 병렬 조회
+  const [{ values }, photoMap] = await Promise.all([
+    getSheetRange(spreadsheetId, range),
+    getParticipantPhotoMap(spreadsheetId),
+  ]);
   const rows = FINAL_RESULT_HAS_HEADER ? values.slice(1) : values;
 
   const leaders: ResultEntry[] = [];
@@ -232,6 +302,9 @@ async function getFinalResults(
   for (const row of rows) {
     const num = cell(row, cols.num);
     const name = cell(row, cols.teamName);
+    // 1순위: 6.결승 B열의 사진 URL → 2순위: 3.참가자 시트의 사진 URL → 3순위: 빈 문자열
+    const photo =
+      normalizePhotoUrl(cell(row, cols.photo)) || photoMap.get(num) || '';
     const finalRank = cell(row, cols.finalRank);
     if (!finalRank || !num || !name) continue;
 
@@ -240,12 +313,12 @@ async function getFinalResults(
     if (lm) {
       const rank = Number.parseInt(lm[1], 10);
       if (rank >= 1 && rank <= 3 && !leaders.find((x) => x.idx === rank)) {
-        leaders.push({ idx: rank, name, num });
+        leaders.push({ idx: rank, name, num, photo });
       }
     } else if (fm) {
       const rank = Number.parseInt(fm[1], 10);
       if (rank >= 1 && rank <= 3 && !followers.find((x) => x.idx === rank)) {
-        followers.push({ idx: rank, name, num });
+        followers.push({ idx: rank, name, num, photo });
       }
     }
   }

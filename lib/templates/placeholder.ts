@@ -42,8 +42,10 @@ function fillResultEntries(
     const foll = followers.find((x) => x.idx === i);
     out[`${prefix}_leader_${i}`] = lead?.name ?? '';
     out[`${prefix}_leader_num_${i}`] = lead?.num ?? '';
+    out[`${prefix}_leader_photo_${i}`] = lead?.photo ?? '';
     out[`${prefix}_follower_${i}`] = foll?.name ?? '';
     out[`${prefix}_follower_num_${i}`] = foll?.num ?? '';
+    out[`${prefix}_follower_photo_${i}`] = foll?.photo ?? '';
   }
 }
 

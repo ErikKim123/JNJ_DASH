@@ -182,6 +182,9 @@ export function sunburstTop(cx = 640, cy = 110, scale = 1): string {
   `;
 }
 
+// 같은 SVG 안에서 여러 hexagonFrame이 호출될 때 clipPath id가 충돌하지 않도록 고유 카운터.
+let hexClipCounter = 0;
+
 export function hexagonFrame(
   cx: number,
   cy: number,
@@ -189,7 +192,8 @@ export function hexagonFrame(
   size = 38,
   animDelay = 0,
   nameFontSize = 18,
-  numKey: string | null = null
+  numKey: string | null = null,
+  photoKey: string | null = null
 ): string {
   const outer: string[] = [];
   const inner: string[] = [];
@@ -204,10 +208,29 @@ export function hexagonFrame(
   const numTextEl = numKey
     ? `<text x="${cx}" y="${numY.toFixed(1)}" text-anchor="middle" font-family="ui-monospace, monospace" font-size="${numFontSize.toFixed(1)}" letter-spacing="2" fill="#9C7C2C" font-weight="500">${numKey}</text>`
     : '';
+
+  // 사진: photoKey가 주어지면 hex 폴리곤으로 clip한 <image> 삽입.
+  // placeholder가 빈 문자열로 치환되면 href=""가 되는데, 이 경우 브라우저는 아무것도 렌더하지 않음(broken icon 회피).
+  let photoEl = '';
+  if (photoKey) {
+    const clipId = `hxclip-${++hexClipCounter}`;
+    const ix = cx - size;
+    const iy = cy - size;
+    const iw = size * 2;
+    const ih = size * 2;
+    photoEl = `
+      <defs>
+        <clipPath id="${clipId}"><polygon points="${outer.join(' ')}"/></clipPath>
+      </defs>
+      <image href="${photoKey}" x="${ix.toFixed(1)}" y="${iy.toFixed(1)}" width="${iw.toFixed(1)}" height="${ih.toFixed(1)}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${clipId})"/>
+    `;
+  }
+
   return `
     <g opacity="0">
       <animate attributeName="opacity" values="0;1" dur="0.6s" begin="${animDelay.toFixed(2)}s" fill="freeze"/>
       <polygon points="${outer.join(' ')}" fill="url(#hxg)" stroke="url(#goldg)" stroke-width="1.6"/>
+      ${photoEl}
       <polygon points="${inner.join(' ')}" fill="none" stroke="#D4AF37" stroke-width="0.5" opacity="0.55"/>
       <text x="${cx}" y="${nameY.toFixed(1)}" text-anchor="middle" font-family="'Gulim', '굴림', sans-serif" font-size="${nameFontSize}" letter-spacing="2" fill="#FFEBA0" font-weight="700">${nameKey}</text>
       ${numTextEl}

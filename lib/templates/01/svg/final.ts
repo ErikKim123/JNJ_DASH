@@ -158,30 +158,67 @@ export function finalResultSvg(): string {
         <text x="0" y="378" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" letter-spacing="6" fill="#D4AF37">${sideLabel}</text>
         <line x1="-110" y1="392" x2="110" y2="392" stroke="url(#goldgh)" stroke-width="0.5"/>
 
-        <g transform="translate(0 432)">
-          <g fill="url(#goldg)">
-            <animate attributeName="opacity" values="0.85;1;0.85" dur="2.6s" repeatCount="indefinite"/>
-            <path d="M -28 8 L -28 -8 L -14 8 L 0 -18 L 14 8 L 28 -8 L 28 8 Z"/>
-            <rect x="-30" y="8" width="60" height="5"/>
-            <circle cx="-28" cy="-12" r="2.5"/>
-            <circle cx="0" cy="-22" r="3"/>
-            <circle cx="28" cy="-12" r="2.5"/>
-          </g>
+        <g class="jnj-reveal" data-reveal-id="${side}-2">
+          ${hexagonFrame(-105, 502, `{{${prefix}_2}}`, 36, dly + 0.45, 16, `{{${prefix}_num_2}}`, `{{${prefix}_photo_2}}`)}
+          <text x="-105" y="600" text-anchor="middle" font-family="ui-monospace, monospace" font-size="10" letter-spacing="5" fill="#C0C0C8">2ND</text>
         </g>
 
-        ${hexagonFrame(-105, 502, `{{${prefix}_2}}`, 36, dly + 0.45, 16, `{{${prefix}_num_2}}`)}
-        <text x="-105" y="600" text-anchor="middle" font-family="ui-monospace, monospace" font-size="10" letter-spacing="5" fill="#C0C0C8">2ND</text>
+        <g class="jnj-reveal" data-reveal-id="${side}-1">
+          <g transform="translate(0 432)">
+            <g fill="url(#goldg)">
+              <animate attributeName="opacity" values="0.85;1;0.85" dur="2.6s" repeatCount="indefinite"/>
+              <path d="M -28 8 L -28 -8 L -14 8 L 0 -18 L 14 8 L 28 -8 L 28 8 Z"/>
+              <rect x="-30" y="8" width="60" height="5"/>
+              <circle cx="-28" cy="-12" r="2.5"/>
+              <circle cx="0" cy="-22" r="3"/>
+              <circle cx="28" cy="-12" r="2.5"/>
+            </g>
+          </g>
+          ${hexagonFrame(0, 502, `{{${prefix}_1}}`, 52, dly + 0.2, 20, `{{${prefix}_num_1}}`, `{{${prefix}_photo_1}}`)}
+          <text x="0" y="624" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" letter-spacing="6" fill="#FFD56B">CHAMPION · 1ST</text>
+        </g>
 
-        ${hexagonFrame(0, 502, `{{${prefix}_1}}`, 52, dly + 0.2, 20, `{{${prefix}_num_1}}`)}
-        <text x="0" y="624" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" letter-spacing="6" fill="#FFD56B">CHAMPION · 1ST</text>
-
-        ${hexagonFrame(105, 502, `{{${prefix}_3}}`, 36, dly + 0.65, 16, `{{${prefix}_num_3}}`)}
-        <text x="105" y="600" text-anchor="middle" font-family="ui-monospace, monospace" font-size="10" letter-spacing="5" fill="#B07050">3RD</text>
+        <g class="jnj-reveal" data-reveal-id="${side}-3">
+          ${hexagonFrame(105, 502, `{{${prefix}_3}}`, 36, dly + 0.65, 16, `{{${prefix}_num_3}}`, `{{${prefix}_photo_3}}`)}
+          <text x="105" y="600" text-anchor="middle" font-family="ui-monospace, monospace" font-size="10" letter-spacing="5" fill="#B07050">3RD</text>
+        </g>
       </g>
     `;
   };
 
   return shell(`
+    <style>
+      .jnj-reveal {
+        opacity: 0;
+        transform-box: fill-box;
+        transform-origin: center;
+      }
+      /* 이미 발표된 항목 — 정적 가시 상태(애니메이션 없음) */
+      .jnj-reveal.revealed {
+        opacity: 1;
+      }
+      /* 방금 클릭으로 새로 발표된 항목만 keyframe 애니메이션 재생 */
+      .jnj-reveal.reveal-anim {
+        will-change: transform, opacity, filter;
+        animation: jnj-reveal-pop 1250ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+                   jnj-reveal-glow 1400ms ease-out forwards;
+      }
+      @keyframes jnj-reveal-pop {
+        0%   { opacity: 0; transform: translateY(110px) scale(0.35) rotate(-16deg); }
+        25%  { opacity: 1; transform: translateY(-26px)  scale(1.24) rotate(6deg); }
+        45%  {              transform: translateY(10px)   scale(0.92) rotate(-3deg); }
+        62%  {              transform: translateY(-6px)   scale(1.06) rotate(2deg); }
+        80%  {              transform: translateY(2px)    scale(0.985) rotate(-0.6deg); }
+        100% { opacity: 1; transform: translateY(0)      scale(1)    rotate(0deg); }
+      }
+      @keyframes jnj-reveal-glow {
+        0%   { filter: brightness(2.6) drop-shadow(0 0 0 rgba(255,213,107,0)); }
+        25%  { filter: brightness(2.0) drop-shadow(0 0 42px rgba(255,213,107,0.95)); }
+        55%  { filter: brightness(1.35) drop-shadow(0 0 22px rgba(255,213,107,0.55)); }
+        100% { filter: brightness(1)   drop-shadow(0 0 0 rgba(255,213,107,0)); }
+      }
+    </style>
+
     ${heroHeader()}
 
     <text x="640" y="296" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-weight="bold" font-size="54" letter-spacing="12" fill="url(#goldg)">{{result_title}}</text>

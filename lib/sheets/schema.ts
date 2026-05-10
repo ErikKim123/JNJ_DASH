@@ -84,7 +84,24 @@ export const SHEET_LOCATORS = {
   semiResult: { tabName: '5.본선통과' },
   finalResult: { tabName: '6.결승' },
   contestInfo: { gid: '1162828405', tabName: '1.대회정보' },
+  /** 참가자 명단(3.참가자) — 사진 URL의 단일 출처. 참가번호로 조회. */
+  participants: { tabName: '3.참가자' },
 } as const satisfies Record<string, SheetLocator>;
+
+// 참가자 명단 시트 (3.참가자)
+// A 참가번호 | C 팀명/참가자명 | D 대표자 | E 인원수 | ... | O 사진(텍스트 URL)
+// 사진 컬럼은 운영팀 시트 개편으로 B → O 이동(2026-05).
+export interface ParticipantSheetColumns {
+  num: number;    // A
+  photo: number;  // O
+}
+
+export const DEFAULT_PARTICIPANT_COLUMNS: ParticipantSheetColumns = {
+  num: 0,
+  photo: 14,
+};
+
+export const PARTICIPANT_HAS_HEADER = true;
 
 // Pairing 시트 컬럼 (실제 시트 구조에 맞춤)
 // A: 페어 번호 | B: 리더 참가번호 | C: 리더 팀명 | D: 리더 대표자
@@ -140,12 +157,14 @@ export const QUALIFIER_ROLE_FOLLOWER = '팔로워';
 // K열 값 예: "리더 1", "리더 2", "팔로워 1" — 정규식으로 분류 + 순위 추출
 export interface FinalResultSheetColumns {
   num: number;        // A
+  photo: number;      // B
   teamName: number;   // C
   finalRank: number;  // K
 }
 
 export const DEFAULT_FINAL_RESULT_COLUMNS: FinalResultSheetColumns = {
   num: 0,
+  photo: 1,
   teamName: 2,
   finalRank: 10,
 };

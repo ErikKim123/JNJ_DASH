@@ -36,7 +36,6 @@
  대회 003 원본시트 : https://docs.google.com/spreadsheets/d/1cqFFHZfFn6ZEFeHZRvHXHhtOdBeinNLRGQ5TNeMtFG8/edit?gid=1162828405#gid=1162828405
                    
 
- 구글시프레드 시트로 업무를 정리함. 이 시트를 중심으로 화면을 구성하면됨
  예선 Pairing은 3.1예선랜덤시트에서 자료를 가져와서 표출  , 예선 Result는 4.예선통과시트에서 자료를 가져와서 표출
  본선 Pairing은 4.1예선랜덤시트에서 자료를 가져와서 표출  , 본선 Result는 5.본선통과시트에서 자료를 가져와서 표출
  결승 Result(6.결승시트에서 자료를 가져와서 표출)
