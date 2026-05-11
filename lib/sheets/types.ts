@@ -2,18 +2,51 @@
 // SVG 문자열의 {{key}}와 매칭됨. 변경 시 SVG 함수의 placeholder 키도 동기화 필요.
 
 export type RoundKey = 'prelim' | 'semi' | 'final';
-export type StepKey = 'prep' | 'pairing' | 'open' | 'live' | 'wrapup' | 'close' | 'result';
+export type StepKey =
+  | 'prep'
+  | 'pairing'
+  | 'pairingB'
+  | 'pairingC'
+  | 'open'
+  | 'live'
+  | 'wrapup'
+  | 'close'
+  | 'result'
+  | 'ceremony';
 
 export const ROUND_KEYS = ['prelim', 'semi', 'final'] as const;
-export const STEP_KEYS = ['prep', 'pairing', 'open', 'live', 'wrapup', 'close', 'result'] as const;
+export const STEP_KEYS = [
+  'prep',
+  'pairing',
+  'pairingB',
+  'pairingC',
+  'open',
+  'live',
+  'wrapup',
+  'close',
+  'result',
+  'ceremony',
+] as const;
 
-// 라운드별 프로세스 (3 라운드 모두 7 steps 동일):
-//   Prep → Pairing → Open → Live → Calculate Total → Close → Result
+// 라운드별 프로세스:
+//   prelim: Prep → Pairing A → Pairing B → Pairing C → Open → Live → Calculate Total → Close → Result
+//     (예선은 최대 60페어까지 A/B/C 각 20씩 분할 표출)
+//   semi/final: Prep → Pairing → Open → Live → Calculate Total → Close → Result
 // 결승 Pairing은 자동 매핑 없음 — 사람이 직접 매칭하고 'PAIRING' 화면만 표출.
 export const STEPS_BY_ROUND: Record<RoundKey, ReadonlyArray<StepKey>> = {
-  prelim: ['prep', 'pairing', 'open', 'live', 'wrapup', 'close', 'result'],
+  prelim: [
+    'prep',
+    'pairing',
+    'pairingB',
+    'pairingC',
+    'open',
+    'live',
+    'wrapup',
+    'close',
+    'result',
+  ],
   semi: ['prep', 'pairing', 'open', 'live', 'wrapup', 'close', 'result'],
-  final: ['prep', 'pairing', 'open', 'live', 'wrapup', 'close', 'result'],
+  final: ['prep', 'pairing', 'open', 'live', 'wrapup', 'close', 'result', 'ceremony'],
 };
 
 export interface ContestSummary {
@@ -105,6 +138,33 @@ export interface ResultData {
   leaders: ResultEntry[];
   followers: ResultEntry[];
   tagline: string;
+  /**
+   * 운영자 알림용 — 시트의 자동 통과 인원이 설정한 인원(maxPerRole)을 초과한 경우.
+   * 동점자 처리를 운영자가 수동으로 결정해야 함을 알림.
+   *   maxPerRole: 1.대회정보 시트에 설정된 통과 정원
+   *   leaderTotal/followerTotal: 시트에서 실제 TRUE인 총 인원수
+   *   leaderOverflow/followerOverflow: 정원 초과분 (>0이면 동점자 검토 필요)
+   */
+  overflow?: {
+    maxPerRole: number;
+    leaderTotal: number;
+    followerTotal: number;
+    leaderOverflow: number;
+    followerOverflow: number;
+  };
+}
+
+// Ceremony: 결승 시상식 — Result와 같은 데이터(1·2·3등 리더/팔로워)지만
+// 화면 디자인이 다름(중앙 1위 + 좌·우 2·3위, 색종이 효과).
+export interface CeremonyData {
+  festival_header: string;
+  ceremony_title: string;
+  ceremony_subtitle: string;
+  label_leader: string;
+  label_follower: string;
+  leaders: ResultEntry[];
+  followers: ResultEntry[];
+  tagline: string;
 }
 
 export type StepDataPayload =
@@ -114,7 +174,8 @@ export type StepDataPayload =
   | { kind: 'live'; data: LiveData }
   | { kind: 'wrapup'; data: WrapupData }
   | { kind: 'close'; data: CloseData }
-  | { kind: 'result'; data: ResultData };
+  | { kind: 'result'; data: ResultData }
+  | { kind: 'ceremony'; data: CeremonyData };
 
 export interface ContestMeta {
   contestId: string;

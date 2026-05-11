@@ -14,6 +14,7 @@ import { MiniNav } from './MiniNav';
 import { LiveIndicator } from './LiveIndicator';
 import { EmptyState } from './EmptyState';
 import { FullscreenToggle } from './FullscreenToggle';
+import { OverflowAlert } from './OverflowAlert';
 
 function parseRound(v: string | null): RoundKey {
   if (v && (ROUND_KEYS as readonly string[]).includes(v)) return v as RoundKey;
@@ -68,7 +69,16 @@ export function DashboardShell({ meta, templateId }: { meta: ContestMeta; templa
     step,
   });
 
-  const stepLabel = useMemo(() => `${meta.rounds[round].label} · ${step.toUpperCase()}`, [meta, round, step]);
+  const stepLabel = useMemo(() => {
+    const steps = meta.rounds[round].steps;
+    const hasMultiPair = steps.includes('pairingB') || steps.includes('pairingC');
+    let pretty: string;
+    if (step === 'pairingC') pretty = 'PAIRING C';
+    else if (step === 'pairingB') pretty = 'PAIRING B';
+    else if (step === 'pairing' && hasMultiPair) pretty = 'PAIRING A';
+    else pretty = step.toUpperCase();
+    return `${meta.rounds[round].label} · ${pretty}`;
+  }, [meta, round, step]);
 
   // 키보드 단축키: 1/2/3 = 라운드, ←/→ = 스텝, F = 풀스크린 토글, Esc는 FullscreenToggle에서 처리
   useEffect(() => {
@@ -167,17 +177,15 @@ export function DashboardShell({ meta, templateId }: { meta: ContestMeta; templa
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {step === 'pairing' && round !== 'final' ? (
-            <button
-              type="button"
-              onClick={() => refresh()}
-              disabled={loading}
-              title="시트에서 페어링 데이터를 다시 가져와 표시. 시트를 박제한 직후 또는 새 페어링이 확정되었을 때 클릭"
-              className="px-3 py-1.5 rounded border border-accent2 bg-panel text-xs font-mono tracking-widest text-accent hover:bg-accent2 hover:text-bg transition-colors disabled:opacity-40"
-            >
-              {loading ? 'LOADING…' : '↻ 조회'}
-            </button>
-          ) : null}
+          <button
+            type="button"
+            onClick={() => refresh()}
+            disabled={loading}
+            title="시트에서 데이터를 다시 가져와 화면을 갱신. 시트가 변경된 직후 사용."
+            className="px-3 py-1.5 rounded border border-accent2 bg-panel text-xs font-mono tracking-widest text-accent hover:bg-accent2 hover:text-bg transition-colors disabled:opacity-40"
+          >
+            {loading ? 'LOADING…' : '↻ 조회'}
+          </button>
           {step === 'live' ? <LiveIndicator loading={loading} lastUpdated={lastUpdated} /> : null}
           <FullscreenToggle active={fullscreen} onToggle={() => setFullscreen(true)} />
         </div>
@@ -186,6 +194,9 @@ export function DashboardShell({ meta, templateId }: { meta: ContestMeta; templa
       <div className="space-y-3 mb-5">
         <RoundNav meta={meta} current={round} onSelect={onRoundSelect} />
         <StepNav meta={meta} round={round} currentStep={step} onSelect={onStepSelect} />
+        {result?.payload.kind === 'result' && result.payload.data.overflow ? (
+          <OverflowAlert overflow={result.payload.data.overflow} />
+        ) : null}
       </div>
 
       <section

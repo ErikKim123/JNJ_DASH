@@ -1,20 +1,27 @@
-// Design Ref: §11.1 #6 — Pairing 스크린 (20/10/5 페어 변형)
+// Design Ref: §11.1 #6 — Pairing 스크린 (예선 ≤25 / 본선 10 / 폴백 5)
 // 페어 수에 따라 레이아웃이 달라지므로 변형별 함수 분리
 import { shell, topHeader, citiesFooter } from './common';
 
-// 20 pairs (예선) — 2 columns × 10 rows
-export function pairingSvg20(): string {
-  const rowsPerCol = 10;
-  const rowH = 42;
+// 예선 — 2 columns × ceil(count/2) rows. 최대 25페어 지원.
+// 중앙 PAIR 번호 배지는 제거(좌우 번호 배지로 충분), 행 높이는 페어 수에 맞춰 자동 축소.
+export function pairingSvg20(pairCount: number = 20): string {
+  const count = Math.max(11, Math.min(25, pairCount));
+  const firstColEnd = Math.ceil(count / 2);
+  const rowsPerCol = firstColEnd;
   const startY = 232;
-  // 컬럼 중심을 바깥으로 살짝 이동(320→300, 960→980)해 번호 배지 ↔ 이름 사이 여유 확보.
+  const availableHeight = 428;
+  const rowH = Math.min(42, Math.floor(availableHeight / Math.max(1, rowsPerCol - 1)));
+  // 컬럼 중심을 안쪽으로 이동해(좌 300→340, 우 980→940) 화면 좌우 여백 확보.
+  // 번호 배지(NUM_OFFSET 256)는 긴 이름(8자 한글/영문)과 겹치지 않도록 원래 거리 유지.
+  // 결과: 좌 cx=340, 배지 좌측 끝 x=58 → 화면 왼쪽 58px 여백. 우측 동일.
   const cols = [
-    { cx: 300, start: 1, end: 10 },
-    { cx: 980, start: 11, end: 20 },
+    { cx: 340, start: 1, end: firstColEnd },
+    { cx: 940, start: firstColEnd + 1, end: count },
   ];
   const NUM_OFFSET = 256;
   const NAME_OFFSET = 100;
   const NAME_SIZE = 20;
+  const stripeH = Math.max(28, rowH - 2);
 
   let body = '';
   for (const col of cols) {
@@ -24,7 +31,7 @@ export function pairingSvg20(): string {
       const delay = (rowIdx * 0.05).toFixed(2);
       const isStripe = rowIdx % 2 === 1;
       const stripe = isStripe
-        ? `<rect x="${col.cx - 290}" y="${y - 20}" width="580" height="40" rx="4" fill="#0F2C20" opacity="0.55"/>`
+        ? `<rect x="${col.cx - 260}" y="${y - stripeH / 2}" width="520" height="${stripeH}" rx="4" fill="#0F2C20" opacity="0.55"/>`
         : '';
       body += `
         ${stripe}
@@ -36,11 +43,6 @@ export function pairingSvg20(): string {
             <text y="5" text-anchor="middle" font-family="ui-monospace, monospace" font-size="12.5" letter-spacing="1" fill="#FFD56B" font-weight="700">{{leader_num_${i}}}</text>
           </g>
           <text x="-${NAME_OFFSET}" y="7" text-anchor="end" font-family="'Gulim', '굴림', sans-serif" font-size="${NAME_SIZE}" font-weight="700" fill="#FFEBA0">{{leader_${i}}}</text>
-          <line x1="-58" y1="0" x2="-22" y2="0" stroke="#9C7C2C" stroke-width="0.7" opacity="0.7"/>
-          <circle r="17" fill="none" stroke="url(#goldg)" stroke-width="1.4"/>
-          <circle r="11" fill="url(#goldg)" opacity="0.22"/>
-          <text y="6" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-size="15" font-weight="700" fill="#FFD56B">${i.toString().padStart(2, '0')}</text>
-          <line x1="22" y1="0" x2="58" y2="0" stroke="#9C7C2C" stroke-width="0.7" opacity="0.7"/>
           <text x="${NAME_OFFSET}" y="7" text-anchor="start" font-family="'Gulim', '굴림', sans-serif" font-size="${NAME_SIZE}" font-weight="700" fill="#FFEBA0">{{follower_${i}}}</text>
           <g transform="translate(${NUM_OFFSET} 0)">
             <rect x="-26" y="-13" width="52" height="26" rx="13" fill="url(#goldg)" opacity="0.2"/>
@@ -60,7 +62,6 @@ export function pairingSvg20(): string {
     .map((col) => `
       <g transform="translate(${col.cx} 200)">
         <text x="-100" y="0" text-anchor="end" font-family="ui-monospace, monospace" font-size="10" letter-spacing="4" fill="#D4AF37">{{label_leader}}</text>
-        <text x="0" y="0" text-anchor="middle" font-family="ui-monospace, monospace" font-size="10" letter-spacing="4" fill="#9A98A8">PAIR</text>
         <text x="100" y="0" text-anchor="start" font-family="ui-monospace, monospace" font-size="10" letter-spacing="4" fill="#D4AF37">{{label_follower}}</text>
         <line x1="-200" y1="14" x2="200" y2="14" stroke="url(#goldgh)" stroke-width="0.5" opacity="0.6"/>
       </g>
@@ -104,13 +105,6 @@ export function pairingSvg10(): string {
           <text y="6" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" letter-spacing="1" fill="#FFD56B" font-weight="700">{{leader_num_${i}}}</text>
         </g>
         <text x="340" y="10" text-anchor="end" font-family="'Gulim', '굴림', sans-serif" font-size="28" font-weight="700" fill="#FFEBA0">{{leader_${i}}}</text>
-        <g transform="translate(640 0)">
-          <line x1="-186" y1="0" x2="-26" y2="0" stroke="#9C7C2C" stroke-width="0.8" opacity="0.7"/>
-          <circle r="22" fill="none" stroke="url(#goldg)" stroke-width="1.6"/>
-          <circle r="14" fill="url(#goldg)" opacity="0.22"/>
-          <text y="8" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-size="20" font-weight="700" fill="#FFD56B">${i.toString().padStart(2, '0')}</text>
-          <line x1="26" y1="0" x2="186" y2="0" stroke="#9C7C2C" stroke-width="0.8" opacity="0.7"/>
-        </g>
         <text x="940" y="10" text-anchor="start" font-family="'Gulim', '굴림', sans-serif" font-size="28" font-weight="700" fill="#FFEBA0">{{follower_${i}}}</text>
         <g transform="translate(1140 0)">
           <rect x="-32" y="-15" width="64" height="30" rx="15" fill="url(#goldg)" opacity="0.22"/>
@@ -134,7 +128,6 @@ export function pairingSvg10(): string {
 
     <g transform="translate(0 206)">
       <text x="340" y="0" text-anchor="end" font-family="ui-monospace, monospace" font-size="11" letter-spacing="5" fill="#D4AF37">{{label_leader}}</text>
-      <text x="640" y="0" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" letter-spacing="5" fill="#9A98A8">PAIR</text>
       <text x="940" y="0" text-anchor="start" font-family="ui-monospace, monospace" font-size="11" letter-spacing="5" fill="#D4AF37">{{label_follower}}</text>
       <line x1="120" y1="14" x2="540" y2="14" stroke="url(#goldgh)" stroke-width="0.5" opacity="0.6"/>
       <line x1="740" y1="14" x2="1160" y2="14" stroke="url(#goldgh)" stroke-width="0.5" opacity="0.6"/>
@@ -191,11 +184,11 @@ export function pairingSvg5(): string {
 
 /**
  * 페어 수에 따라 적절한 변형 선택. 디자인 1번 기준:
- *   prelim = 20 pairs, semi = 10 pairs.
- *   그 외(예: 12) — 가장 가까운 변형으로 폴백 (≥11 → 20, 6~10 → 10, ≤5 → 5)
+ *   prelim = 11~25 pairs, semi = 10 pairs.
+ *   그 외(예: 12) — 가장 가까운 변형으로 폴백 (≥11 → 예선 2열, 6~10 → 10, ≤5 → 5)
  */
 export function pickPairingSvg(pairCount: number): string {
-  if (pairCount >= 11) return pairingSvg20();
+  if (pairCount >= 11) return pairingSvg20(pairCount);
   if (pairCount >= 6) return pairingSvg10();
   return pairingSvg5();
 }

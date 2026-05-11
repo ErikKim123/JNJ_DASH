@@ -12,6 +12,7 @@ import { wrapupSvg } from './svg/wrapup';
 import { closeSvg } from './svg/close';
 import { resultListSvg } from './svg/result';
 import { finalPrepSvg, finalWrapupSvg, finalResultSvg, finalPairingSvg } from './svg/final';
+import { ceremonySvg } from './svg/ceremony';
 
 // step 파라미터는 디버그/로깅 용도로만 유지 (선택)
 function selectSvg(round: RoundKey, _step: StepKey, data: StepDataPayload): string {
@@ -24,6 +25,8 @@ function selectSvg(round: RoundKey, _step: StepKey, data: StepDataPayload): stri
         return finalWrapupSvg();
       case 'result':
         return finalResultSvg();
+      case 'ceremony':
+        return ceremonySvg();
       case 'pairing':
         return finalPairingSvg(); // 폴백 (라우트 레벨 차단됨)
       case 'open':
@@ -56,6 +59,9 @@ function selectSvg(round: RoundKey, _step: StepKey, data: StepDataPayload): stri
       );
       return resultListSvg(count);
     }
+    case 'ceremony':
+      // 비결승 라운드에서는 일반적으로 도달 불가 (라우트 차단) — 안전한 폴백.
+      return ceremonySvg();
   }
 }
 

@@ -21,7 +21,7 @@
 각 라운드에서 참가자를 평가 : 예선랜덤 / 예선결과 / 본선랜덤 / 본선결과 / 결승결과 에 결과를 큰 화면에 표출
 
 
-예선업무프로세스 : Prep->Pairing(3.1예선랜덤시트)->Open->Live->Calculate Total->Close->Result(4.예선통과시트)
+예선업무프로세스 : Prep->Pairing A (3.1예선랜덤시트)->Pairing B (3.1예선랜덤시트)->Pairing C (3.1예선랜덤시트)->Open->Live->Calculate Total->Close->Result(4.예선통과시트)
 본선업무프로세스 : Prep->Pairing(4.1본선랜덤시트)->Open->Live->Calculate Total->Close->Result(5.본선통과시트)
 결승업무프로세스 : Prep->Pairing(참조없고 'Pairing' 표출-사람직접 매칭함 자동없음)->Open->Live->Calculate Total->Result(6.결승시트)
 

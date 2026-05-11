@@ -37,6 +37,7 @@ import type {
   RoundKey,
   StepKey,
   StepDataPayload,
+  CeremonyData,
 } from './types';
 import { STEPS_BY_ROUND } from './types';
 
@@ -109,6 +110,36 @@ async function getContestDesignTemplateNumber(spreadsheetId: string): Promise<nu
     return 1;
   } catch {
     return 1;
+  }
+}
+
+/**
+ * 대회별 1.대회정보 시트에서 라운드별 통과 인원(역할별) 조회.
+ *   - "예선 통과 인원 (역할별)" → prelim Result 화면의 리더/팔로워 각각 표시 수
+ *   - "본선 통과 인원 (역할별)" → semi Result 화면의 리더/팔로워 각각 표시 수
+ * A열에 라벨, B열에 숫자. 라벨 매칭은 "예선 통과 인원" / "본선 통과 인원" 포함 여부로 느슨하게 비교.
+ * 누락/오류 시 기본값(prelim=10, semi=5) 폴백.
+ */
+async function getQualifiedCount(
+  spreadsheetId: string,
+  round: RoundKey
+): Promise<number> {
+  const fallback = round === 'prelim' ? 10 : round === 'semi' ? 5 : 3;
+  if (round === 'final') return 3; // 결승은 1·2·3등 고정
+  const keyword = round === 'prelim' ? '예선 통과 인원' : '본선 통과 인원';
+  try {
+    const range = locatorToRange(SHEET_LOCATORS.contestInfo);
+    const { values } = await getSheetRange(spreadsheetId, range);
+    for (const row of values) {
+      const label = String(cell(row, 0) ?? '').trim();
+      if (label.indexOf(keyword) >= 0) {
+        const n = safeInt(cell(row, 1), fallback);
+        return n > 0 ? n : fallback;
+      }
+    }
+    return fallback;
+  } catch {
+    return fallback;
   }
 }
 
@@ -192,6 +223,11 @@ export async function getContestMeta(contestId: string): Promise<ContestMeta | n
 
 // ─── Pairing ────────────────────────────────────────────────────────────────
 
+// 한쪽 인원이 비어 있을 때 채울 헬퍼 표기.
+// (운영 측에서 리더/팔로워 수가 불일치할 때 자동으로 빈 자리를 채워 화면 깨짐 방지)
+const HELPER_NAME = '헬퍼유저';
+const HELPER_NUM = '—';
+
 async function getPairs(
   spreadsheetId: string,
   range: string,
@@ -206,12 +242,14 @@ async function getPairs(
     const leader = cell(row, DEFAULT_PAIRING_COLUMNS.leaderName);
     const follower = cell(row, DEFAULT_PAIRING_COLUMNS.followerName);
     if (!leader && !follower) continue;
+    const leaderNum = cell(row, DEFAULT_PAIRING_COLUMNS.leaderNum);
+    const followerNum = cell(row, DEFAULT_PAIRING_COLUMNS.followerNum);
     pairs.push({
       idx,
-      leader,
-      leaderNum: cell(row, DEFAULT_PAIRING_COLUMNS.leaderNum),
-      follower,
-      followerNum: cell(row, DEFAULT_PAIRING_COLUMNS.followerNum),
+      leader: leader || HELPER_NAME,
+      leaderNum: leader ? leaderNum : HELPER_NUM,
+      follower: follower || HELPER_NAME,
+      followerNum: follower ? followerNum : HELPER_NUM,
     });
   }
   return pairs;
@@ -453,7 +491,7 @@ export async function getStepData(params: GetStepDataParams): Promise<StepDataPa
   const { festivalHeader, tagline } = meta;
   const roundLabel = ROUND_LABELS[round];
 
-  if (step === 'pairing') {
+  if (step === 'pairing' || step === 'pairingB' || step === 'pairingC') {
     // 결승: 자동 매핑 없음 — 사람이 직접 매칭, 'PAIRING' 화면만 표출 (설명.txt §결승업무프로세스)
     if (round === 'final') {
       return {
@@ -465,7 +503,8 @@ export async function getStepData(params: GetStepDataParams): Promise<StepDataPa
           label_leader: 'LEADER',
           label_follower: 'FOLLOWER',
           pairs: [],
-          tagline: tagline || '✦ Manual Matching · Grand Final ✦',
+          // 페어링 화면은 태그라인 비표시
+          tagline: '',
         },
       };
     }
@@ -480,6 +519,7 @@ export async function getStepData(params: GetStepDataParams): Promise<StepDataPa
     // 시트의 RAND() 자동 재계산(매분/F5)으로 값이 계속 바뀌므로 스냅샷 락 사용.
     //   refresh=false (기본): 스냅샷이 있으면 그것을 사용, 없으면 시트에서 fetch 후 저장
     //   refresh=true: 스냅샷 폐기 → 시트에서 즉시 fetch → 새 스냅샷 저장 (사용자 명시 갱신)
+    // A/B는 동일 시트·동일 스냅샷을 공유 — A=1~20, B=21~ 슬라이스만 다름.
     let pairs: Pair[];
     if (refresh) {
       await clearPairingSnapshot(contestId, round);
@@ -495,14 +535,35 @@ export async function getStepData(params: GetStepDataParams): Promise<StepDataPa
       }
     }
 
+    // 예선 A/B/C 3분할 — 각 페이지 최대 20페어, 총 60커플 지원.
+    //   A: idx 1~20, B: idx 21~40, C: idx 41~60
+    // B/C는 placeholder 매칭을 위해 idx를 1부터 재인덱싱.
+    const PAGE_SIZE = 20;
+    const pageLetter = step === 'pairingC' ? 'C' : step === 'pairingB' ? 'B' : 'A';
+    const pageNumber = pageLetter === 'C' ? 3 : pageLetter === 'B' ? 2 : 1;
+    const sortedPairs = [...pairs].sort((a, b) => a.idx - b.idx);
+    let pagedPairs: Pair[];
+    if (round === 'prelim') {
+      const lo = (pageNumber - 1) * PAGE_SIZE + 1; // 1 / 21 / 41
+      const hi = pageNumber * PAGE_SIZE; // 20 / 40 / 60
+      pagedPairs = sortedPairs
+        .filter((p) => p.idx >= lo && p.idx <= hi)
+        .map((p, i) => ({ ...p, idx: i + 1 }));
+    } else {
+      // semi/final은 단일 페어링 페이지 — 슬라이스 없이 전체 사용
+      pagedPairs = sortedPairs;
+    }
+
+    const pageSuffix = round === 'prelim' ? ` · ${pageLetter}` : '';
     const data: PairingData = {
       festival_header: festivalHeader,
-      stage_label: `${roundLabel.toUpperCase()} ROUND`,
+      stage_label: `${roundLabel.toUpperCase()} ROUND${pageSuffix}`,
       round_title: 'RANDOM PAIRING',
       label_leader: 'LEADER',
       label_follower: 'FOLLOWER',
-      pairs,
-      tagline: tagline || `✦ Random Draw · ${roundLabel} Pairing ✦`,
+      pairs: pagedPairs,
+      // 페어링 화면은 태그라인 비표시 (디자인 요구 — 가운데 PAIR 배지 제거와 함께 통일)
+      tagline: '',
     };
     return { kind: 'pairing', data };
   }
@@ -516,10 +577,26 @@ export async function getStepData(params: GetStepDataParams): Promise<StepDataPa
         : await getQualifiers(spreadsheetId, range);
 
     // 디자인 템플릿이 처리할 수 있는 최대치로 캡.
-    // 예선: 10/10 (총 20명) · 본선: 5/5 (총 10명) · 결승: 3/3 (총 6명)
-    const maxPerRole: number = round === 'prelim' ? 10 : round === 'semi' ? 5 : 3;
+    // 통과 인원은 1.대회정보 시트의 "예선/본선 통과 인원 (역할별)" 값 사용 (운영팀 입력).
+    // 결승은 1·2·3등 고정.
+    const maxPerRole: number =
+      round === 'final' ? 3 : await getQualifiedCount(spreadsheetId, round);
     const leaders = raw.leaders.slice(0, maxPerRole);
     const followers = raw.followers.slice(0, maxPerRole);
+    // 동점자로 시트의 자동 통과(TRUE)가 정원을 초과한 경우 운영자에게 알림.
+    // 결승은 1·2·3등 고정이라 overflow 무의미.
+    const leaderOverflow = Math.max(0, raw.leaders.length - maxPerRole);
+    const followerOverflow = Math.max(0, raw.followers.length - maxPerRole);
+    const overflow =
+      round !== 'final' && (leaderOverflow > 0 || followerOverflow > 0)
+        ? {
+            maxPerRole,
+            leaderTotal: raw.leaders.length,
+            followerTotal: raw.followers.length,
+            leaderOverflow,
+            followerOverflow,
+          }
+        : undefined;
     // 디자인 의도 (이미지 2번):
     //   final = CHAMPIONS / JEJU YYYY · GRAND FINAL / Bachata Jack & Jill ... 태그라인
     //   prelim = QUALIFIED / ADVANCING TO SEMI-FINAL
@@ -533,15 +610,18 @@ export async function getStepData(params: GetStepDataParams): Promise<StepDataPa
     if (round === 'final') {
       resultTitle = 'CHAMPIONS';
       resultSubtitle = `JEJU ${year} · GRAND FINAL`;
-      resultTagline = `✦ Bachata Jack & Jill · Pro Division · Champions of Jeju ${year} ✦`;
+      // 결승 Result 태그라인 비표시 (디자인 요구)
+      resultTagline = '';
     } else if (round === 'prelim') {
       resultTitle = 'QUALIFIED';
       resultSubtitle = 'ADVANCING TO SEMI-FINAL';
-      resultTagline = '✦ See you at the Semi-Final ✦';
+      // 예선 Result 태그라인 비표시 (디자인 요구)
+      resultTagline = '';
     } else {
       resultTitle = 'FINALISTS';
       resultSubtitle = 'ADVANCING TO GRAND FINAL';
-      resultTagline = '✦ See you at the Grand Final ✦';
+      // 본선 Result 태그라인 비표시 (디자인 요구)
+      resultTagline = '';
     }
 
     const data: ResultData = {
@@ -553,12 +633,35 @@ export async function getStepData(params: GetStepDataParams): Promise<StepDataPa
       leaders,
       followers,
       tagline: tagline || resultTagline,
+      overflow,
     };
     return { kind: 'result', data };
   }
 
+  // Ceremony — 결승 시상식 화면. Result와 같은 데이터(1·2·3등) 사용하되 다른 SVG로 렌더.
+  if (step === 'ceremony') {
+    if (round !== 'final') throw new StepNotAvailableError(round, step);
+    const locator = resultLocator(round);
+    const range = locatorToRange(locator);
+    const raw = await getFinalResults(spreadsheetId, range);
+    const leaders = raw.leaders.slice(0, 3);
+    const followers = raw.followers.slice(0, 3);
+    const data: CeremonyData = {
+      festival_header: festivalHeader,
+      ceremony_title: 'CHAMPIONS',
+      // 부제목 비표시 (디자인 요구)
+      ceremony_subtitle: '',
+      label_leader: 'LEADER',
+      label_follower: 'FOLLOWER',
+      leaders,
+      followers,
+      tagline: '',
+    };
+    return { kind: 'ceremony', data };
+  }
+
   // Static steps — 시트 데이터 없이 라벨만 사용
-  const totalCount = round === 'prelim' ? 20 : round === 'semi' ? 10 : 3;
+  const totalCount = round === 'prelim' ? 60 : round === 'semi' ? 10 : 3;
   switch (step) {
     case 'prep':
       return staticPrep(roundLabel, totalCount, festivalHeader, tagline);

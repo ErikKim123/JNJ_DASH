@@ -3,6 +3,7 @@ import type {
   StepDataPayload,
   PairingData,
   ResultData,
+  CeremonyData,
   Pair,
   ResultEntry,
 } from '@/lib/sheets/types';
@@ -82,6 +83,16 @@ export function flattenStepData(payload: StepDataPayload): Record<string, string
       fillResultEntries(out, 'result', leaders, followers, max);
       // 결승 result는 항상 top 3
       fillResultEntries(out, 'champ', leaders, followers, 3);
+      break;
+    }
+    case 'ceremony': {
+      const ceremony = payload.data as CeremonyData;
+      const leaders = ceremony.leaders ?? [];
+      const followers = ceremony.followers ?? [];
+      // Ceremony는 항상 top 3 (1·2·3등)
+      fillResultEntries(out, 'champ', leaders, followers, 3);
+      // 결승 result 화면과 placeholder 키 공유 가능하도록 result_ prefix도 채움
+      fillResultEntries(out, 'result', leaders, followers, 3);
       break;
     }
     default:

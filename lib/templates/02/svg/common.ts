@@ -175,11 +175,12 @@ export function hexagonFrame(
     outer.push(`${(cx + Math.cos(a) * size).toFixed(1)},${(cy + Math.sin(a) * size).toFixed(1)}`);
     inner.push(`${(cx + Math.cos(a) * (size - 6)).toFixed(1)},${(cy + Math.sin(a) * (size - 6)).toFixed(1)}`);
   }
-  const nameY = cy + size + nameFontSize + 6;
-  const numFontSize = Math.max(9, nameFontSize * 0.55);
-  const numY = nameY + nameFontSize * 0.85;
+  // 순서: 헥사곤 → 번호 → 이름 (번호 먼저, 이름이 아래)
+  const numFontSize = Math.max(11, nameFontSize * 0.8);
+  const numY = cy + size + numFontSize + 4;
+  const nameY = numY + nameFontSize + 2;
   const numTextEl = numKey
-    ? `<text x="${cx}" y="${numY.toFixed(1)}" text-anchor="middle" font-family="ui-monospace, monospace" font-size="${numFontSize.toFixed(1)}" letter-spacing="2" fill="#9C7C2C" font-weight="500">${numKey}</text>`
+    ? `<text x="${cx}" y="${numY.toFixed(1)}" text-anchor="middle" font-family="ui-monospace, monospace" font-size="${numFontSize.toFixed(1)}" letter-spacing="2" fill="#FFFFFF" font-weight="600">${numKey}</text>`
     : '';
 
   let photoEl = '';

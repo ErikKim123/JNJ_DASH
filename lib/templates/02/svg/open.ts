@@ -25,11 +25,11 @@ export function openSvg(): string {
     </g>
 
     <g transform="translate(640 360)">
-      <circle r="86" fill="#0F2C20" stroke="url(#goldg)" stroke-width="2"/>
-      <circle r="78" fill="none" stroke="#D4AF37" stroke-width="0.6" opacity="0.6"/>
-      <text y="-12" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="13" letter-spacing="5" fill="#FFD56B">NOW</text>
-      <text y="18" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-weight="bold" font-size="34" letter-spacing="10" fill="#FFEBA0">OPEN</text>
-      <text y="44" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="11" letter-spacing="3" fill="#D4AF37" opacity="0.8">the journey begins</text>
+      <circle r="96" fill="#0F2C20" stroke="url(#goldg)" stroke-width="2"/>
+      <circle r="88" fill="none" stroke="#D4AF37" stroke-width="0.6" opacity="0.6"/>
+      <text y="-26" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="13" letter-spacing="5" fill="#FFD56B">NOW</text>
+      <text y="10" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-weight="bold" font-size="34" letter-spacing="10" fill="#FFEBA0">OPEN</text>
+      <text y="42" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="10" letter-spacing="1.5" fill="#D4AF37" opacity="0.85">the journey begins</text>
     </g>
 
     <text x="640" y="190" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-weight="bold" font-size="58" letter-spacing="10" fill="url(#goldg)">{{round_title}}</text>

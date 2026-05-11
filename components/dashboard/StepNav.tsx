@@ -6,12 +6,26 @@ import type { ContestMeta, RoundKey, StepKey } from '@/lib/sheets/types';
 const STEP_LABEL: Record<StepKey, string> = {
   prep: 'PREP',
   pairing: 'PAIRING',
+  pairingB: 'PAIRING B',
+  pairingC: 'PAIRING C',
   open: 'OPEN',
   live: 'LIVE',
   wrapup: 'CALC TOTAL',
   close: 'CLOSE',
   result: 'RESULT',
+  ceremony: 'CEREMONY',
 };
+
+// pairingB/C가 같은 라운드에 있으면 첫 pairing을 'PAIRING A'로 표기.
+function labelFor(step: StepKey, steps: ReadonlyArray<StepKey>): string {
+  if (
+    step === 'pairing' &&
+    (steps.includes('pairingB') || steps.includes('pairingC'))
+  ) {
+    return 'PAIRING A';
+  }
+  return STEP_LABEL[step];
+}
 
 export function StepNav({
   meta,
@@ -48,7 +62,7 @@ export function StepNav({
                   : 'text-ink2 hover:bg-bg2 hover:text-ink'
               }`}
             >
-              {STEP_LABEL[step]}
+              {labelFor(step, steps)}
             </button>
           </div>
         );

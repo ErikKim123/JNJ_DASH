@@ -7,12 +7,26 @@ const ROUND_ORDER: RoundKey[] = ['prelim', 'semi', 'final'];
 const STEP_LABEL: Record<StepKey, string> = {
   prep: 'PREP',
   pairing: 'PAIR',
+  pairingB: 'PAIR-B',
+  pairingC: 'PAIR-C',
   open: 'OPEN',
   live: 'LIVE',
   wrapup: 'CALC',
   close: 'CLOSE',
   result: 'RES',
+  ceremony: 'CER',
 };
+
+// 같은 라운드에 pairingB/C가 있으면 'pairing'은 'PAIR-A'로 명시.
+function labelFor(s: StepKey, steps: ReadonlyArray<StepKey>): string {
+  if (
+    s === 'pairing' &&
+    (steps.includes('pairingB') || steps.includes('pairingC'))
+  ) {
+    return 'PAIR-A';
+  }
+  return STEP_LABEL[s];
+}
 
 export function MiniNav({
   meta,
@@ -62,7 +76,7 @@ export function MiniNav({
                 : 'text-ink2 hover:text-ink'
             }`}
           >
-            {STEP_LABEL[s]}
+            {labelFor(s, steps)}
           </button>
         ))}
       </div>

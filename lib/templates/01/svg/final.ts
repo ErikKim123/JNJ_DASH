@@ -201,7 +201,7 @@ export function finalResultSvg(): string {
       .jnj-reveal.reveal-anim {
         will-change: transform, opacity, filter;
         animation: jnj-reveal-pop 1250ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
-                   jnj-reveal-glow 1400ms ease-out forwards;
+                   jnj-reveal-glow 1800ms ease-out forwards;
       }
       @keyframes jnj-reveal-pop {
         0%   { opacity: 0; transform: translateY(110px) scale(0.35) rotate(-16deg); }
@@ -211,11 +211,24 @@ export function finalResultSvg(): string {
         80%  {              transform: translateY(2px)    scale(0.985) rotate(-0.6deg); }
         100% { opacity: 1; transform: translateY(0)      scale(1)    rotate(0deg); }
       }
+      /* 강화된 글로우 — 흰 코어 + 골드 헤일로 이중 레이어 + 채도 부스트 */
       @keyframes jnj-reveal-glow {
-        0%   { filter: brightness(2.6) drop-shadow(0 0 0 rgba(255,213,107,0)); }
-        25%  { filter: brightness(2.0) drop-shadow(0 0 42px rgba(255,213,107,0.95)); }
-        55%  { filter: brightness(1.35) drop-shadow(0 0 22px rgba(255,213,107,0.55)); }
-        100% { filter: brightness(1)   drop-shadow(0 0 0 rgba(255,213,107,0)); }
+        0%   { filter: brightness(4) saturate(2.2) contrast(1.15)
+                       drop-shadow(0 0 0 rgba(255,255,255,0))
+                       drop-shadow(0 0 0 rgba(255,213,107,0)); }
+        12%  { filter: brightness(3.4) saturate(2.0) contrast(1.15)
+                       drop-shadow(0 0 28px rgba(255,255,255,1))
+                       drop-shadow(0 0 80px rgba(255,213,107,1)); }
+        28%  { filter: brightness(2.6) saturate(1.7) contrast(1.1)
+                       drop-shadow(0 0 50px rgba(255,255,255,0.85))
+                       drop-shadow(0 0 110px rgba(255,213,107,0.95)); }
+        50%  { filter: brightness(1.7) saturate(1.3) contrast(1.05)
+                       drop-shadow(0 0 30px rgba(255,255,255,0.45))
+                       drop-shadow(0 0 70px rgba(255,213,107,0.7)); }
+        75%  { filter: brightness(1.25) saturate(1.1) contrast(1)
+                       drop-shadow(0 0 14px rgba(255,213,107,0.4)); }
+        100% { filter: brightness(1) saturate(1) contrast(1)
+                       drop-shadow(0 0 0 rgba(255,213,107,0)); }
       }
     </style>
 
