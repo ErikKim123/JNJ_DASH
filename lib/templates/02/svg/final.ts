@@ -155,8 +155,8 @@ export function finalResultSvg(): string {
     const dly = side === 'L' ? 0 : 0.08;
     return `
       <g transform="translate(${xCenter} 0)">
-        <text x="0" y="378" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" letter-spacing="6" fill="#D4AF37">${sideLabel}</text>
-        <line x1="-110" y1="392" x2="110" y2="392" stroke="url(#goldgh)" stroke-width="0.5"/>
+        <text x="0" y="378" text-anchor="middle" font-family="ui-monospace, monospace" font-size="22" font-weight="600" letter-spacing="8" fill="#D4AF37">${sideLabel}</text>
+        <line x1="-130" y1="396" x2="130" y2="396" stroke="url(#goldgh)" stroke-width="0.6"/>
 
         <g class="jnj-reveal" data-reveal-id="${side}-2">
           ${hexagonFrame(-105, 502, `{{${prefix}_2}}`, 36, dly + 0.45, 16, `{{${prefix}_num_2}}`, `{{${prefix}_photo_2}}`)}
