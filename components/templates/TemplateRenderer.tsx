@@ -44,18 +44,35 @@ export function TemplateRenderer({ templateId, round, step, data, fit = 'width' 
   );
 
   const isFinalResult = round === 'final' && step === 'result';
+  const isCeremony = round === 'final' && step === 'ceremony';
   const wrapRef = useRef<HTMLDivElement>(null);
   // 발표된 ID 집합 — monotonic
   const [revealed, setRevealed] = useState<Set<RevealId>>(() => new Set());
   // 이미 keyframe 애니메이션이 트리거된 ID — 다시 추가하지 않음(재재생 방지)
   const animatedRef = useRef<Set<RevealId>>(new Set());
   const totalReveal = FINAL_REVEAL_ORDER.length;
+  // Ceremony 벚꽃 토글 상태
+  const [sakuraActive, setSakuraActive] = useState(false);
 
   // 결승 Result 진입/이탈 시 reveal 상태 + 애니메이션 기록 초기화
   useEffect(() => {
     setRevealed(new Set());
     animatedRef.current = new Set();
   }, [isFinalResult, round, step]);
+
+  // Ceremony 진입/이탈 시 벚꽃 토글 초기화
+  useEffect(() => {
+    setSakuraActive(false);
+  }, [isCeremony, round, step]);
+
+  // Ceremony — .jnj-sakura 클래스에 active 토글 적용
+  useLayoutEffect(() => {
+    if (!isCeremony || !wrapRef.current) return;
+    const el = wrapRef.current.querySelector<SVGGElement>('.jnj-sakura');
+    if (!el) return;
+    if (sakuraActive) el.classList.add('active');
+    else el.classList.remove('active');
+  }, [sakuraActive, isCeremony, svg]);
 
   // SVG/reveal 변화 시 [data-reveal-id] 요소에 클래스 + 인라인 style 적용.
   // useLayoutEffect로 paint 직전 동기 적용 → 한 프레임의 깜빡임도 방지.
@@ -111,8 +128,14 @@ export function TemplateRenderer({ templateId, round, step, data, fit = 'width' 
   }, [isFinalResult]);
 
   const handleClick = () => {
-    if (!isFinalResult) return;
-    advanceReveal();
+    if (isFinalResult) {
+      advanceReveal();
+      return;
+    }
+    if (isCeremony) {
+      setSakuraActive((v) => !v);
+      return;
+    }
   };
 
   const revealCount = revealed.size;
@@ -128,7 +151,13 @@ export function TemplateRenderer({ templateId, round, step, data, fit = 'width' 
       <div
         className="relative w-full h-full"
         onClick={handleClick}
-        style={isFinalResult ? { cursor: revealCount < totalReveal ? 'pointer' : 'default' } : undefined}
+        style={
+          isFinalResult
+            ? { cursor: revealCount < totalReveal ? 'pointer' : 'default' }
+            : isCeremony
+              ? { cursor: 'pointer' }
+              : undefined
+        }
       >
         <SvgHost ref={wrapRef} svg={svg} />
         {hint ? (

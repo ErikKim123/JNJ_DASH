@@ -1,6 +1,7 @@
 // Design Ref: §11.1 — Ceremony 스크린 (결승 시상식)
 // 레이아웃: 상단 중앙 1위 (리더 + 팔로워), 하단 좌 2위, 하단 우 3위.
-// 벚꽃(sakura) 애니메이션: 화면 클릭 시 트리거 → 상단에서 천천히 흩날리며 떨어짐.
+// 벚꽃(sakura) 토글: TemplateRenderer가 .jnj-sakura에 .active 클래스를 토글해 보임/숨김.
+//                    SMIL은 페이지 로드부터 계속 돌고, opacity로 가시성 제어.
 import { shell, topHeader, hexagonFrame, citiesFooter } from './common';
 
 // 결정적 의사난수 — 매 빌드마다 동일한 결과(스냅샷 안정성).
@@ -8,9 +9,6 @@ function seeded(i: number): number {
   const x = Math.sin(i * 9301 + 49297) * 233280;
   return x - Math.floor(x);
 }
-
-// SMIL 클릭 트리거 이름 — Ceremony SVG 안의 투명 트리거 rect id
-const TRIGGER_ID = 'ceremony-stage';
 
 // 벚꽃 잎 색상 팔레트 (분홍·흰 톤)
 const SAKURA_COLORS = [
@@ -50,16 +48,17 @@ function sakuraFall(): string {
     const rotDir = i % 2 === 0 ? 1 : -1; // 짝수/홀수로 회전 방향 교대
     const color = SAKURA_COLORS[i % SAKURA_COLORS.length];
     const swayAmp = 60 + Math.floor(seeded(i + 700) * 20); // 60~80 (변동 좁힘)
-    const beginExpr = `${TRIGGER_ID}.click+${delay}s`;
+    // SMIL은 페이지 로드부터 계속 돌고, 부모 그룹 opacity로 가시성 토글.
+    const beginExpr = `${delay}s`;
     html += `
       <g transform="translate(${x.toFixed(1)} -20)">
         <animateTransform attributeName="transform" type="translate"
           values="${x.toFixed(1)} -20; ${(x + swayAmp).toFixed(1)} 180; ${(x - swayAmp).toFixed(1)} 400; ${(x + swayAmp * 0.5).toFixed(1)} 600; ${x.toFixed(1)} 760"
-          dur="${DUR}s" begin="${beginExpr}" restart="always" repeatCount="indefinite"/>
+          dur="${DUR}s" begin="${beginExpr}" repeatCount="indefinite"/>
         <path d="${petalPath(size)}" fill="${color}" stroke="#F472B6" stroke-width="0.3" opacity="0">
           <animateTransform attributeName="transform" type="rotate"
-            from="${rot}" to="${rot + 360 * rotDir}" dur="${ROT_DUR}s" begin="${beginExpr}" restart="always" repeatCount="indefinite"/>
-          <animate attributeName="opacity" values="0;0.95;0.95;0" keyTimes="0;0.06;0.92;1" dur="${DUR}s" begin="${beginExpr}" restart="always" repeatCount="indefinite"/>
+            from="${rot}" to="${rot + 360 * rotDir}" dur="${ROT_DUR}s" begin="${beginExpr}" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0;0.95;0.95;0" keyTimes="0;0.06;0.92;1" dur="${DUR}s" begin="${beginExpr}" repeatCount="indefinite"/>
         </path>
       </g>`;
   }
@@ -71,7 +70,7 @@ function sakuraFall(): string {
  *   1위: 상단 중앙 (y=290)
  *   2위: 하단 좌 (y=510)
  *   3위: 하단 우 (y=510)
- * 화면 클릭 시 색종이가 떨어짐(SMIL 이벤트 트리거).
+ * 화면 클릭 시 벚꽃이 떨어짐(SMIL 이벤트 트리거).
  */
 export function ceremonySvg(): string {
   // 1·2·3위 헥사곤 사진 크기 — 기존 70/56에서 15% 확대
@@ -112,6 +111,18 @@ export function ceremonySvg(): string {
   const follower3 = hexagonFrame(thirdFollowerX, secondY, `{{champ_follower_3}}`, HEX_RUNNER, 0.6, NAME_RUNNER, `{{champ_follower_num_3}}`, `{{champ_follower_photo_3}}`);
 
   return shell(`
+    <style>
+      /* 벚꽃 토글 — display로 SMIL을 실제로 중지/재개. */
+      /* OFF (기본): display:none → 애니메이션 일시정지, 잎 사라짐 (떨어지지 않음) */
+      /* ON (.active): display:inline → 잎이 다시 떨어지기 시작 */
+      .jnj-sakura {
+        display: none;
+      }
+      .jnj-sakura.active {
+        display: inline;
+      }
+    </style>
+
     ${topHeader()}
 
     <text x="640" y="146" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-weight="bold" font-size="46" letter-spacing="12" fill="url(#goldg)">{{ceremony_title}}</text>
@@ -129,11 +140,8 @@ export function ceremonySvg(): string {
     ${leader3}
     ${follower3}
 
-    <!-- 벚꽃 — 클릭 트리거로만 작동, 평소엔 보이지 않음 -->
-    <g pointer-events="none">${sakuraFall()}</g>
-
-    <!-- 투명 클릭 트리거 — 화면 전체 영역, 클릭 시 색종이 낙하 -->
-    <rect id="${TRIGGER_ID}" x="0" y="0" width="1280" height="720" fill="#000000" fill-opacity="0" pointer-events="all" style="cursor:pointer"/>
+    <!-- 벚꽃 — SMIL은 계속 돌지만 .jnj-sakura의 opacity로 가시성 토글 -->
+    <g class="jnj-sakura" pointer-events="none">${sakuraFall()}</g>
 
     ${citiesFooter()}
   `);

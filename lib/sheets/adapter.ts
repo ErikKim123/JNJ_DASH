@@ -375,7 +375,7 @@ async function getFinalResults(
 
 // ─── Static (non-data) steps ───────────────────────────────────────────────
 
-function staticPrep(roundLabel: string, totalCount: number, festivalHeader: string, tagline: string): StepDataPayload {
+function staticPrep(roundLabel: string, _totalCount: number, festivalHeader: string, tagline: string): StepDataPayload {
   return {
     kind: 'prep',
     data: {
@@ -383,7 +383,8 @@ function staticPrep(roundLabel: string, totalCount: number, festivalHeader: stri
       stage_label: `${roundLabel.toUpperCase()} ROUND`,
       round_title: 'PREPARING',
       round_subtitle: 'Get ready · take your places',
-      participants: `${totalCount} LEADERS  ·  ${totalCount} FOLLOWERS`,
+      // 참가자 수 표기 비표시 (디자인 요구)
+      participants: '',
       tagline,
     },
   };

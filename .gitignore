@@ -29,3 +29,7 @@ DashDisignTemplates/02/
 
 # Claude Code 로컬 설정
 .claude/
+
+# Playwright 스크린샷(scripts/capture-steps.mjs) 출력 — 로컬에서만 사용
+screenshots/
+screenshots.zip
