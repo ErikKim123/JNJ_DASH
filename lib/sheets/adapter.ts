@@ -870,26 +870,36 @@ export async function getStepData(params: GetStepDataParams): Promise<StepDataPa
       }
     }
 
-    // 예선 A/B/C 3분할 — 각 페이지 최대 20페어, 총 60커플 지원.
-    //   A: idx 1~20, B: idx 21~40, C: idx 41~60
-    // B/C는 placeholder 매칭을 위해 idx를 1부터 재인덱싱.
-    const PAGE_SIZE = 20;
+    // 페어 분할 — 라운드별 페이지 사이즈와 분할 수가 다름:
+    //   예선: A/B/C 3분할, 각 페이지 최대 20페어, 총 60커플 지원
+    //     A: idx 1~20, B: idx 21~40, C: idx 41~60
+    //   본선: A/B 2분할, 전체 페어를 절반씩 (홀수면 A에 1개 더)
+    //     A: idx 1~ceil(N/2), B: idx ceil(N/2)+1~N
+    //   결승: 분할 없음 (위에서 처리)
+    // 모든 페이지는 placeholder 매칭을 위해 idx를 1부터 재인덱싱.
     const pageLetter = step === 'pairingC' ? 'C' : step === 'pairingB' ? 'B' : 'A';
-    const pageNumber = pageLetter === 'C' ? 3 : pageLetter === 'B' ? 2 : 1;
     const sortedPairs = [...pairs].sort((a, b) => a.idx - b.idx);
     let pagedPairs: Pair[];
     if (round === 'prelim') {
-      const lo = (pageNumber - 1) * PAGE_SIZE + 1; // 1 / 21 / 41
-      const hi = pageNumber * PAGE_SIZE; // 20 / 40 / 60
+      const PAGE_SIZE = 20;
+      const pageNumber = pageLetter === 'C' ? 3 : pageLetter === 'B' ? 2 : 1;
+      const lo = (pageNumber - 1) * PAGE_SIZE + 1;
+      const hi = pageNumber * PAGE_SIZE;
       pagedPairs = sortedPairs
         .filter((p) => p.idx >= lo && p.idx <= hi)
         .map((p, i) => ({ ...p, idx: i + 1 }));
+    } else if (round === 'semi') {
+      // 본선 2분할 — 절반 기준은 ceil(N/2). 페어 0개여도 안전.
+      const half = Math.ceil(sortedPairs.length / 2);
+      const slice = pageLetter === 'B' ? sortedPairs.slice(half) : sortedPairs.slice(0, half);
+      pagedPairs = slice.map((p, i) => ({ ...p, idx: i + 1 }));
     } else {
-      // semi/final은 단일 페어링 페이지 — 슬라이스 없이 전체 사용
+      // final은 위에서 이미 빈 페어로 반환됨 — 도달 불가지만 안전망.
       pagedPairs = sortedPairs;
     }
 
-    const pageSuffix = round === 'prelim' ? ` · ${pageLetter}` : '';
+    // 라벨 suffix — 분할이 있는 라운드만 ` · A` 또는 ` · B`/`· C` 표기.
+    const pageSuffix = round === 'prelim' || round === 'semi' ? ` · ${pageLetter}` : '';
     const data: PairingData = {
       festival_header: festivalHeader,
       stage_label: `${roundLabel.toUpperCase()} ROUND${pageSuffix}`,

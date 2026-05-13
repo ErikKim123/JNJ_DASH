@@ -82,6 +82,7 @@ export function DashboardShell({
   });
 
   // 메타(참가자 수/등수/점수)를 강제 갱신. ?refresh=1 → 서버 LRU 캐시 무효화 후 시트 재조회.
+  // API 봉투 포맷: { data: ContestMeta, error: null } | { data: null, error: string }
   const refreshMeta = useCallback(async () => {
     setMetaRefreshing(true);
     try {
@@ -89,8 +90,8 @@ export function DashboardShell({
         cache: 'no-store',
       });
       if (!res.ok) return;
-      const json = (await res.json()) as { ok: boolean; data?: ContestMeta };
-      if (json.ok && json.data) setMeta(json.data);
+      const json = (await res.json()) as { data: ContestMeta | null; error: string | null };
+      if (!json.error && json.data) setMeta(json.data);
     } catch {
       // best-effort: 실패해도 기존 메타 그대로 유지
     } finally {

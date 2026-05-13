@@ -31,7 +31,9 @@ export const STEP_KEYS = [
 // 라운드별 프로세스:
 //   prelim: Prep → Pairing A → Pairing B → Pairing C → Open → Live → Calculate Total → Close → Result
 //     (예선은 최대 60페어까지 A/B/C 각 20씩 분할 표출)
-//   semi/final: Prep → Pairing → Open → Live → Calculate Total → Close → Result
+//   semi: Prep → Pairing A → Pairing B → Open → Live → Calculate Total → Close → Result
+//     (본선은 페어 전체를 절반씩 A/B로 분할 표출)
+//   final: Prep → Pairing → Open → Live → Calculate Total → Close → Result → Ceremony
 // 결승 Pairing은 자동 매핑 없음 — 사람이 직접 매칭하고 'PAIRING' 화면만 표출.
 export const STEPS_BY_ROUND: Record<RoundKey, ReadonlyArray<StepKey>> = {
   prelim: [
@@ -45,7 +47,7 @@ export const STEPS_BY_ROUND: Record<RoundKey, ReadonlyArray<StepKey>> = {
     'close',
     'result',
   ],
-  semi: ['prep', 'pairing', 'open', 'live', 'wrapup', 'close', 'result'],
+  semi: ['prep', 'pairing', 'pairingB', 'open', 'live', 'wrapup', 'close', 'result'],
   final: ['prep', 'pairing', 'open', 'live', 'wrapup', 'close', 'result', 'ceremony'],
 };
 

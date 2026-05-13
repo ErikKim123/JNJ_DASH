@@ -11,15 +11,17 @@ export function pairingSvg20(pairCount: number = 20): string {
   const startY = 232;
   const availableHeight = 428;
   const rowH = Math.min(42, Math.floor(availableHeight / Math.max(1, rowsPerCol - 1)));
-  // 컬럼 중심을 안쪽으로 이동해(좌 340, 우 940) 화면 좌우 여백 확보.
-  // NUM_OFFSET=256 유지(긴 이름과 겹침 방지). cx 이동만으로 좌우 58px 여백 확보.
+  // 컬럼 중심을 안쪽으로 더 모으고(좌 360, 우 920) 각 컬럼 너비도 축소(NUM_OFFSET 256 → 220).
+  // → 각 컬럼은 440px 폭으로 더 콤팩트, 가운데 컬럼 간 공백은 120px, 좌우 외곽 여백도 140px로 균형 잡힘.
   const cols = [
-    { cx: 340, start: 1, end: firstColEnd },
-    { cx: 940, start: firstColEnd + 1, end: count },
+    { cx: 360, start: 1, end: firstColEnd },
+    { cx: 920, start: firstColEnd + 1, end: count },
   ];
   // 한글 5~6자, 영문 8자 이상 이름이 와도 겹치지 않게 배지·이름 위치/크기 튜닝.
-  const NUM_OFFSET = 256;
-  const NAME_OFFSET = 100;
+  // NAME_OFFSET 60: 리더/팔로워 이름 가운데 공백 = 120px.
+  // NUM_OFFSET 220: 배지가 이름 쪽으로 더 가깝게(이전 256보다 36px 안쪽).
+  const NUM_OFFSET = 220;
+  const NAME_OFFSET = 60;
   const NAME_SIZE = 20;
   const stripeH = Math.max(28, rowH - 2);
 
@@ -31,7 +33,7 @@ export function pairingSvg20(pairCount: number = 20): string {
       const delay = (rowIdx * 0.05).toFixed(2);
       const isStripe = rowIdx % 2 === 1;
       const stripe = isStripe
-        ? `<rect x="${col.cx - 260}" y="${y - stripeH / 2}" width="520" height="${stripeH}" rx="4" fill="#0F2C20" opacity="0.55"/>`
+        ? `<rect x="${col.cx - (NUM_OFFSET + 30)}" y="${y - stripeH / 2}" width="${(NUM_OFFSET + 30) * 2}" height="${stripeH}" rx="4" fill="#0F2C20" opacity="0.55"/>`
         : '';
       body += `
         ${stripe}
@@ -61,9 +63,9 @@ export function pairingSvg20(pairCount: number = 20): string {
   const colHeaders = cols
     .map((col) => `
       <g transform="translate(${col.cx} 200)">
-        <text x="-100" y="0" text-anchor="end" font-family="ui-monospace, monospace" font-size="10" letter-spacing="4" fill="#D4AF37">{{label_leader}}</text>
-        <text x="100" y="0" text-anchor="start" font-family="ui-monospace, monospace" font-size="10" letter-spacing="4" fill="#D4AF37">{{label_follower}}</text>
-        <line x1="-200" y1="14" x2="200" y2="14" stroke="url(#goldgh)" stroke-width="0.5" opacity="0.6"/>
+        <text x="-${NAME_OFFSET}" y="0" text-anchor="end" font-family="ui-monospace, monospace" font-size="10" letter-spacing="4" fill="#D4AF37">{{label_leader}}</text>
+        <text x="${NAME_OFFSET}" y="0" text-anchor="start" font-family="ui-monospace, monospace" font-size="10" letter-spacing="4" fill="#D4AF37">{{label_follower}}</text>
+        <line x1="-${NUM_OFFSET}" y1="14" x2="${NUM_OFFSET}" y2="14" stroke="url(#goldgh)" stroke-width="0.5" opacity="0.6"/>
       </g>
     `)
     .join('');

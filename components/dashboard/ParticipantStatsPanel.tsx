@@ -31,22 +31,28 @@ function PrelimOrSemiPanel({
   const participantLeaders = isSemi ? stats.semiLeaders : stats.leaders;
   const participantFollowers = isSemi ? stats.semiFollowers : stats.followers;
 
+  // 헬퍼 칸은 예선에서만 의미 있음 (3.참가자 시트의 전체 헬퍼 풀 = 예선 RAND 페어링 보강용).
+  // 본선은 예선 통과자만 참가하므로 헬퍼 통계 비노출 → 2-칸 레이아웃.
   return (
     <aside
-      className="flex-1 min-w-[320px] rounded-lg border border-accent2/60 bg-panel/40 px-4 py-3"
+      className={`flex-1 ${isSemi ? 'min-w-[260px]' : 'min-w-[320px]'} rounded-lg border border-accent2/60 bg-panel/40 px-4 py-3`}
       aria-label={`${isSemi ? '본선' : '예선'} 참가자 요약`}
     >
-      <div className="grid grid-cols-3 gap-3 h-full items-center">
+      <div
+        className={`grid ${isSemi ? 'grid-cols-2' : 'grid-cols-3'} gap-3 h-full items-center`}
+      >
         <StatCell
           label={isSemi ? '본선참가자 수' : '예선참가자 수'}
           sub="LEADER · FOLLOWER"
           value={`${participantLeaders} · ${participantFollowers}`}
         />
-        <StatCell
-          label="헬퍼"
-          sub="LEADER · FOLLOWER"
-          value={`${stats.helperLeaders} · ${stats.helperFollowers}`}
-        />
+        {isSemi ? null : (
+          <StatCell
+            label="헬퍼"
+            sub="LEADER · FOLLOWER"
+            value={`${stats.helperLeaders} · ${stats.helperFollowers}`}
+          />
+        )}
         <StatCell label={passLabel} sub={passSub} value={String(passValue)} />
       </div>
     </aside>

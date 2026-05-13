@@ -24,7 +24,7 @@ export function ContestCard({ contest }: { contest: ContestCardData }) {
           <div className="text-xs font-mono text-ink2 tracking-widest uppercase mb-1">
             {contest.contestId}
           </div>
-          <h2 className="text-lg font-semibold tracking-tight text-ink mb-1 truncate">
+          <h2 className="text-lg font-semibold tracking-tight text-ink mb-1 break-keep">
             {contest.name}
           </h2>
           {period ? (
