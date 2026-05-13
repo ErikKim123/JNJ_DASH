@@ -31,6 +31,7 @@ import type {
   ContestSummary,
   ContestMeta,
   FinalPodiumEntry,
+  OverflowEntry,
   Pair,
   PairingData,
   ParticipantStats,
@@ -357,6 +358,53 @@ async function getFinalPodium(
   }
 }
 
+/**
+ * 3.참가자 시트의 라운드별 심사위원 투표수(O 개수)를 참가번호 → votes 맵으로 추출.
+ * 컬럼 위치:
+ *   - "예선 등수"(prelim) 또는 "본선 등수"(semi) 헤더 셀의 바로 앞 15개 컬럼이 심사위원 투표 (O/X).
+ *   - 헤더 위치는 운영팀이 안내 행/컬럼을 추가해도 동적 탐지.
+ * 시트/헤더 매칭 실패 시 빈 Map 반환 (overflow에 votes=0으로 표시).
+ */
+async function getRoundVoteCounts(
+  spreadsheetId: string,
+  round: Exclude<RoundKey, 'final'>
+): Promise<Map<string, number>> {
+  const result = new Map<string, number>();
+  try {
+    const range = locatorToRange(SHEET_LOCATORS.participants);
+    const { values } = await getSheetRange(spreadsheetId, range);
+    if (!values || values.length === 0) return result;
+
+    let headerIdx = -1;
+    for (let i = 0; i < Math.min(values.length, 10); i++) {
+      if (cell(values[i], 0).indexOf('참가번호') >= 0) { headerIdx = i; break; }
+    }
+    if (headerIdx < 0) headerIdx = 0;
+
+    const headers = (values[headerIdx] ?? []).map((h) => String(h ?? '').trim());
+    const rankHeader = round === 'prelim' ? '예선 등수' : '본선 등수';
+    let rankCol = -1;
+    for (let i = 0; i < headers.length; i++) {
+      if (headers[i] === rankHeader) { rankCol = i; break; }
+    }
+    if (rankCol < 15) return result; // 등수 컬럼 못 찾거나 앞에 15개 심사위원 컬럼이 부족
+
+    const voteStart = rankCol - 15;
+    for (let i = headerIdx + 1; i < values.length; i++) {
+      const num = cell(values[i], 0);
+      if (!num || !/^\d+$/.test(num)) continue;
+      let votes = 0;
+      for (let c = voteStart; c < rankCol; c++) {
+        if (cell(values[i], c).toUpperCase() === 'O') votes++;
+      }
+      result.set(num, votes);
+    }
+    return result;
+  } catch {
+    return result;
+  }
+}
+
 async function getParticipantStats(spreadsheetId: string): Promise<ParticipantStats> {
   const [counts, semiCounts, finalCounts, prelimPassCouples, semiPassCouples, podium] =
     await Promise.all([
@@ -659,6 +707,50 @@ const ROUND_LABELS: Record<RoundKey, string> = {
   final: 'Grand Final',
 };
 
+/**
+ * 예선/본선 통과자 시트(4.예선통과 / 5.본선통과)와 1.대회정보의 정원을 비교해
+ * 동점자 overflow 정보를 계산. RESULT/WRAPUP 단계에서 공통으로 사용.
+ * 정원을 초과하지 않으면 undefined. 결승은 1·2·3등 고정이라 항상 undefined.
+ *
+ * 통과자가 정원을 초과한 경우 통과자 전원의 번호·이름·투표수(3.참가자 시트 심사위원 컬럼의 O 개수)를
+ * 함께 채워 운영자가 boundary 동점자를 식별할 수 있도록 함.
+ */
+async function computeOverflowInfo(
+  spreadsheetId: string,
+  round: RoundKey
+): Promise<ResultData['overflow']> {
+  if (round === 'final') return undefined;
+  try {
+    const locator = resultLocator(round);
+    const range = locatorToRange(locator);
+    const [raw, maxPerRole] = await Promise.all([
+      getQualifiers(spreadsheetId, range),
+      getQualifiedCount(spreadsheetId, round),
+    ]);
+    const leaderOverflow = Math.max(0, raw.leaders.length - maxPerRole);
+    const followerOverflow = Math.max(0, raw.followers.length - maxPerRole);
+    if (leaderOverflow === 0 && followerOverflow === 0) return undefined;
+
+    const voteCounts = await getRoundVoteCounts(spreadsheetId, round);
+    const toEntry = (e: ResultEntry): OverflowEntry => ({
+      num: e.num,
+      name: e.name,
+      votes: voteCounts.get(e.num) ?? 0,
+    });
+    return {
+      maxPerRole,
+      leaderTotal: raw.leaders.length,
+      followerTotal: raw.followers.length,
+      leaderOverflow,
+      followerOverflow,
+      leaderEntries: raw.leaders.map(toEntry).sort((a, b) => b.votes - a.votes),
+      followerEntries: raw.followers.map(toEntry).sort((a, b) => b.votes - a.votes),
+    };
+  } catch {
+    return undefined;
+  }
+}
+
 export async function getStepData(params: GetStepDataParams): Promise<StepDataPayload> {
   const { contestId, round, step, refresh = false } = params;
 
@@ -769,20 +861,8 @@ export async function getStepData(params: GetStepDataParams): Promise<StepDataPa
       round === 'final' ? 3 : await getQualifiedCount(spreadsheetId, round);
     const leaders = raw.leaders.slice(0, maxPerRole);
     const followers = raw.followers.slice(0, maxPerRole);
-    // 동점자로 시트의 자동 통과(TRUE)가 정원을 초과한 경우 운영자에게 알림.
-    // 결승은 1·2·3등 고정이라 overflow 무의미.
-    const leaderOverflow = Math.max(0, raw.leaders.length - maxPerRole);
-    const followerOverflow = Math.max(0, raw.followers.length - maxPerRole);
-    const overflow =
-      round !== 'final' && (leaderOverflow > 0 || followerOverflow > 0)
-        ? {
-            maxPerRole,
-            leaderTotal: raw.leaders.length,
-            followerTotal: raw.followers.length,
-            leaderOverflow,
-            followerOverflow,
-          }
-        : undefined;
+    // 동점자/순위권 overflow 정보는 공용 헬퍼에서 계산 (wrapup 단계와 동일 결과).
+    const overflow = await computeOverflowInfo(spreadsheetId, round);
     // 디자인 의도 (이미지 2번):
     //   final = CHAMPIONS / JEJU YYYY · GRAND FINAL / Bachata Jack & Jill ... 태그라인
     //   prelim = QUALIFIED / ADVANCING TO SEMI-FINAL
@@ -846,7 +926,7 @@ export async function getStepData(params: GetStepDataParams): Promise<StepDataPa
     return { kind: 'ceremony', data };
   }
 
-  // Static steps — 시트 데이터 없이 라벨만 사용
+  // Static steps — 시트 데이터 없이 라벨만 사용 (wrapup은 overflow 정보만 추가로 부착)
   const totalCount = round === 'prelim' ? 60 : round === 'semi' ? 10 : 3;
   switch (step) {
     case 'prep':
@@ -855,8 +935,15 @@ export async function getStepData(params: GetStepDataParams): Promise<StepDataPa
       return staticOpen(roundLabel, festivalHeader, tagline);
     case 'live':
       return staticLive(roundLabel, festivalHeader, tagline);
-    case 'wrapup':
-      return staticWrapup(roundLabel, festivalHeader, tagline);
+    case 'wrapup': {
+      const base = staticWrapup(roundLabel, festivalHeader, tagline);
+      // 결승은 1·2·3등 고정이라 overflow 무의미 — undefined로 유지.
+      // 예선/본선은 RESULT 페이지와 동일한 동점자 정보를 CALC TOTAL에서도 보여줌.
+      if (base.kind === 'wrapup' && round !== 'final') {
+        base.data.overflow = await computeOverflowInfo(spreadsheetId, round);
+      }
+      return base;
+    }
     case 'close':
       return staticClose(roundLabel, festivalHeader, tagline);
   }

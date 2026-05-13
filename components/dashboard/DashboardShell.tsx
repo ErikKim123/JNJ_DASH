@@ -175,8 +175,17 @@ export function DashboardShell({
             onStepSelect={onStepSelect}
           />
         </div>
-        {/* 우상단: 풀스크린 해제 */}
-        <div className="absolute top-2 right-2 opacity-25 hover:opacity-100 focus-within:opacity-100 transition-opacity z-10">
+        {/* 우상단: 조회 + 풀스크린 해제 (둘 다 dim, hover/focus 시 선명) */}
+        <div className="absolute top-2 right-2 opacity-25 hover:opacity-100 focus-within:opacity-100 transition-opacity z-10 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onRefreshAll}
+            disabled={loading || metaRefreshing}
+            title="시트에서 페어링/결과 + 참가자수/등수/점수를 모두 다시 가져와 화면을 갱신."
+            className="px-2 py-1 rounded border border-accent2 bg-panel text-[10px] font-mono tracking-widest text-accent hover:bg-accent2 hover:text-bg transition-colors disabled:opacity-40"
+          >
+            {loading || metaRefreshing ? 'LOADING…' : '↻ 조회'}
+          </button>
           <FullscreenToggle active={fullscreen} onToggle={() => setFullscreen(false)} />
         </div>
         {/* 좌상단: Live 인디케이터 (Live 단계에만) */}
@@ -232,9 +241,14 @@ export function DashboardShell({
           <ParticipantStatsPanel stats={meta.participantStats} round={round} />
         </div>
         <StepNav meta={meta} round={round} currentStep={step} onSelect={onStepSelect} />
-        {result?.payload.kind === 'result' && result.payload.data.overflow ? (
-          <OverflowAlert overflow={result.payload.data.overflow} />
-        ) : null}
+        {(() => {
+          // RESULT와 CALC TOTAL(wrapup) 모두에서 동일한 동점자/순위권 정보를 노출.
+          const ov =
+            result?.payload.kind === 'result' || result?.payload.kind === 'wrapup'
+              ? result.payload.data.overflow
+              : undefined;
+          return ov ? <OverflowAlert overflow={ov} /> : null;
+        })()}
       </div>
 
       <section

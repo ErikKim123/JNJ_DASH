@@ -110,6 +110,12 @@ export interface WrapupData {
   wrap_subtitle: string;
   wrap_message: string;
   tagline: string;
+  /**
+   * CALC TOTAL 단계에서도 RESULT와 동일한 동점자/순위권 정보를 운영자에게 노출.
+   * 시트 자동 통과 인원이 정원을 초과한 경우에만 채워짐 (그 외엔 undefined).
+   * 구조는 ResultData.overflow와 동일.
+   */
+  overflow?: ResultData['overflow'];
 }
 
 export interface CloseData {
@@ -144,6 +150,7 @@ export interface ResultData {
    *   maxPerRole: 1.대회정보 시트에 설정된 통과 정원
    *   leaderTotal/followerTotal: 시트에서 실제 TRUE인 총 인원수
    *   leaderOverflow/followerOverflow: 정원 초과분 (>0이면 동점자 검토 필요)
+   *   leaderEntries/followerEntries: 통과자 전원의 번호·이름·투표수 (운영자 검토용, votes 내림차순)
    */
   overflow?: {
     maxPerRole: number;
@@ -151,7 +158,16 @@ export interface ResultData {
     followerTotal: number;
     leaderOverflow: number;
     followerOverflow: number;
+    leaderEntries?: OverflowEntry[];
+    followerEntries?: OverflowEntry[];
   };
+}
+
+/** OverflowAlert에 표출할 한 명의 정보 — 번호·이름·투표수. */
+export interface OverflowEntry {
+  num: string;
+  name: string;
+  votes: number;
 }
 
 // Ceremony: 결승 시상식 — Result와 같은 데이터(1·2·3등 리더/팔로워)지만
