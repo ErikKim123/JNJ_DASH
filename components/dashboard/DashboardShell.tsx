@@ -15,6 +15,7 @@ import { LiveIndicator } from './LiveIndicator';
 import { EmptyState } from './EmptyState';
 import { FullscreenToggle } from './FullscreenToggle';
 import { OverflowAlert } from './OverflowAlert';
+import { FinalTieAlert } from './FinalTieAlert';
 import { ParticipantStatsPanel } from './ParticipantStatsPanel';
 
 function parseRound(v: string | null): RoundKey {
@@ -243,11 +244,16 @@ export function DashboardShell({
         <StepNav meta={meta} round={round} currentStep={step} onSelect={onStepSelect} />
         {(() => {
           // RESULT와 CALC TOTAL(wrapup) 모두에서 동일한 동점자/순위권 정보를 노출.
-          const ov =
-            result?.payload.kind === 'result' || result?.payload.kind === 'wrapup'
-              ? result.payload.data.overflow
-              : undefined;
-          return ov ? <OverflowAlert overflow={ov} /> : null;
+          // - 예선/본선: OverflowAlert (정원 초과 + 투표수)
+          // - 결승: FinalTieAlert (1·2·3위 동점자 + 총점)
+          if (result?.payload.kind !== 'result' && result?.payload.kind !== 'wrapup') return null;
+          const data = result.payload.data;
+          return (
+            <>
+              {data.overflow ? <OverflowAlert overflow={data.overflow} /> : null}
+              {data.finalTie ? <FinalTieAlert tie={data.finalTie} /> : null}
+            </>
+          );
         })()}
       </div>
 

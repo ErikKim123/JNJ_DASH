@@ -69,7 +69,7 @@ function EntryList({
     <div className="rounded border border-border bg-panel/40 px-3 py-2">
       <div className="text-[10px] font-mono tracking-widest text-accent mb-1.5 flex justify-between">
         <span>{title}</span>
-        <span className="text-ink2">번호 · 이름 · 투표수</span>
+        <span className="text-ink2">점수</span>
       </div>
       <ul className="space-y-0.5">
         {entries.map((e, i) => {
@@ -84,7 +84,7 @@ function EntryList({
             >
               <span className="tabular-nums text-ink2">{e.num}</span>
               <span className="truncate" title={e.name}>{e.name}</span>
-              <span className="tabular-nums text-accent">{e.votes}표</span>
+              <span className="tabular-nums text-accent">{e.votes}점</span>
             </li>
           );
         })}

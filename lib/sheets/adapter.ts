@@ -31,6 +31,8 @@ import type {
   ContestSummary,
   ContestMeta,
   FinalPodiumEntry,
+  FinalTieEntry,
+  FinalTieInfo,
   OverflowEntry,
   Pair,
   PairingData,
@@ -715,6 +717,61 @@ const ROUND_LABELS: Record<RoundKey, string> = {
  * 통과자가 정원을 초과한 경우 통과자 전원의 번호·이름·투표수(3.참가자 시트 심사위원 컬럼의 O 개수)를
  * 함께 채워 운영자가 boundary 동점자를 식별할 수 있도록 함.
  */
+/**
+ * 6.결승 시트의 1·2·3위 후보를 모두 추출해 같은 rank에 2명 이상이면 동점자 정보를 반환.
+ * 운영자가 수동 확정해야 할 boundary를 식별할 수 있도록 번호·이름·순위·총점을 함께 제공.
+ * 동점자가 없으면 undefined.
+ */
+async function computeFinalTieInfo(
+  spreadsheetId: string
+): Promise<FinalTieInfo | undefined> {
+  try {
+    const range = locatorToRange(SHEET_LOCATORS.finalResult);
+    const { values } = await getSheetRange(spreadsheetId, range);
+    const cols = DEFAULT_FINAL_RESULT_COLUMNS;
+    const rows = FINAL_RESULT_HAS_HEADER ? values.slice(1) : values;
+    const leaderRe = /리더\s*(\d+)/;
+    const followerRe = /팔로워\s*(\d+)/;
+
+    const leaderEntries: FinalTieEntry[] = [];
+    const followerEntries: FinalTieEntry[] = [];
+
+    for (const row of rows) {
+      const num = cell(row, cols.num);
+      const name = cell(row, cols.teamName);
+      const score = cell(row, cols.totalScore);
+      const finalRank = cell(row, cols.finalRank);
+      if (!finalRank || !name || !num) continue;
+      const lm = finalRank.match(leaderRe);
+      const fm = finalRank.match(followerRe);
+      if (lm) {
+        const rank = Number.parseInt(lm[1], 10);
+        if (rank >= 1 && rank <= 3) leaderEntries.push({ num, name, rank, score });
+      } else if (fm) {
+        const rank = Number.parseInt(fm[1], 10);
+        if (rank >= 1 && rank <= 3) followerEntries.push({ num, name, rank, score });
+      }
+    }
+
+    leaderEntries.sort((a, b) => a.rank - b.rank);
+    followerEntries.sort((a, b) => a.rank - b.rank);
+
+    // 같은 rank에 2명 이상 있으면 동점자.
+    const leaderRankCounts = new Map<number, number>();
+    for (const e of leaderEntries) leaderRankCounts.set(e.rank, (leaderRankCounts.get(e.rank) ?? 0) + 1);
+    const followerRankCounts = new Map<number, number>();
+    for (const e of followerEntries) followerRankCounts.set(e.rank, (followerRankCounts.get(e.rank) ?? 0) + 1);
+    const hasTie =
+      [...leaderRankCounts.values()].some((c) => c > 1) ||
+      [...followerRankCounts.values()].some((c) => c > 1);
+
+    if (!hasTie) return undefined;
+    return { leaderEntries, followerEntries, hasTie };
+  } catch {
+    return undefined;
+  }
+}
+
 async function computeOverflowInfo(
   spreadsheetId: string,
   round: RoundKey
@@ -863,6 +920,8 @@ export async function getStepData(params: GetStepDataParams): Promise<StepDataPa
     const followers = raw.followers.slice(0, maxPerRole);
     // 동점자/순위권 overflow 정보는 공용 헬퍼에서 계산 (wrapup 단계와 동일 결과).
     const overflow = await computeOverflowInfo(spreadsheetId, round);
+    // 결승은 1·2·3위 안에 동점자(같은 rank에 2명 이상)가 있을 때만 채워짐.
+    const finalTie = round === 'final' ? await computeFinalTieInfo(spreadsheetId) : undefined;
     // 디자인 의도 (이미지 2번):
     //   final = CHAMPIONS / JEJU YYYY · GRAND FINAL / Bachata Jack & Jill ... 태그라인
     //   prelim = QUALIFIED / ADVANCING TO SEMI-FINAL
@@ -900,6 +959,7 @@ export async function getStepData(params: GetStepDataParams): Promise<StepDataPa
       followers,
       tagline: tagline || resultTagline,
       overflow,
+      finalTie,
     };
     return { kind: 'result', data };
   }
@@ -937,10 +997,14 @@ export async function getStepData(params: GetStepDataParams): Promise<StepDataPa
       return staticLive(roundLabel, festivalHeader, tagline);
     case 'wrapup': {
       const base = staticWrapup(roundLabel, festivalHeader, tagline);
-      // 결승은 1·2·3등 고정이라 overflow 무의미 — undefined로 유지.
-      // 예선/본선은 RESULT 페이지와 동일한 동점자 정보를 CALC TOTAL에서도 보여줌.
-      if (base.kind === 'wrapup' && round !== 'final') {
-        base.data.overflow = await computeOverflowInfo(spreadsheetId, round);
+      if (base.kind === 'wrapup') {
+        if (round === 'final') {
+          // 결승은 1·2·3위 동점자 검토 정보 (overflow는 무의미).
+          base.data.finalTie = await computeFinalTieInfo(spreadsheetId);
+        } else {
+          // 예선/본선은 RESULT와 동일한 정원 초과 동점자 정보.
+          base.data.overflow = await computeOverflowInfo(spreadsheetId, round);
+        }
       }
       return base;
     }

@@ -116,6 +116,8 @@ export interface WrapupData {
    * 구조는 ResultData.overflow와 동일.
    */
   overflow?: ResultData['overflow'];
+  /** 결승 라운드 한정 — 1·2·3위 안에 동점자가 있을 때 채워짐. */
+  finalTie?: FinalTieInfo;
 }
 
 export interface CloseData {
@@ -161,6 +163,8 @@ export interface ResultData {
     leaderEntries?: OverflowEntry[];
     followerEntries?: OverflowEntry[];
   };
+  /** 결승 라운드 한정 — 1·2·3위 안에 동점자가 있을 때 채워짐. */
+  finalTie?: FinalTieInfo;
 }
 
 /** OverflowAlert에 표출할 한 명의 정보 — 번호·이름·투표수. */
@@ -168,6 +172,25 @@ export interface OverflowEntry {
   num: string;
   name: string;
   votes: number;
+}
+
+/** 결승 1·2·3위 후보 — 번호·이름·순위·총점. 동점자가 있을 때 OverflowAlert 형태로 노출. */
+export interface FinalTieEntry {
+  num: string;
+  name: string;
+  rank: number;
+  score: string;
+}
+
+/**
+ * 결승 동점자 정보. 같은 rank에 2명 이상 들어와 운영자가 수동 확정해야 할 때 채워짐.
+ *   leaderEntries/followerEntries: 1·2·3위 모든 후보 (동점자 포함, rank 오름차순)
+ *   hasTie: 둘 중 어느 쪽이라도 동점자가 있을 때 true
+ */
+export interface FinalTieInfo {
+  leaderEntries: FinalTieEntry[];
+  followerEntries: FinalTieEntry[];
+  hasTie: boolean;
 }
 
 // Ceremony: 결승 시상식 — Result와 같은 데이터(1·2·3등 리더/팔로워)지만
