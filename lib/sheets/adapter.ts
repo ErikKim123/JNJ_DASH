@@ -30,8 +30,10 @@ import {
 import type {
   ContestSummary,
   ContestMeta,
+  FinalPodiumEntry,
   Pair,
   PairingData,
+  ParticipantStats,
   ResultData,
   ResultEntry,
   RoundKey,
@@ -196,6 +198,185 @@ export async function getContestSummary(contestId: string): Promise<ContestSumma
   return list.find((c) => c.contestId === contestId) ?? null;
 }
 
+/**
+ * 3.참가자 시트의 "역할" 컬럼 값을 분류.
+ * 실제 시트 표기: "리더", "팔로워", "헬퍼(리더)", "헬퍼(팔로워)" — 전각 괄호/공백/어순 차이도 정규화 후 매칭.
+ * "헬퍼"/"도우미" 키워드가 있으면 sub-역할(리더/팔로워)에 따라 helperLeader/helperFollower로 분류 —
+ * 일반 리더/팔로워 카운트에는 포함되지 않음. (Apps Script combined.gs:classifyHelperRole과 동일 규칙)
+ */
+function classifyParticipantRoleCell(
+  raw: string
+): 'leader' | 'follower' | 'helperLeader' | 'helperFollower' | 'helperAny' | 'other' {
+  if (!raw) return 'other';
+  const t = raw.replace(/[（]/g, '(').replace(/[）]/g, ')').replace(/\s+/g, '');
+  const hasHelper = t.indexOf('헬퍼') >= 0 || t.indexOf('도우미') >= 0;
+  const hasLeader = /리더/.test(t);
+  const hasFollower = /팔로워/.test(t);
+  if (hasHelper) {
+    if (hasLeader) return 'helperLeader';
+    if (hasFollower) return 'helperFollower';
+    return 'helperAny';
+  }
+  if (hasLeader) return 'leader';
+  if (hasFollower) return 'follower';
+  return 'other';
+}
+
+/**
+ * 3.참가자 시트의 "역할" 컬럼을 행 단위로 카운트.
+ * 실제 시트 구조: 한 행 = 한 명, 역할 컬럼 값은 "리더"/"팔로워"/"헬퍼(리더)"/"헬퍼(팔로워)" 중 하나.
+ *  - 헤더 행은 헤더 텍스트에 "참가번호"가 포함된 행으로 동적 탐지 (다른 안내 텍스트가 함께 들어가도 안전).
+ *  - 헬퍼는 일반 리더/팔로워와 분리해서 카운트.
+ *  - 시트 조회/파싱 실패 시 0으로 폴백.
+ */
+async function getParticipantRoleCounts(
+  spreadsheetId: string
+): Promise<{ leaders: number; followers: number; helperLeaders: number; helperFollowers: number }> {
+  const empty = { leaders: 0, followers: 0, helperLeaders: 0, helperFollowers: 0 };
+  try {
+    const range = locatorToRange(SHEET_LOCATORS.participants);
+    const { values } = await getSheetRange(spreadsheetId, range);
+    if (!values || values.length === 0) return empty;
+
+    // 헤더 행 탐지 — A열 셀에 "참가번호"라는 단어가 포함된 행 (운영팀이 안내 텍스트를
+    // 같은 셀에 함께 넣어두기도 함). 못 찾으면 0번째 행을 헤더로 가정.
+    let headerIdx = -1;
+    for (let i = 0; i < Math.min(values.length, 10); i++) {
+      if (cell(values[i], 0).indexOf('참가번호') >= 0) { headerIdx = i; break; }
+    }
+    if (headerIdx < 0) headerIdx = 0;
+
+    // 헤더 텍스트는 trim 후 정확 일치로만 매칭.
+    // (운영팀이 첫 헤더 셀에 "📋 기본 정보 ⚠️ ... [역할별 (리더/팔로워)] ... 참가번호" 같은
+    //  긴 안내 텍스트를 함께 넣어두기 때문에 indexOf로 검사하면 그 셀이 잘못 매칭됨)
+    const headers = (values[headerIdx] ?? []).map((h) => String(h ?? '').replace(/^☑\s*/, '').trim());
+    let roleIdx = -1;
+    for (let i = 0; i < headers.length; i++) {
+      if (headers[i] === '역할' || headers[i] === '역활') { roleIdx = i; break; }
+    }
+    if (roleIdx < 0) return empty;
+
+    let leaders = 0, followers = 0, helperLeaders = 0, helperFollowers = 0, helperAny = 0;
+    for (let i = headerIdx + 1; i < values.length; i++) {
+      const cat = classifyParticipantRoleCell(cell(values[i], roleIdx));
+      if (cat === 'leader') leaders++;
+      else if (cat === 'follower') followers++;
+      else if (cat === 'helperLeader') helperLeaders++;
+      else if (cat === 'helperFollower') helperFollowers++;
+      else if (cat === 'helperAny') helperAny++;
+    }
+    // sub-역할 명시 없는 "헬퍼"만 있는 행이 있으면 — 어느 쪽인지 모르므로 양쪽에 합산.
+    // (운영팀이 보통 "헬퍼(리더)"/"헬퍼(팔로워)"로 명시하므로 helperAny는 거의 0)
+    if (helperAny > 0) {
+      helperLeaders += helperAny;
+      helperFollowers += helperAny;
+    }
+    return { leaders, followers, helperLeaders, helperFollowers };
+  } catch {
+    return empty;
+  }
+}
+
+/**
+ * 4.예선통과 시트의 실제 역할별 통과자 수.
+ * 본선 라운드에서 "참가자 수" = 예선 통과자 수로 사용. 시트 조회 실패 시 0 폴백.
+ */
+async function getPrelimQualifierCounts(
+  spreadsheetId: string
+): Promise<{ semiLeaders: number; semiFollowers: number }> {
+  try {
+    const range = locatorToRange(SHEET_LOCATORS.prelimResult);
+    const raw = await getQualifiers(spreadsheetId, range);
+    return { semiLeaders: raw.leaders.length, semiFollowers: raw.followers.length };
+  } catch {
+    return { semiLeaders: 0, semiFollowers: 0 };
+  }
+}
+
+/**
+ * 5.본선통과 시트의 실제 역할별 통과자 수.
+ * 결승 라운드에서 "참가자 수" = 본선 통과자 수로 사용. 시트 조회 실패 시 0 폴백.
+ */
+async function getSemiQualifierCounts(
+  spreadsheetId: string
+): Promise<{ finalLeaders: number; finalFollowers: number }> {
+  try {
+    const range = locatorToRange(SHEET_LOCATORS.semiResult);
+    const raw = await getQualifiers(spreadsheetId, range);
+    return { finalLeaders: raw.leaders.length, finalFollowers: raw.followers.length };
+  } catch {
+    return { finalLeaders: 0, finalFollowers: 0 };
+  }
+}
+
+/** 결승 패널에 표출할 최대 순위 (동점자 포함이라 실제 표시 행 수는 더 많을 수 있음). */
+const FINAL_PODIUM_MAX_RANK = 7;
+
+/**
+ * 6.결승 시트에서 rank ≤ 7인 모든 리더/팔로워를 추출. 동점자도 모두 포함.
+ * 반환값은 rank 오름차순, 같은 rank 내에서는 시트 등장 순서 유지.
+ */
+async function getFinalPodium(
+  spreadsheetId: string
+): Promise<{ finalLeaderPodium: FinalPodiumEntry[]; finalFollowerPodium: FinalPodiumEntry[] }> {
+  try {
+    const range = locatorToRange(SHEET_LOCATORS.finalResult);
+    const { values } = await getSheetRange(spreadsheetId, range);
+    const cols = DEFAULT_FINAL_RESULT_COLUMNS;
+    const rows = FINAL_RESULT_HAS_HEADER ? values.slice(1) : values;
+    const leaderRe = /리더\s*(\d+)/;
+    const followerRe = /팔로워\s*(\d+)/;
+
+    const leaders: FinalPodiumEntry[] = [];
+    const followers: FinalPodiumEntry[] = [];
+
+    for (const row of rows) {
+      const name = cell(row, cols.teamName);
+      const finalRank = cell(row, cols.finalRank);
+      const score = cell(row, cols.totalScore);
+      if (!finalRank || !name) continue;
+      const lm = finalRank.match(leaderRe);
+      const fm = finalRank.match(followerRe);
+      if (lm) {
+        const rank = Number.parseInt(lm[1], 10);
+        if (rank >= 1 && rank <= FINAL_PODIUM_MAX_RANK) {
+          leaders.push({ rank, name, score });
+        }
+      } else if (fm) {
+        const rank = Number.parseInt(fm[1], 10);
+        if (rank >= 1 && rank <= FINAL_PODIUM_MAX_RANK) {
+          followers.push({ rank, name, score });
+        }
+      }
+    }
+    leaders.sort((a, b) => a.rank - b.rank);
+    followers.sort((a, b) => a.rank - b.rank);
+    return { finalLeaderPodium: leaders, finalFollowerPodium: followers };
+  } catch {
+    return { finalLeaderPodium: [], finalFollowerPodium: [] };
+  }
+}
+
+async function getParticipantStats(spreadsheetId: string): Promise<ParticipantStats> {
+  const [counts, semiCounts, finalCounts, prelimPassCouples, semiPassCouples, podium] =
+    await Promise.all([
+      getParticipantRoleCounts(spreadsheetId),
+      getPrelimQualifierCounts(spreadsheetId),
+      getSemiQualifierCounts(spreadsheetId),
+      getQualifiedCount(spreadsheetId, 'prelim'),
+      getQualifiedCount(spreadsheetId, 'semi'),
+      getFinalPodium(spreadsheetId),
+    ]);
+  return {
+    ...counts,
+    ...semiCounts,
+    ...finalCounts,
+    prelimPassCouples,
+    semiPassCouples,
+    ...podium,
+  };
+}
+
 // ─── Contest meta ───────────────────────────────────────────────────────────
 
 export async function getContestMeta(contestId: string): Promise<ContestMeta | null> {
@@ -207,12 +388,16 @@ export async function getContestMeta(contestId: string): Promise<ContestMeta | n
   const festivalHeader = summary.name;
   const tagline = '';
 
+  // 참가자 통계는 시트 읽기 실패 시 0으로 폴백 (대시보드 진입 자체는 막지 않음).
+  const participantStats = await getParticipantStats(summary.spreadsheetId);
+
   return {
     contestId: summary.contestId,
     name: summary.name,
     designTemplateNumber: summary.designTemplateNumber,
     festivalHeader,
     tagline,
+    participantStats,
     rounds: {
       prelim: { label: '예선', steps: STEPS_BY_ROUND.prelim },
       semi: { label: '본선', steps: STEPS_BY_ROUND.semi },

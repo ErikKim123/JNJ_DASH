@@ -168,6 +168,18 @@ export async function getSheetRange(
   return response;
 }
 
+/**
+ * 특정 시트 문서의 모든 탭 캐시 항목을 무효화. 운영자가 "조회" 버튼으로
+ * 즉시 갱신을 요청할 때 사용 (5초 TTL을 우회).
+ */
+export function invalidateSheetCache(spreadsheetId: string): void {
+  const cache = getCache();
+  const prefix = `${spreadsheetId}::`;
+  for (const key of cache.keys()) {
+    if (key.startsWith(prefix)) cache.delete(key);
+  }
+}
+
 // 테스트/디버그용
 export function _resetCacheForTests(): void {
   cacheInstance?.clear();

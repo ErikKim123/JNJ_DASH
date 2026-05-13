@@ -177,6 +177,39 @@ export type StepDataPayload =
   | { kind: 'result'; data: ResultData }
   | { kind: 'ceremony'; data: CeremonyData };
 
+/**
+ * 대회 참가자 통계 — 대시보드 예선/본선 라운드 상단의 요약 패널에 표시.
+ *   leaders/followers: 3.참가자 시트의 "역할" 컬럼에서 "리더" / "팔로워" 행 카운트
+ *   helperLeaders/helperFollowers: "헬퍼(리더)" / "헬퍼(팔로워)" 행 카운트 (헬퍼는 리더/팔로워 카운트에서 제외)
+ *   prelimPassCouples: 1.대회정보 시트의 "예선 통과 인원 (역할별)" 값
+ *   semiPassCouples: 1.대회정보 시트의 "본선 통과 인원 (역할별)" 값
+ */
+/** 결승 한 명의 순위·이름·총점. 6.결승 시트에서 rank ≤ 7인 행을 모두 추출. */
+export interface FinalPodiumEntry {
+  rank: number;
+  name: string;
+  score: string;
+}
+
+export interface ParticipantStats {
+  leaders: number;
+  followers: number;
+  helperLeaders: number;
+  helperFollowers: number;
+  /** 본선 참가자 수 (= 예선 통과자 수). 4.예선통과 시트의 실제 역할별 행 카운트. */
+  semiLeaders: number;
+  semiFollowers: number;
+  /** 결승 참가자 수 (= 본선 통과자 수). 5.본선통과 시트의 실제 역할별 행 카운트. */
+  finalLeaders: number;
+  finalFollowers: number;
+  prelimPassCouples: number;
+  semiPassCouples: number;
+  /** 결승 리더 순위 1~7위 리스트 (동점 포함, rank 오름차순). 6.결승 시트에서 추출. */
+  finalLeaderPodium: FinalPodiumEntry[];
+  /** 결승 팔로워 순위 1~7위 리스트 (동점 포함, rank 오름차순). 6.결승 시트에서 추출. */
+  finalFollowerPodium: FinalPodiumEntry[];
+}
+
 export interface ContestMeta {
   contestId: string;
   name: string;
@@ -184,4 +217,6 @@ export interface ContestMeta {
   rounds: Record<RoundKey, { label: string; steps: ReadonlyArray<StepKey> }>;
   festivalHeader: string;
   tagline: string;
+  /** 참가자 통계. 시트 읽기 실패 시 0으로 폴백. */
+  participantStats: ParticipantStats;
 }

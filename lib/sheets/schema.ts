@@ -155,12 +155,14 @@ export const QUALIFIER_ROLE_LEADER = '리더';
 export const QUALIFIER_ROLE_FOLLOWER = '팔로워';
 
 // 결승 시트 (6.결승) — 같은 시트에 리더/팔로워 섞여있음
-// A 참가# | B 사진 | C 팀명 | D 장르 | E 부문 | F~H 점수 | I 총점 | J 평균 | K 최종순위
+// A 참가# | B 사진 | C 팀명 | D 장르 | E 부문 | F~H 점수 합계(기본기/연결성/음악성) | I 총점 | J 평균 | K 최종순위
 // K열 값 예: "리더 1", "리더 2", "팔로워 1" — 정규식으로 분류 + 순위 추출
 export interface FinalResultSheetColumns {
   num: number;        // A
   photo: number;      // B
   teamName: number;   // C
+  totalScore: number; // I: 총점
+  average: number;    // J: 평균
   finalRank: number;  // K
 }
 
@@ -168,6 +170,8 @@ export const DEFAULT_FINAL_RESULT_COLUMNS: FinalResultSheetColumns = {
   num: 0,
   photo: 1,
   teamName: 2,
+  totalScore: 8,
+  average: 9,
   finalRank: 10,
 };
 

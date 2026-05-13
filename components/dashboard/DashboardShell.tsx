@@ -15,6 +15,7 @@ import { LiveIndicator } from './LiveIndicator';
 import { EmptyState } from './EmptyState';
 import { FullscreenToggle } from './FullscreenToggle';
 import { OverflowAlert } from './OverflowAlert';
+import { ParticipantStatsPanel } from './ParticipantStatsPanel';
 
 function parseRound(v: string | null): RoundKey {
   if (v && (ROUND_KEYS as readonly string[]).includes(v)) return v as RoundKey;
@@ -25,10 +26,20 @@ function parseStep(v: string | null): StepKey {
   return 'prep';
 }
 
-export function DashboardShell({ meta, templateId }: { meta: ContestMeta; templateId: number }) {
+export function DashboardShell({
+  meta: initialMeta,
+  templateId,
+}: {
+  meta: ContestMeta;
+  templateId: number;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [fullscreen, setFullscreen] = useState(false);
+  // 메타(참가자 통계, 결승 순위·점수 등)는 조회 버튼으로 강제 갱신되므로 클라이언트 상태로 보관.
+  // 초기값은 서버 컴포넌트가 prop으로 주입한 값.
+  const [meta, setMeta] = useState<ContestMeta>(initialMeta);
+  const [metaRefreshing, setMetaRefreshing] = useState(false);
 
   const round = parseRound(searchParams.get('round'));
   const requestedStep = parseStep(searchParams.get('step'));
@@ -68,6 +79,29 @@ export function DashboardShell({ meta, templateId }: { meta: ContestMeta; templa
     round,
     step,
   });
+
+  // 메타(참가자 수/등수/점수)를 강제 갱신. ?refresh=1 → 서버 LRU 캐시 무효화 후 시트 재조회.
+  const refreshMeta = useCallback(async () => {
+    setMetaRefreshing(true);
+    try {
+      const res = await fetch(`/api/contests/${encodeURIComponent(meta.contestId)}/meta?refresh=1`, {
+        cache: 'no-store',
+      });
+      if (!res.ok) return;
+      const json = (await res.json()) as { ok: boolean; data?: ContestMeta };
+      if (json.ok && json.data) setMeta(json.data);
+    } catch {
+      // best-effort: 실패해도 기존 메타 그대로 유지
+    } finally {
+      setMetaRefreshing(false);
+    }
+  }, [meta.contestId]);
+
+  // 조회 버튼: 현재 스텝 데이터 + 메타(참가자수/등수/점수) 동시 갱신.
+  const onRefreshAll = useCallback(() => {
+    void refresh();
+    void refreshMeta();
+  }, [refresh, refreshMeta]);
 
   const stepLabel = useMemo(() => {
     const steps = meta.rounds[round].steps;
@@ -179,12 +213,12 @@ export function DashboardShell({ meta, templateId }: { meta: ContestMeta; templa
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => refresh()}
-            disabled={loading}
-            title="시트에서 데이터를 다시 가져와 화면을 갱신. 시트가 변경된 직후 사용."
+            onClick={onRefreshAll}
+            disabled={loading || metaRefreshing}
+            title="시트에서 페어링/결과 + 참가자수/등수/점수를 모두 다시 가져와 화면을 갱신. 시트가 변경된 직후 사용."
             className="px-3 py-1.5 rounded border border-accent2 bg-panel text-xs font-mono tracking-widest text-accent hover:bg-accent2 hover:text-bg transition-colors disabled:opacity-40"
           >
-            {loading ? 'LOADING…' : '↻ 조회'}
+            {loading || metaRefreshing ? 'LOADING…' : '↻ 조회'}
           </button>
           {step === 'live' ? <LiveIndicator loading={loading} lastUpdated={lastUpdated} /> : null}
           <FullscreenToggle active={fullscreen} onToggle={() => setFullscreen(true)} />
@@ -192,7 +226,11 @@ export function DashboardShell({ meta, templateId }: { meta: ContestMeta; templa
       </header>
 
       <div className="space-y-3 mb-5">
-        <RoundNav meta={meta} current={round} onSelect={onRoundSelect} />
+        <div className="flex items-stretch gap-3 flex-wrap">
+          <RoundNav meta={meta} current={round} onSelect={onRoundSelect} />
+          {/* 라운드별 요약 패널: 예선/본선은 참가자·헬퍼·통과 목표, 결승은 참가자·1·2·3위 */}
+          <ParticipantStatsPanel stats={meta.participantStats} round={round} />
+        </div>
         <StepNav meta={meta} round={round} currentStep={step} onSelect={onStepSelect} />
         {result?.payload.kind === 'result' && result.payload.data.overflow ? (
           <OverflowAlert overflow={result.payload.data.overflow} />
