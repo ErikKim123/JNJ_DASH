@@ -859,14 +859,19 @@ export async function getStepData(params: GetStepDataParams): Promise<StepDataPa
     if (refresh) {
       await clearPairingSnapshot(contestId, round);
       pairs = await getPairs(spreadsheetId, range, { skipCache: true });
-      if (pairs.length > 0) await savePairingSnapshot(contestId, round, pairs);
+      if (pairs.length > 0) await savePairingSnapshot(contestId, round, pairs, spreadsheetId);
     } else {
       const snap = await getPairingSnapshot(contestId, round);
-      if (snap && snap.pairs.length > 0) {
+      // 마스터시트가 교체되면(snap.spreadsheetId !== 현재 spreadsheetId) 스냅샷 무효화.
+      // 구형 스냅샷(spreadsheetId 필드 없음)은 호환을 위해 그대로 사용 — 다음 ?refresh=1로 갱신됨.
+      const snapStale =
+        !!snap && !!snap.spreadsheetId && snap.spreadsheetId !== spreadsheetId;
+      if (snap && snap.pairs.length > 0 && !snapStale) {
         pairs = snap.pairs;
       } else {
+        if (snapStale) await clearPairingSnapshot(contestId, round);
         pairs = await getPairs(spreadsheetId, range, { skipCache: true });
-        if (pairs.length > 0) await savePairingSnapshot(contestId, round, pairs);
+        if (pairs.length > 0) await savePairingSnapshot(contestId, round, pairs, spreadsheetId);
       }
     }
 

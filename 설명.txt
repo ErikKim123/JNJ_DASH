@@ -22,7 +22,7 @@
 
 
 예선업무프로세스 : Prep->Pairing A (3.1예선랜덤시트)->Pairing B (3.1예선랜덤시트)->Pairing C (3.1예선랜덤시트)->Open->Live->Calculate Total->Close->Result(4.예선통과시트)
-본선업무프로세스 : Prep->Pairing(4.1본선랜덤시트)->Open->Live->Calculate Total->Close->Result(5.본선통과시트)
+본선업무프로세스 : Prep->Pairing A (4.1본선랜덤시트)->Pairing B (4.1본선랜덤시트)->Open->Live->Calculate Total->Close->Result(5.본선통과시트)
 결승업무프로세스 : Prep->Pairing(참조없고 'Pairing' 표출-사람직접 매칭함 자동없음)->Open->Live->Calculate Total->Result(6.결승시트)->Ceremony(6.결승시트)
 
 
@@ -32,8 +32,8 @@
 
  대회목록시트 : https://docs.google.com/spreadsheets/d/1bRclkuN8fuSfhoSrRUEtBjPPx6TePofxojE72qHV6iU/edit?gid=2102151233#gid=2102151233
  대회 001 원본시트 : https://docs.google.com/spreadsheets/d/1gzX4kidjg4J6Qj5g1ANX9ibdeGaK_KkLTgU6xoQVn80/edit?gid=1162828405#gid=1162828405
- 대회 002 원본시트 : https://docs.google.com/spreadsheets/d/1yHpSMCUvqZNqdH2i28jBI0MCFrOaDrhU_jjZFQreHbw/edit?gid=1162828405#gid=1162828405
- 대회 003 원본시트 : https://docs.google.com/spreadsheets/d/1cqFFHZfFn6ZEFeHZRvHXHhtOdBeinNLRGQ5TNeMtFG8/edit?gid=1162828405#gid=1162828405
+ 대회 002 원본시트 : https://docs.google.com/spreadsheets/d/11uFQUjL51CkkLVjF8hlaf5hA5VfNbrCHkJst67rTHBw/edit?gid=1162828405#gid=1162828405
+ 대회 003 원본시트 : https://docs.google.com/spreadsheets/d/1aAXrLe_t7ZWyVWvz2AsBgADiRjLeRKclBe_kUAYlR1g/edit?gid=1162828405#gid=1162828405
                    
 
  예선 Pairing은 3.1예선랜덤시트에서 자료를 가져와서 표출  , 예선 Result는 4.예선통과시트에서 자료를 가져와서 표출

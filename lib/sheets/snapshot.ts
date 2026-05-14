@@ -31,6 +31,8 @@ function snapshotPath(contestId: string, round: RoundKey): string {
 export interface PairingSnapshot {
   contestId: string;
   round: RoundKey;
+  /** 박제 당시 마스터시트 ID. 운영팀이 마스터를 교체하면 자동 무효화 트리거. */
+  spreadsheetId?: string;
   pairs: Pair[];
   savedAt: string;
 }
@@ -51,11 +53,13 @@ export async function getPairingSnapshot(
 export async function savePairingSnapshot(
   contestId: string,
   round: RoundKey,
-  pairs: Pair[]
+  pairs: Pair[],
+  spreadsheetId?: string
 ): Promise<PairingSnapshot> {
   const snapshot: PairingSnapshot = {
     contestId,
     round,
+    spreadsheetId,
     pairs,
     savedAt: new Date().toISOString(),
   };
