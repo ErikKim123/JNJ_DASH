@@ -1,4 +1,5 @@
 // Design Ref: §11.2 — HOME (대회 선택)
+import Link from 'next/link';
 import { Suspense } from 'react';
 import { ContestList } from '@/components/home/ContestList';
 
@@ -14,9 +15,17 @@ export default function HomePage() {
           </h1>
           <p className="text-sm text-ink2 mt-1">대회를 선택하세요</p>
         </div>
-        <p className="text-xs text-ink2 font-mono tracking-widest uppercase">
-          DANCE · COMPETITION · DASHBOARD
-        </p>
+        <div className="flex items-center gap-4">
+          <p className="text-xs text-ink2 font-mono tracking-widest uppercase">
+            DANCE · COMPETITION · DASHBOARD
+          </p>
+          <Link
+            href="/admin"
+            className="text-xs font-mono tracking-widest uppercase px-3 py-1.5 rounded border border-accent/40 text-accent hover:bg-accent/10 hover:border-accent transition"
+          >
+            Admin →
+          </Link>
+        </div>
       </header>
 
       <Suspense
