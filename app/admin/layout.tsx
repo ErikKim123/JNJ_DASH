@@ -9,11 +9,12 @@ import { getServerLocale } from '@/lib/i18n/server';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  // 현재 경로 추출 (next/headers 의 'x-pathname' 은 미들웨어가 안 채우니 referer 도 폴백).
+  // 현재 경로 추출 — middleware 가 모든 /admin/* 응답에 x-pathname 헤더를 세팅.
+  // Vercel 운영에서 next-url 헤더는 RSC 요청에만 있고, referer 폴백은
+  // 로그인 직후처럼 referer 가 /admin/login 일 때 오판이 생기므로 제거.
   const h = await headers();
-  // Next 가 매 요청마다 RSC 헤더 'next-url' 을 자동 주입 — App Router 표준 경로 추출.
-  const nextUrl = h.get('next-url') ?? h.get('referer') ?? '';
-  const isLogin = /\/admin\/login(\?|$|\/)/.test(nextUrl);
+  const currentPath = h.get('x-pathname') ?? h.get('next-url') ?? '';
+  const isLogin = /\/admin\/login(\?|$|\/)/.test(currentPath);
 
   if (isLogin) return <>{children}</>;
 
