@@ -1,7 +1,7 @@
 // Design Ref: §7.1 — Dashboard 진입점 (Server Component). meta는 서버에서 미리 fetch.
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
-import { getContestMeta, getContestSummary } from '@/lib/sheets/adapter';
+import { getContestMeta, getContestSummary } from '@/lib/db/adapter';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { DEFAULT_TEMPLATE_ID } from '@/lib/templates/registry';
 
@@ -47,7 +47,7 @@ function ErrorScreen({ title, message }: { title: string; message: string }) {
         {message}
       </pre>
       <p className="text-xs text-ink2 mt-3">
-        환경변수 CONTEST_LIST_SHEET_ID가 설정되어 있는지 확인하세요 (로컬: .env.local · Vercel: Project Settings → Environment Variables).
+        Supabase 연결을 확인하세요 (로컬: .env.local · Vercel: Project Settings → Environment Variables).
       </p>
     </main>
   );

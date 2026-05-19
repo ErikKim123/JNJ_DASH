@@ -17,8 +17,8 @@ export function FinalTieAlert({ tie }: { tie: FinalTieInfo }) {
           결승 동점자 발생 — 운영자 수동 확정 필요
         </p>
         <p className="text-ink2 mt-1 leading-relaxed">
-          1·2·3위 안에 같은 순위로 묶인 후보가 있습니다. 시트(6.결승)에서 동점자를 직접
-          확정한 뒤 우측 상단 <span className="font-mono text-accent">↻ 조회</span> 버튼을 눌러 갱신하세요.
+          1·2·3위 안에 같은 순위로 묶인 후보가 있습니다. Admin 의 Final Results 화면에서 동점자를
+          직접 확정한 뒤 우측 상단 <span className="font-mono text-accent">↻ 조회</span> 버튼을 눌러 갱신하세요.
         </p>
 
         <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">

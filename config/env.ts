@@ -29,6 +29,15 @@ const ServerEnvSchema = z.object({
     .default('5')
     .transform((v) => Number.parseInt(v, 10))
     .pipe(z.number().int().min(1).max(300)),
+  // Supabase — DB 중심 운영(Phase 1) 부터 사용. 표출 화면은 anon, 운영 API 는 service role.
+  // 클라이언트 노출 가능 (NEXT_PUBLIC_*) 키는 노출되어도 RLS 로 막힘.
+  NEXT_PUBLIC_SUPABASE_URL: z.string().url().optional(),
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(20).optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(20).optional(),
+  // 자료운영 UI(/admin) 보호용 PIN. 누락 시 인증 미들웨어가 throw → /admin 사용 불가.
+  // 표출 화면은 영향 없음.
+  ADMIN_PIN: z.string().min(4).optional(),
+  ADMIN_SESSION_SECRET: z.string().optional(),
 });
 
 export type ServerEnv = z.infer<typeof ServerEnvSchema>;

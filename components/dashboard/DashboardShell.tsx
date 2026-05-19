@@ -81,7 +81,7 @@ export function DashboardShell({
     step,
   });
 
-  // 메타(참가자 수/등수/점수)를 강제 갱신. ?refresh=1 → 서버 LRU 캐시 무효화 후 시트 재조회.
+  // 메타(참가자 수/등수/점수)를 강제 갱신. ?refresh=1 → 서버 LRU 캐시 무효화 후 DB 재조회.
   // API 봉투 포맷: { data: ContestMeta, error: null } | { data: null, error: string }
   const refreshMeta = useCallback(async () => {
     setMetaRefreshing(true);
@@ -183,7 +183,7 @@ export function DashboardShell({
             type="button"
             onClick={onRefreshAll}
             disabled={loading || metaRefreshing}
-            title="시트에서 페어링/결과 + 참가자수/등수/점수를 모두 다시 가져와 화면을 갱신."
+            title="DB 에서 페어링/결과 + 참가자수/등수/점수를 모두 다시 가져와 화면을 갱신."
             className="px-2 py-1 rounded border border-accent2 bg-panel text-[10px] font-mono tracking-widest text-accent hover:bg-accent2 hover:text-bg transition-colors disabled:opacity-40"
           >
             {loading || metaRefreshing ? 'LOADING…' : '↻ 조회'}
@@ -226,7 +226,7 @@ export function DashboardShell({
             type="button"
             onClick={onRefreshAll}
             disabled={loading || metaRefreshing}
-            title="시트에서 페어링/결과 + 참가자수/등수/점수를 모두 다시 가져와 화면을 갱신. 시트가 변경된 직후 사용."
+            title="DB 에서 페어링/결과 + 참가자수/등수/점수를 모두 다시 가져와 화면을 갱신. Admin 에서 변경한 직후 사용."
             className="px-3 py-1.5 rounded border border-accent2 bg-panel text-xs font-mono tracking-widest text-accent hover:bg-accent2 hover:text-bg transition-colors disabled:opacity-40"
           >
             {loading || metaRefreshing ? 'LOADING…' : '↻ 조회'}

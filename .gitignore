@@ -33,3 +33,9 @@ DashDisignTemplates/02/
 # Playwright 스크린샷(scripts/capture-steps.mjs) 출력 — 로컬에서만 사용
 screenshots/
 screenshots.zip
+
+# 디자인 참고용 정적 HTML — JWT 등 민감 토큰 포함 가능, 리포에 올리지 않음
+UI기준.html
+
+# 레거시 백업 데이터 — 운영 데이터, 리포에 올리지 않음
+data/judges-legacy-backup.json

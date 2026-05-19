@@ -3,7 +3,7 @@
 //   · 예선: 예선참가자 수 | 헬퍼 | 예선 통과 목표 커플 (24)
 //   · 본선: 본선참가자 수 | 헬퍼 | 본선 통과 목표 커플 (7)
 //   · 결승: 결승참가자 수 | 1위 / 2위 / 3위 (리더 · 팔로워 이름)
-// 데이터 출처: 3.참가자 · 4.예선통과 · 5.본선통과 · 6.결승 · 1.대회정보 시트.
+// 데이터 출처: DB 의 contests / participants / qualifiers(prelim·semi) / final_results 테이블.
 import type { ParticipantStats, RoundKey } from '@/lib/sheets/types';
 
 export function ParticipantStatsPanel({
@@ -31,7 +31,7 @@ function PrelimOrSemiPanel({
   const participantLeaders = isSemi ? stats.semiLeaders : stats.leaders;
   const participantFollowers = isSemi ? stats.semiFollowers : stats.followers;
 
-  // 헬퍼 칸은 예선에서만 의미 있음 (3.참가자 시트의 전체 헬퍼 풀 = 예선 RAND 페어링 보강용).
+  // 헬퍼 칸은 예선에서만 의미 있음 (participants 의 helper_leader/helper_follower = 예선 RAND 페어링 보강용).
   // 본선은 예선 통과자만 참가하므로 헬퍼 통계 비노출 → 2-칸 레이아웃.
   return (
     <aside

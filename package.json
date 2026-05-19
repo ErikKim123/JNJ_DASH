@@ -8,17 +8,26 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:migrate": "node scripts/apply-migrations.mjs",
+    "db:status": "node scripts/apply-migrations.mjs --list",
+    "import:sheets": "node scripts/import-from-sheets.mjs",
+    "import:sheets:skip-existing": "node scripts/import-from-sheets.mjs --skip-existing",
+    "db:seed-judging": "node scripts/seed-judging-from-meta.mjs"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.105.4",
+    "lru-cache": "^11.0.2",
     "next": "^15.1.6",
+    "pg": "^8.20.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "lru-cache": "^11.0.2",
+    "xlsx": "^0.18.5",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^22.9.0",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.4.20",

@@ -1,14 +1,19 @@
-// Design Ref: §4.1 — GET /api/contests
-import { getContestList } from '@/lib/sheets/adapter';
+// Design Ref: §4.1 — GET /api/contests (Phase 3: DB 기반)
+import { getContestList } from '@/lib/db/adapter';
 import { ok, mapError } from '@/lib/api/envelope';
 
-export const dynamic = 'force-dynamic'; // 캐시는 서버 LRU에서 처리, Next fetch 캐시 비활성화
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export async function GET() {
   try {
     const list = await getContestList();
-    // Design §4.4 — spreadsheetId는 클라이언트에 노출 금지
-    const safe = list.map(({ spreadsheetId, ...rest }) => rest);
+    // legacy spreadsheetId 는 클라이언트 노출 금지 (의미 없는 정보 + 시트 ID 비공개)
+    const safe = list.map((c) => {
+      const { spreadsheetId, ...rest } = c;
+      void spreadsheetId;
+      return rest;
+    });
     return ok(safe);
   } catch (e) {
     return mapError(e);
