@@ -442,6 +442,11 @@ function ExpandedDetail({
       {groups.profile.length > 0 && (
         <Section title="Profile" tone="info" count={groups.profile.length} defaultOpen>
           <KeyValueGrid entries={groups.profile} cols={3} onCommit={commitMetaKey} />
+          <ResendEmailButton
+            contestId={contestId}
+            participantId={row.id}
+            email={(row.meta?.['이메일'] as string | undefined) ?? ''}
+          />
         </Section>
       )}
 
@@ -974,6 +979,60 @@ function NewParticipantCard({
           ))}
         </div>
       </section>
+    </div>
+  );
+}
+
+// ─── Resend confirmation email button ──────────────────────────────────
+// PROFILE 섹션 하단에서 호출. 등록 시 메일 발송이 안 된 경우(키 미설정/샌드박스 제한 등)
+// 운영자가 ENV 보정 후 수동으로 재발송할 수 있게 한다.
+function ResendEmailButton({
+  contestId,
+  participantId,
+  email,
+}: {
+  contestId: string;
+  participantId: string;
+  email: string;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<{ ok: boolean; msg: string } | null>(null);
+
+  async function send() {
+    setBusy(true);
+    setResult(null);
+    try {
+      const res = await fetch(
+        `/api/admin/contests/${encodeURIComponent(contestId)}/participants/${participantId}/resend-email`,
+        { method: 'POST' }
+      );
+      const j = await res.json().catch(() => ({}));
+      if (res.ok && j.sent) {
+        setResult({ ok: true, msg: `발송 완료 → ${j.to ?? email} (id: ${j.id ?? '-'})` });
+      } else {
+        const reason = j.reason ?? j.error ?? `HTTP ${res.status}`;
+        const detail = j.error && j.error !== reason ? ` · ${j.error}` : '';
+        setResult({ ok: false, msg: `발송 실패: ${reason}${detail}` });
+      }
+    } catch (e) {
+      setResult({ ok: false, msg: e instanceof Error ? e.message : '네트워크 오류' });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const disabled = busy || !email;
+  return (
+    <div className="mt-3 flex items-center gap-3 flex-wrap">
+      <Button variant="secondary" onClick={send} disabled={disabled}>
+        {busy ? 'Sending…' : '✉ 확인 메일 재발송'}
+      </Button>
+      <span className="text-xs text-ink2">
+        {email ? `→ ${email}` : '이메일 미입력 — PROFILE.이메일 필드를 먼저 채우세요'}
+      </span>
+      {result && (
+        <span className={`text-xs ${result.ok ? 'text-ok' : 'text-danger'}`}>{result.msg}</span>
+      )}
     </div>
   );
 }
