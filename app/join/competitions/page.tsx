@@ -111,12 +111,12 @@ export default async function CompetitionsPage() {
             {contests.map((c) => {
               const isOpen = c.status === 'ready';
               const absUrl = `${origin}/join/${encodeURIComponent(c.id)}`;
-              // 상태별 짧은 한글 라벨
+              // 상태별 짧은 영문 라벨
               const statusLabel =
-                c.status === 'ready' ? '접수중'
-                : c.status === 'live' ? '대회 진행중'
-                : c.status === 'done' ? '종료'
-                : c.status;
+                c.status === 'ready' ? 'OPEN'
+                : c.status === 'live' ? 'IN PROGRESS'
+                : c.status === 'done' ? 'CLOSED'
+                : c.status.toUpperCase();
               return (
                 <li key={c.id}>
                   <CardShell isOpen={isOpen} href={`/join/${encodeURIComponent(c.id)}`}>
@@ -166,7 +166,7 @@ export default async function CompetitionsPage() {
                       </div>
                     </div>
                     <div
-                      title={isOpen ? absUrl : `${statusLabel} — 등록 불가`}
+                      title={isOpen ? absUrl : `${statusLabel} — Registration unavailable`}
                       aria-disabled={!isOpen}
                       style={{
                         flexShrink: 0,
