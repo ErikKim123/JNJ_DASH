@@ -93,9 +93,11 @@ export function Field({
 export function Badge({
   children,
   tone = 'neutral',
+  title,
 }: {
   children: React.ReactNode;
   tone?: 'neutral' | 'ok' | 'warn' | 'danger' | 'info';
+  title?: string;
 }) {
   const tones: Record<string, string> = {
     neutral: 'border-border text-ink2',
@@ -106,6 +108,7 @@ export function Badge({
   };
   return (
     <span
+      title={title}
       className={`inline-flex items-center px-2 py-0.5 rounded border text-xs ${tones[tone]}`}
     >
       {children}

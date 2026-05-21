@@ -30,6 +30,7 @@ interface Eligible {
   num: string;
   team_name: string;
   role: 'leader' | 'follower';
+  isHelper: boolean;
 }
 
 export function JudgingMatrix({
@@ -71,6 +72,7 @@ export function JudgingMatrix({
   const [actionMsg, setActionMsg] = useState<string | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [resetModalOpen, setResetModalOpen] = useState(false);
+  const [uncommitModalOpen, setUncommitModalOpen] = useState(false);
 
   const apiBase = `/api/admin/contests/${encodeURIComponent(contestId)}/judging/${round}`;
   // judges 추가/수정/삭제는 3 라운드 mirror 가 적용된 통합 엔드포인트 사용.
@@ -85,11 +87,21 @@ export function JudgingMatrix({
   const activeKeys: readonly ScoringItemKey[] = useMemo(() => activeDefs.map((d) => d.key), [activeDefs]);
 
   // Eligible participants for this round
+  // prelim 은 helper_leader / helper_follower 도 포함해 매트릭스에 노출 (isHelper=true).
+  // 헬퍼는 표시·투표만 가능하고 순위/정원/통과 계산에서는 제외된다.
   const eligible = useMemo<Eligible[]>(() => {
     if (round === 'prelim') {
       return participants
-        .filter((p) => p.role === 'leader' || p.role === 'follower')
-        .map((p) => ({ num: p.num, team_name: p.team_name, role: p.role as 'leader' | 'follower' }))
+        .filter((p) =>
+          p.role === 'leader' || p.role === 'follower' ||
+          p.role === 'helper_leader' || p.role === 'helper_follower'
+        )
+        .map((p) => {
+          const isHelper = p.role === 'helper_leader' || p.role === 'helper_follower';
+          const role: 'leader' | 'follower' =
+            p.role === 'leader' || p.role === 'helper_leader' ? 'leader' : 'follower';
+          return { num: p.num, team_name: p.team_name, role, isHelper };
+        })
         .sort((a, b) => a.num.localeCompare(b.num, undefined, { numeric: true }));
     }
     const source = round === 'semi' ? prelimQualifiers : semiQualifiers;
@@ -99,6 +111,7 @@ export function JudgingMatrix({
         num: q.participant_num,
         team_name: q.team_name,
         role: q.role as 'leader' | 'follower',
+        isHelper: false,
       }))
       .sort((a, b) => a.num.localeCompare(b.num, undefined, { numeric: true }));
   }, [round, participants, prelimQualifiers, semiQualifiers]);
@@ -130,15 +143,24 @@ export function JudgingMatrix({
     return t;
   }, [judges, voteMap, eligible, isFinal, activeKeys]);
 
+  // 헬퍼는 순위/정원 계산에서 제외하기 위한 lookup.
+  const helperSet = useMemo(() => {
+    const s = new Set<string>();
+    for (const e of eligible) if (e.isHelper) s.add(e.num);
+    return s;
+  }, [eligible]);
+
   // 점수 평가 — prelim/semi 는 O 카운트, final 은 total(없으면 avg). rank + boundary tie 공용.
+  // 헬퍼는 -Infinity 로 처리 → 정렬·rank 대상에서 자동 배제 (commit 로직과 일치).
   const scoreOf = useMemo(() => (num: string): number => {
+    if (helperSet.has(num)) return -Infinity;
     const t = totals.get(num);
     if (!t) return -Infinity;
     if (isFinal) return t.total > 0 ? t.total : (t.avg ?? -Infinity);
     // prelim/semi : O가 0이면 ranking 대상이 아님 (commit 로직과 일치 — "No O vote → not in qualifiers list").
     // 그렇지 않으면 0표 동점자가 정원 안으로 흘러들어와 통과 인원이 부풀려진다.
     return t.o > 0 ? t.o : -Infinity;
-  }, [totals, isFinal]);
+  }, [totals, isFinal, helperSet]);
 
   // 정원 경계 동점자 — rank == maxPerRole 의 점수와 rank == maxPerRole+1 의 점수가 같으면
   // 그 점수를 가진 모든 참가자가 boundary tie. 정원 안/밖 모두 포함 → 운영자 수동 결정 필요.
@@ -207,8 +229,10 @@ export function JudgingMatrix({
     return m;
   }, [judges, voteMap, eligible, isFinal, activeKeys]);
 
-  const eligibleLeaders = eligible.filter((e) => e.role === 'leader').length;
-  const eligibleFollowers = eligible.filter((e) => e.role === 'follower').length;
+  // 정규 참가자(leader/follower) 카운트 — 헬퍼는 별도 집계.
+  const eligibleLeaders = eligible.filter((e) => e.role === 'leader' && !e.isHelper).length;
+  const eligibleFollowers = eligible.filter((e) => e.role === 'follower' && !e.isHelper).length;
+  const eligibleHelpers = eligible.filter((e) => e.isHelper).length;
 
   // 현재 O/X 상태 기준 라이브 통과 인원 — rank ≤ maxPerRole (= 행 하이라이트 기준)
   // boundary tie 가 있으면 정원을 초과할 수 있다 (e.g. 24 정원에 25명 통과).
@@ -281,6 +305,24 @@ export function JudgingMatrix({
     }, 5000);
     return () => clearInterval(id);
   }, [autoRefresh]);
+
+  async function performUncommit() {
+    setUncommitModalOpen(false);
+    setError(null);
+    setActionMsg(null);
+    startTransition(async () => {
+      const res = await fetch(`${apiBase}/uncommit`, { method: 'POST' });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        setError(j.error ?? `Uncommit failed (${res.status})`);
+        return;
+      }
+      const j = await res.json();
+      setConfirmed({ leaders: 0, followers: 0 });
+      setActionMsg(t('matrix.uncommittedDone').replace('{N}', String(j.data?.deleted ?? 0)));
+      router.refresh();
+    });
+  }
 
   async function commitToQualifiers() {
     if (isFinal) {
@@ -423,7 +465,10 @@ export function JudgingMatrix({
       <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
         <div className="text-sm text-ink2 flex items-center gap-3 flex-wrap">
           <span>{roundLabel}</span>
-          <span>· {eligible.length} {t('matrix.eligible')} ({eligibleLeaders} {L} / {eligibleFollowers} {F})</span>
+          <span>
+            · {eligible.length} {t('matrix.eligible')} ({eligibleLeaders} {L} / {eligibleFollowers} {F}
+            {eligibleHelpers > 0 && <> + {eligibleHelpers} {t('matrix.helperShort')}</>})
+          </span>
           <span>· {judges.length} {t('matrix.judges')}</span>
           <Badge tone="warn">
             {t('matrix.passQuota')}: {maxPerRole * 2} {t('matrix.couples')} ({maxPerRole} {L} / {maxPerRole} {F})
@@ -488,9 +533,19 @@ export function JudgingMatrix({
             {t('matrix.reset')}
           </Button>
           {!isFinal && (
-            <Button variant="primary" onClick={commitToQualifiers} disabled={pending}>
-              {t('matrix.commitToQualifiers')}
-            </Button>
+            <>
+              <Button
+                variant="danger"
+                onClick={() => setUncommitModalOpen(true)}
+                disabled={pending || (confirmed.leaders === 0 && confirmed.followers === 0)}
+                title={t('matrix.uncommitTooltip')}
+              >
+                {t('matrix.uncommit')}
+              </Button>
+              <Button variant="primary" onClick={commitToQualifiers} disabled={pending}>
+                {t('matrix.commitToQualifiers')}
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -540,10 +595,15 @@ export function JudgingMatrix({
                   <tr key={e.num} className={`border-t border-border ${rowBg}`}>
                     <td className={`px-3 py-1 font-mono sticky left-0 ${stickyBg}`}>{e.num}</td>
                     <td className={`px-3 py-1 sticky left-20 w-48 ${stickyBg}`}>
-                      <div className="flex items-center gap-2 min-w-0">
+                      <div className="flex items-center gap-1.5 min-w-0">
                         <Badge tone={e.role === 'leader' ? 'info' : 'neutral'}>
                           {e.role === 'leader' ? L : F}
                         </Badge>
+                        {e.isHelper && (
+                          <Badge tone="warn" title={t('matrix.helperTooltip')}>
+                            {t('matrix.helperShort')}
+                          </Badge>
+                        )}
                         <span className="truncate">{e.team_name}</span>
                       </div>
                     </td>
@@ -727,6 +787,38 @@ export function JudgingMatrix({
               </Button>
               <Button variant="danger" onClick={performReset} disabled={pending}>
                 {t('matrix.resetModalConfirm')}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Uncommit 확인 모달 — qualifiers 행 전체 삭제 경고. */}
+      {uncommitModalOpen && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="uncommit-modal-title"
+          onClick={() => setUncommitModalOpen(false)}
+          onKeyDown={(e) => { if (e.key === 'Escape') setUncommitModalOpen(false); }}
+        >
+          <div
+            className="max-w-md w-[min(28rem,calc(100vw-2rem))] rounded-xl border-2 border-danger/60 bg-panel p-6 shadow-2xl shadow-black/60"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 id="uncommit-modal-title" className="text-lg font-semibold text-danger mb-3">
+              ⚠ {t('matrix.uncommitModalTitle')}
+            </h3>
+            <p className="text-sm text-ink2 mb-5 whitespace-pre-line">
+              {t('matrix.confirmUncommit').replace('{ROUND}', roundLabel)}
+            </p>
+            <div className="flex items-center justify-end gap-2">
+              <Button onClick={() => setUncommitModalOpen(false)} disabled={pending}>
+                {t('matrix.cancel')}
+              </Button>
+              <Button variant="danger" onClick={performUncommit} disabled={pending}>
+                {t('matrix.uncommitModalConfirm')}
               </Button>
             </div>
           </div>
