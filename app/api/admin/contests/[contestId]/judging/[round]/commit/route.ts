@@ -119,8 +119,11 @@ export async function POST(_req: Request, ctx: RouteCtx) {
     }
   }
 
-  // 5) upsert qualifiers: votes > 0 후보만 — passed = inQuota
-  const rowsToUpsert = eligible
+  // 5) DELETE → INSERT 로 idempotent commit.
+  //    upsert 방식은 votes=0 으로 떨어진 옛 통과자나, 심사위원 수 변경 이전에 저장된 stale votes 가
+  //    DB 에 그대로 남는 버그가 있었다 (display 가 5/4명 한도를 초과한 점수를 표시).
+  //    매 commit 마다 현재 라운드의 qualifiers 를 깨끗이 비우고 현재 상태로 다시 채운다.
+  const rowsToInsert = eligible
     .filter((e) => (voteCount.get(e.num) ?? 0) > 0)
     .map((e) => ({
       contest_id: contestId,
@@ -135,11 +138,16 @@ export async function POST(_req: Request, ctx: RouteCtx) {
       display_order: 0,
     }));
 
-  if (rowsToUpsert.length > 0) {
-    const { error: ue } = await sb
-      .from('qualifiers')
-      .upsert(rowsToUpsert, { onConflict: 'contest_id,round,participant_num' });
-    if (ue) return NextResponse.json({ error: ue.message }, { status: 500 });
+  const { error: de } = await sb
+    .from('qualifiers')
+    .delete()
+    .eq('contest_id', contestId)
+    .eq('round', r.data);
+  if (de) return NextResponse.json({ error: de.message }, { status: 500 });
+
+  if (rowsToInsert.length > 0) {
+    const { error: ie } = await sb.from('qualifiers').insert(rowsToInsert);
+    if (ie) return NextResponse.json({ error: ie.message }, { status: 500 });
   }
 
   // 6) 응답 — passed 카운트 (in-quota set 으로 계산)
@@ -152,7 +160,7 @@ export async function POST(_req: Request, ctx: RouteCtx) {
 
   return NextResponse.json({
     data: {
-      total: rowsToUpsert.length,
+      total: rowsToInsert.length,
       confirmedLeaders,
       confirmedFollowers,
       maxPerRole,
