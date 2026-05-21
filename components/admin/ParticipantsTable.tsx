@@ -3,7 +3,7 @@
 // Participants editor — thumbnails, inline edit, expandable detail row
 // exposing every meta field imported from the source sheet (38+ keys).
 // All UI text is English.
-import { useEffect, useMemo, useState, useTransition } from 'react';
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Badge, Button, Field, Input, Select, Textarea } from './ui';
 import type { ParticipantRow, ParticipantRole } from '@/lib/db/types';
@@ -28,7 +28,20 @@ interface DraftRow {
   representative: string;
   role: ParticipantRole;
   photo_url: string;
+  meta: Record<string, string>; // PROFILE 8개 필드 — 시트 키 그대로 보존
 }
+
+// 신규 폼에서 노출할 PROFILE 키 목록 (participant-meta.ts 의 PROFILE_KEYS 와 동일 순서).
+const PROFILE_FIELDS: { key: string; label: string; hint?: string; type?: 'date' | 'email' | 'text' }[] = [
+  { key: '부문', label: '부문', hint: '예: 소셜댄스' },
+  { key: '장르', label: '장르', hint: '예: 바차타' },
+  { key: '연락처', label: '연락처', hint: '예: 010-0000-0000' },
+  { key: '이메일', label: '이메일', type: 'email' },
+  { key: 'Nationality', label: 'Nationality' },
+  { key: '접수일', label: '접수일', type: 'date' },
+  { key: '사진원본', label: '사진원본', hint: 'Google Drive 공유 URL (선택)' },
+  { key: 'X', label: '인스타 (@)', hint: '예: @your_id' },
+];
 
 const EMPTY_DRAFT: DraftRow = {
   num: '',
@@ -36,6 +49,7 @@ const EMPTY_DRAFT: DraftRow = {
   representative: '',
   role: 'leader',
   photo_url: '',
+  meta: {},
 };
 
 export function ParticipantsTable({
@@ -116,13 +130,27 @@ export function ParticipantsTable({
       setError('Number and team name are required.');
       return;
     }
+    // 빈 PROFILE 필드는 meta 에서 제외 (시트 import 와 동일한 sparse 정책)
+    const trimmedMeta: Record<string, string> = {};
+    for (const [k, v] of Object.entries(newDraft.meta)) {
+      const t = (v ?? '').trim();
+      if (t) trimmedMeta[k] = t;
+    }
+    const payload = {
+      num: newDraft.num,
+      team_name: newDraft.team_name,
+      representative: newDraft.representative,
+      role: newDraft.role,
+      photo_url: newDraft.photo_url,
+      meta: trimmedMeta,
+    };
     startTransition(async () => {
       const res = await fetch(
         `/api/admin/contests/${encodeURIComponent(contestId)}/participants`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(newDraft),
+          body: JSON.stringify(payload),
         }
       );
       if (!res.ok) {
@@ -169,6 +197,17 @@ export function ParticipantsTable({
         <p className="text-sm text-danger mb-3" role="alert">{error}</p>
       )}
 
+      {creating && (
+        <NewParticipantCard
+          contestId={contestId}
+          draft={newDraft}
+          setDraft={setNewDraft}
+          pending={pending}
+          onSave={addRow}
+          onCancel={() => { setNewDraft(EMPTY_DRAFT); setCreating(false); setError(null); }}
+        />
+      )}
+
       <div className="rounded border border-border bg-panel overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-bg2 text-ink2 text-xs uppercase tracking-wider">
@@ -183,32 +222,6 @@ export function ParticipantsTable({
             </tr>
           </thead>
           <tbody>
-            {creating && (
-              <tr className="border-t border-border bg-accent/5">
-                <td className="px-3 py-2"></td>
-                <td className="px-2 py-2">
-                  <PhotoThumb url={normalizePhotoUrl(newDraft.photo_url)} size={40} />
-                </td>
-                <td className="px-2 py-2">
-                  <Input value={newDraft.num} onChange={(e) => setNewDraft({ ...newDraft, num: e.target.value })} placeholder="#" className="w-full" />
-                </td>
-                <td className="px-2 py-2">
-                  <Input value={newDraft.team_name} onChange={(e) => setNewDraft({ ...newDraft, team_name: e.target.value })} placeholder="Team name" className="w-full" />
-                </td>
-                <td className="px-2 py-2">
-                  <Input value={newDraft.representative} onChange={(e) => setNewDraft({ ...newDraft, representative: e.target.value })} placeholder="Rep." className="w-full" />
-                </td>
-                <td className="px-2 py-2">
-                  <Select value={newDraft.role} onChange={(e) => setNewDraft({ ...newDraft, role: e.target.value as ParticipantRole })} className="w-full">
-                    {Object.entries(ROLE_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                  </Select>
-                </td>
-                <td className="px-2 py-2 text-right">
-                  <Button variant="primary" onClick={addRow} disabled={pending}>Save</Button>
-                </td>
-              </tr>
-            )}
-
             {filtered.map((r) => {
               const expanded = expandedId === r.id;
               return (
@@ -255,6 +268,7 @@ export function ParticipantsTable({
                           row={r}
                           pending={pending}
                           activeScoringDefs={activeScoringDefs}
+                          contestId={contestId}
                           onPatch={(patch) => patchRow(r.id, patch)}
                         />
                       </td>
@@ -325,11 +339,13 @@ function ExpandedDetail({
   row,
   pending,
   activeScoringDefs,
+  contestId,
   onPatch,
 }: {
   row: ParticipantRow;
   pending: boolean;
   activeScoringDefs: ScoringItemDef[];
+  contestId: string;
   onPatch: (patch: Partial<ParticipantRow>) => void;
 }) {
   // Basic fields
@@ -386,11 +402,19 @@ function ExpandedDetail({
       <section className="rounded border border-border bg-bg2/30 p-4">
         <h4 className="text-xs uppercase tracking-widest text-accent mb-3">Basic</h4>
         <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-start">
-          <div className="md:col-span-2 flex justify-center">
+          <div className="md:col-span-2 flex flex-col items-center gap-2">
             <PhotoThumb url={photo ? normalizePhotoUrl(photo) : resolvePhotoUrl(row)} size={96} />
+            <PhotoUploadButton
+              contestId={contestId}
+              participantId={row.id}
+              onUploaded={(url) => {
+                setPhoto(url);
+                onPatch({ photo_url: url });
+              }}
+            />
           </div>
           <div className="md:col-span-10 grid grid-cols-1 md:grid-cols-3 gap-3">
-            <Field label="Photo URL" hint="Drive share or https URL">
+            <Field label="Photo URL" hint="Upload a file or paste a https / Drive URL">
               <Input value={photo} onChange={(e) => setPhoto(e.target.value)} onBlur={commitBasic} placeholder="https://…" />
             </Field>
             <Field label="#">
@@ -833,6 +857,202 @@ function AggInput({
         className={empty ? 'opacity-60' : ''}
       />
     </label>
+  );
+}
+
+// ─── New participant card — BASIC + PROFILE ────────────────────────────
+// 인라인 1줄 폼 대신 풀폭 카드. PROFILE 8개 필드는 meta 객체로 저장된다.
+function NewParticipantCard({
+  contestId,
+  draft,
+  setDraft,
+  pending,
+  onSave,
+  onCancel,
+}: {
+  contestId: string;
+  draft: {
+    num: string;
+    team_name: string;
+    representative: string;
+    role: ParticipantRole;
+    photo_url: string;
+    meta: Record<string, string>;
+  };
+  setDraft: (
+    update:
+      | typeof draft
+      | ((prev: typeof draft) => typeof draft)
+  ) => void;
+  pending: boolean;
+  onSave: () => void;
+  onCancel: () => void;
+}) {
+  function setField<K extends keyof typeof draft>(key: K, value: typeof draft[K]) {
+    setDraft((d) => ({ ...d, [key]: value }));
+  }
+  function setMetaField(key: string, value: string) {
+    setDraft((d) => ({ ...d, meta: { ...d.meta, [key]: value } }));
+  }
+  return (
+    <div className="mb-4 rounded border border-accent/40 bg-accent/5 p-4 space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-accent">New Participant</h3>
+        <div className="flex gap-2">
+          <Button variant="ghost" onClick={onCancel} disabled={pending}>Cancel</Button>
+          <Button variant="primary" onClick={onSave} disabled={pending}>Save</Button>
+        </div>
+      </div>
+
+      {/* BASIC */}
+      <section className="rounded border border-border bg-bg2/30 p-4">
+        <h4 className="text-xs uppercase tracking-widest text-accent mb-3">Basic</h4>
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-start">
+          <div className="md:col-span-2 flex flex-col items-center gap-2">
+            <PhotoThumb url={normalizePhotoUrl(draft.photo_url)} size={96} />
+            <PhotoUploadButton
+              contestId={contestId}
+              onUploaded={(url) => setField('photo_url', url)}
+            />
+          </div>
+          <div className="md:col-span-10 grid grid-cols-1 md:grid-cols-3 gap-3">
+            <Field label="Photo URL" hint="Upload a file or paste a https / Drive URL">
+              <Input
+                value={draft.photo_url}
+                onChange={(e) => setField('photo_url', e.target.value)}
+                placeholder="https://…"
+              />
+            </Field>
+            <Field label="# (required)">
+              <Input
+                value={draft.num}
+                onChange={(e) => setField('num', e.target.value)}
+                placeholder="120"
+              />
+            </Field>
+            <Field label="Role">
+              <Select
+                value={draft.role}
+                onChange={(e) => setField('role', e.target.value as ParticipantRole)}
+              >
+                {Object.entries(ROLE_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+              </Select>
+            </Field>
+            <Field label="Team Name (required)">
+              <Input
+                value={draft.team_name}
+                onChange={(e) => setField('team_name', e.target.value)}
+                placeholder="팀명"
+              />
+            </Field>
+            <Field label="Representative">
+              <Input
+                value={draft.representative}
+                onChange={(e) => setField('representative', e.target.value)}
+                placeholder="대표자"
+              />
+            </Field>
+          </div>
+        </div>
+      </section>
+
+      {/* PROFILE */}
+      <section className="rounded border border-border bg-bg2/30 p-4">
+        <h4 className="text-xs uppercase tracking-widest text-info mb-3">
+          Profile <span className="text-ink2/60 normal-case ml-1">(optional)</span>
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {PROFILE_FIELDS.map((f) => (
+            <Field key={f.key} label={f.label} hint={f.hint}>
+              <Input
+                type={f.type ?? 'text'}
+                value={draft.meta[f.key] ?? ''}
+                onChange={(e) => setMetaField(f.key, e.target.value)}
+                placeholder={f.hint ?? ''}
+              />
+            </Field>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+// ─── Photo upload button ────────────────────────────────────────────────
+// 숨겨진 <input type="file"> 을 트리거하는 버튼.
+// participantId 가 있으면 서버가 photo_url 도 PATCH (응답 .data 로 반영).
+// 없으면 (신규 행) 서버는 URL 만 반환 — 호출부에서 draft.photo_url 에 채움.
+function PhotoUploadButton({
+  contestId,
+  participantId,
+  compact = false,
+  onUploaded,
+}: {
+  contestId: string;
+  participantId?: string;
+  compact?: boolean;
+  onUploaded: (url: string) => void;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function handleFile(file: File) {
+    setErr(null);
+    if (file.size > 5 * 1024 * 1024) {
+      setErr('File too large (max 5MB)');
+      return;
+    }
+    if (!/^image\/(jpeg|png|webp|gif)$/.test(file.type)) {
+      setErr('Only jpeg / png / webp / gif allowed');
+      return;
+    }
+    const fd = new FormData();
+    fd.append('file', file);
+    if (participantId) fd.append('participantId', participantId);
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/admin/contests/${encodeURIComponent(contestId)}/photo-upload`, {
+        method: 'POST',
+        body: fd,
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j.url) {
+        setErr(j.error ?? `Upload failed (${res.status})`);
+        return;
+      }
+      onUploaded(j.url as string);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Network error');
+    } finally {
+      setBusy(false);
+      if (fileRef.current) fileRef.current.value = '';
+    }
+  }
+
+  return (
+    <div className={compact ? 'flex flex-col gap-0.5' : 'flex flex-col items-center gap-1'}>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) handleFile(f);
+        }}
+      />
+      <Button
+        type="button"
+        variant="secondary"
+        onClick={() => fileRef.current?.click()}
+        disabled={busy}
+        className={compact ? 'text-[10px] px-1.5 py-0.5' : ''}
+      >
+        {busy ? 'Uploading…' : compact ? 'Upload' : '📷 Upload'}
+      </Button>
+      {err && <p className="text-[10px] text-danger max-w-[120px] text-center">{err}</p>}
+    </div>
   );
 }
 
