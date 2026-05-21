@@ -18,7 +18,23 @@ export function getResend(): Resend | null {
   return client;
 }
 
-/** 발신자 — RESEND_FROM_EMAIL 우선, 미설정 시 Resend 샌드박스 기본값. */
+const SANDBOX_FROM = 'JNJ JOIN <onboarding@resend.dev>';
+
+/**
+ * 발신자 — RESEND_FROM_EMAIL 우선, 미설정 / 빈 문자열 / placeholder 면 Resend 샌드박스 기본값.
+ *
+ * 가드: `your-domain.com` / `example.com` / `example.org` 등 .env 가이드에
+ *  적힌 예시 값이 그대로 들어와도 사용자가 보낼 수 있도록 샌드박스로 폴백.
+ *  운영팀이 도메인 인증 후 진짜 도메인을 입력하면 즉시 사용됨.
+ */
 export function getFromAddress(): string {
-  return process.env.RESEND_FROM_EMAIL || 'JNJ JOIN <onboarding@resend.dev>';
+  const raw = (process.env.RESEND_FROM_EMAIL ?? '').trim();
+  if (!raw) return SANDBOX_FROM;
+  if (/\b(your-domain\.com|example\.com|example\.org|example\.net)\b/i.test(raw)) {
+    console.warn(
+      `[email] RESEND_FROM_EMAIL 에 placeholder 값(${raw}) 이 들어있음 — 샌드박스 발신자로 폴백`
+    );
+    return SANDBOX_FROM;
+  }
+  return raw;
 }
