@@ -325,10 +325,8 @@ export function JudgingMatrix({
   }
 
   async function commitToQualifiers() {
-    if (isFinal) {
-      setError(t('matrix.commitOnlyPrelimSemi'));
-      return;
-    }
+    // 결승은 final_results 테이블 갱신, 예선/본선은 qualifiers 테이블 갱신.
+    // 두 경우 모두 같은 commit 엔드포인트가 처리 (서버 측 분기).
     if (!confirm(
       t('matrix.confirmCommit')
         .replace('{ROUND}', roundLabel)
@@ -532,21 +530,20 @@ export function JudgingMatrix({
           <Button variant="danger" onClick={requestReset} disabled={pending || votes.length === 0}>
             {t('matrix.reset')}
           </Button>
+          {/* Uncommit 은 prelim/semi qualifiers 테이블만 대상 — final 에선 비노출. */}
           {!isFinal && (
-            <>
-              <Button
-                variant="danger"
-                onClick={() => setUncommitModalOpen(true)}
-                disabled={pending || (confirmed.leaders === 0 && confirmed.followers === 0)}
-                title={t('matrix.uncommitTooltip')}
-              >
-                {t('matrix.uncommit')}
-              </Button>
-              <Button variant="primary" onClick={commitToQualifiers} disabled={pending}>
-                {t('matrix.commitToQualifiers')}
-              </Button>
-            </>
+            <Button
+              variant="danger"
+              onClick={() => setUncommitModalOpen(true)}
+              disabled={pending || (confirmed.leaders === 0 && confirmed.followers === 0)}
+              title={t('matrix.uncommitTooltip')}
+            >
+              {t('matrix.uncommit')}
+            </Button>
           )}
+          <Button variant="primary" onClick={commitToQualifiers} disabled={pending}>
+            {isFinal ? t('matrix.commitToFinalResults') : t('matrix.commitToQualifiers')}
+          </Button>
         </div>
       </div>
 
