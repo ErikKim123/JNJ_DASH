@@ -47,6 +47,16 @@ export async function POST(req: Request, ctx: RouteCtx) {
     .maybeSingle();
   const displayOrder = (maxRow?.display_order ?? 0) + 1;
 
+  // 신규 심사위원의 라운드별 max_votes 기본값은 대회의 pass-per-role 과 일치.
+  // 명시적으로 body.max_votes 가 들어오면 그 값을 우선 사용 (예선/본선 공통, 결승은 null).
+  const { data: contest } = await sb
+    .from('contests')
+    .select('prelim_pass_per_role, semi_pass_per_role')
+    .eq('id', contestId)
+    .maybeSingle();
+  const prelimDefault = parsed.data.max_votes ?? contest?.prelim_pass_per_role ?? null;
+  const semiDefault   = parsed.data.max_votes ?? contest?.semi_pass_per_role   ?? null;
+
   const base = {
     contest_id: contestId,
     display_order: displayOrder,
@@ -58,15 +68,14 @@ export async function POST(req: Request, ctx: RouteCtx) {
     phone: parsed.data.phone ?? '',
     email: parsed.data.email ?? '',
     memo: parsed.data.memo ?? '',
-    max_votes: parsed.data.max_votes ?? null,
   };
 
   const { data, error } = await sb
     .from('judges')
     .insert([
-      { ...base, round: 'prelim' },
-      { ...base, round: 'semi'   },
-      { ...base, round: 'final'  },
+      { ...base, round: 'prelim', max_votes: prelimDefault },
+      { ...base, round: 'semi',   max_votes: semiDefault   },
+      { ...base, round: 'final',  max_votes: null          },
     ])
     .select('*');
   if (error) {

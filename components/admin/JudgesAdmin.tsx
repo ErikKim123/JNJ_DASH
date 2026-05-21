@@ -344,9 +344,10 @@ function JudgeRowEditor({
           </Select>
         </td>
         <td className="px-2 py-2">
-          {/* 예선 / 본선 라운드별 cap — 빈 칸 = ∞ (제한 없음). 결승은 점수 입력 방식이라 cap 없음. */}
+          {/* 예선 / 본선 라운드별 cap — 빈 칸 = ∞ (제한 없음). 결승은 점수 입력 방식이라 cap 없음.
+              신규 추가 시 자동으로 대회 정원이 들어가며, placeholder 도 대회 정원으로 안내. */}
           <div className="flex flex-col gap-1">
-            <label className="flex items-center gap-1 text-[10px] text-ink2/70" title="예선 O 표 상한">
+            <label className="flex items-center gap-1 text-[10px] text-ink2/70" title={`예선 O 표 상한 — 비우면 무제한 (대회 정원 ${prelimQuota})`}>
               <span className="w-6 shrink-0">예선</span>
               <Input
                 type="number" min={0} max={999}
@@ -357,11 +358,11 @@ function JudgeRowEditor({
                     onPatchMaxVotes('prelim', maxVotes.prelim);
                   }
                 }}
-                placeholder="∞"
+                placeholder={String(prelimQuota)}
                 className="w-14 font-mono text-center"
               />
             </label>
-            <label className="flex items-center gap-1 text-[10px] text-ink2/70" title="본선 O 표 상한">
+            <label className="flex items-center gap-1 text-[10px] text-ink2/70" title={`본선 O 표 상한 — 비우면 무제한 (대회 정원 ${semiQuota})`}>
               <span className="w-6 shrink-0">본선</span>
               <Input
                 type="number" min={0} max={999}
@@ -372,7 +373,7 @@ function JudgeRowEditor({
                     onPatchMaxVotes('semi', maxVotes.semi);
                   }
                 }}
-                placeholder="∞"
+                placeholder={String(semiQuota)}
                 className="w-14 font-mono text-center"
               />
             </label>
@@ -450,10 +451,10 @@ function JudgeRowEditor({
                 </p>
                 <p>
                   <span className="text-ink2/60">Max O votes →</span>{' '}
-                  <span className="font-mono">예선 {maxVotes.prelim ?? '∞'}</span>{' '}
+                  <span className="font-mono">예선 {maxVotes.prelim ?? `(${prelimQuota})`}</span>{' '}
                   <span className="text-ink2/60">·</span>{' '}
-                  <span className="font-mono">본선 {maxVotes.semi ?? '∞'}</span>{' '}
-                  <span className="text-ink2/60">— 라운드별 cap (빈 칸 = 무제한)</span>
+                  <span className="font-mono">본선 {maxVotes.semi ?? `(${semiQuota})`}</span>{' '}
+                  <span className="text-ink2/60">— 라운드별 cap (빈 칸 = 무제한, 괄호는 대회 정원)</span>
                 </p>
                 <p className="pt-1 text-ink2/60">
                   순서 변경은 현재 UI 에서 비활성화 — 변경하려면 삭제 후 재추가.
