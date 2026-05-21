@@ -571,7 +571,20 @@ export function JudgingMatrix({
                     className="text-left px-2 py-2 border-l border-border"
                     style={isFinal ? { minWidth: `${Math.max(8, activeDefs.length * 2.5)}rem` } : { minWidth: '5rem' }}
                   >
-                    <JudgeHeader judge={j} onRename={renameJudge} onDelete={deleteJudge} pending={pending} />
+                    <JudgeHeader
+                      judge={j}
+                      onRename={renameJudge}
+                      onDelete={deleteJudge}
+                      pending={pending}
+                      leaderShort={L}
+                      followerShort={F}
+                      allShort={t('matrix.judgeAllShort')}
+                      tooltips={{
+                        leader: t('matrix.judgeTargetLeader'),
+                        follower: t('matrix.judgeTargetFollower'),
+                        both: t('matrix.judgeTargetBoth'),
+                      }}
+                    />
                   </th>
                 ))}
                 <th className="text-left px-3 py-2 border-l border-border min-w-[6rem]">
@@ -859,11 +872,16 @@ export function JudgingMatrix({
 
 function JudgeHeader({
   judge, onRename, onDelete, pending,
+  leaderShort, followerShort, allShort, tooltips,
 }: {
   judge: JudgeRow;
   onRename: (id: string, name: string) => void;
   onDelete: (id: string, name: string) => void;
   pending: boolean;
+  leaderShort: string;
+  followerShort: string;
+  allShort: string;
+  tooltips: { leader: string; follower: string; both: string };
 }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(judge.name);
@@ -872,9 +890,21 @@ function JudgeHeader({
     if (name.trim() && name.trim() !== judge.name) onRename(judge.id, name.trim());
     else setName(judge.name);
   }
+  // target_role 짧은 배지 — 매트릭스에서 한눈에 누가 어느 역할을 심사하는지 알 수 있게.
+  const target = judge.target_role;
+  const badge =
+    target === 'leader'   ? { label: leaderShort,   tone: 'border-info/40 text-info',     title: tooltips.leader }   :
+    target === 'follower' ? { label: followerShort, tone: 'border-border text-ink2',      title: tooltips.follower } :
+                            { label: allShort,      tone: 'border-accent/40 text-accent', title: tooltips.both };
   return (
     <div className="flex items-center gap-1">
       <span className="text-ink2/70 font-mono text-xs">{judge.display_order}.</span>
+      <span
+        className={`inline-flex items-center px-1 py-0 rounded border text-[10px] leading-tight font-mono ${badge.tone}`}
+        title={badge.title}
+      >
+        {badge.label}
+      </span>
       {editing ? (
         <input
           autoFocus
