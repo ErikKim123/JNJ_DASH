@@ -37,10 +37,12 @@ export default function JoinLandingPage() {
         <p
           className="jnj-mono"
           style={{
-            fontSize: 13,
-            marginTop: 16,
-            color: 'var(--jnj-grey-500)',
-            letterSpacing: '0.08em',
+            fontSize: 'clamp(15px, 4.2vw, 18px)',
+            fontWeight: 700,
+            marginTop: 20,
+            color: 'var(--jnj-black)',
+            letterSpacing: '0.04em',
+            lineHeight: 1.3,
           }}
         >
           REGISTER FOR YOUR COMPETITION.
