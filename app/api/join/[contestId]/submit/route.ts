@@ -12,6 +12,8 @@ import { z } from 'zod';
 import { getSupabaseAdmin } from '@/lib/db/client';
 import { listParticipants, getContest } from '@/lib/db/queries';
 import { nextParticipantNum } from '@/lib/participants/next-num';
+import { sendConfirmationEmail } from '@/lib/email/sendConfirmation';
+import type { ContestRow } from '@/lib/db/types';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -105,9 +107,30 @@ export async function POST(req: Request, ctx: RouteCtx) {
         .select('*')
         .single();
       if (err2) return NextResponse.json({ error: err2.message }, { status: 500 });
-      return NextResponse.json({ data: data2 }, { status: 201 });
+      const emailResult2 = await dispatchConfirmation(contest, data2, cleanMeta);
+      return NextResponse.json({ data: data2, email: emailResult2 }, { status: 201 });
     }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  return NextResponse.json({ data }, { status: 201 });
+  const emailResult = await dispatchConfirmation(contest, data, cleanMeta);
+  return NextResponse.json({ data, email: emailResult }, { status: 201 });
+}
+
+// 등록 성공 후 확인 메일 발송. PROFILE.이메일 우선, 미입력이면 skip.
+// 발송 실패는 전체 응답을 깨뜨리지 않고 결과만 응답에 포함시켜 운영자가 확인 가능.
+async function dispatchConfirmation(
+  contest: ContestRow,
+  row: { num: string; representative: string; team_name: string },
+  meta: Record<string, string>
+) {
+  const to = meta['이메일'];
+  if (!to) return { sent: false, reason: 'NO_EMAIL' as const };
+  const period = [contest.period_start, contest.period_end].filter(Boolean).join(' ~ ');
+  return sendConfirmationEmail(to, {
+    displayName: row.representative || row.team_name || '참가자',
+    num: row.num,
+    contestName: contest.name,
+    contestId: contest.id,
+    period,
+  });
 }
