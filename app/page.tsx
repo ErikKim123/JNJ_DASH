@@ -20,6 +20,14 @@ export default function HomePage() {
             DANCE · COMPETITION · DASHBOARD
           </p>
           <Link
+            href="/join"
+            target="_blank"
+            rel="noopener"
+            className="text-xs font-mono tracking-widest uppercase px-3 py-1.5 rounded border border-border text-ink2 hover:text-ink hover:border-ink transition"
+          >
+            참가자 앱 ↗
+          </Link>
+          <Link
             href="/admin"
             className="text-xs font-mono tracking-widest uppercase px-3 py-1.5 rounded border border-accent/40 text-accent hover:bg-accent/10 hover:border-accent transition"
           >
