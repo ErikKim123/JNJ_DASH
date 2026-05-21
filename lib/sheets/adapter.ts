@@ -334,6 +334,7 @@ async function getFinalPodium(
     const followers: FinalPodiumEntry[] = [];
 
     for (const row of rows) {
+      const num = cell(row, cols.num);
       const name = cell(row, cols.teamName);
       const finalRank = cell(row, cols.finalRank);
       const score = cell(row, cols.totalScore);
@@ -343,12 +344,12 @@ async function getFinalPodium(
       if (lm) {
         const rank = Number.parseInt(lm[1], 10);
         if (rank >= 1 && rank <= FINAL_PODIUM_MAX_RANK) {
-          leaders.push({ rank, name, score });
+          leaders.push({ rank, num, name, score });
         }
       } else if (fm) {
         const rank = Number.parseInt(fm[1], 10);
         if (rank >= 1 && rank <= FINAL_PODIUM_MAX_RANK) {
-          followers.push({ rank, name, score });
+          followers.push({ rank, num, name, score });
         }
       }
     }

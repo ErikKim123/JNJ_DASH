@@ -85,7 +85,7 @@ function PodiumList({
   entries,
 }: {
   role: string;
-  entries: Array<{ rank: number; name: string; score: string }>;
+  entries: Array<{ rank: number; num: string; name: string; score: string }>;
 }) {
   return (
     <div>
@@ -97,9 +97,10 @@ function PodiumList({
           entries.map((e, i) => (
             <div
               key={`${e.rank}-${i}`}
-              className="grid grid-cols-[28px_1fr_auto] items-center gap-2 text-[11px]"
+              className="grid grid-cols-[28px_36px_1fr_auto] items-center gap-2 text-[11px]"
             >
               <span className="font-mono tracking-widest text-ink2 text-right">{e.rank}위</span>
+              <span className="font-mono text-ink2/70 tabular-nums" title={`참가번호 ${e.num}`}>{e.num || '—'}</span>
               <span className="font-semibold text-ink truncate" title={e.name}>{e.name}</span>
               <span className="font-mono text-accent text-[10px] tabular-nums">{e.score || '—'}</span>
             </div>

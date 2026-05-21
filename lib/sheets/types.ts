@@ -228,6 +228,8 @@ export type StepDataPayload =
 /** 결승 한 명의 순위·이름·총점. 6.결승 시트에서 rank ≤ 7인 행을 모두 추출. */
 export interface FinalPodiumEntry {
   rank: number;
+  /** 참가번호 (e.g. '001'). 시상대 표시와 일치시키기 위해 함께 노출. */
+  num: string;
   name: string;
   score: string;
 }

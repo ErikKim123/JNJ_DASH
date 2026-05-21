@@ -129,7 +129,7 @@ async function getParticipantStats(
     sb.from('participants').select('role').eq('contest_id', cid),
     sb.from('qualifiers').select('role').eq('contest_id', cid).eq('round', 'prelim').eq('passed', true),
     sb.from('qualifiers').select('role').eq('contest_id', cid).eq('round', 'semi').eq('passed', true),
-    sb.from('final_results').select('role,team_name,final_rank').eq('contest_id', cid),
+    sb.from('final_results').select('role,team_name,participant_num,final_rank').eq('contest_id', cid),
   ]);
 
   if (pAll.error) throw new Error(`getParticipantStats(participants): ${pAll.error.message}`);
@@ -160,9 +160,9 @@ async function getParticipantStats(
 
   const finalLeaderPodium: FinalPodiumEntry[] = [];
   const finalFollowerPodium: FinalPodiumEntry[] = [];
-  for (const r of (finalsRows.data ?? []) as Array<{ role: 'leader' | 'follower'; team_name: string; final_rank: number | null }>) {
+  for (const r of (finalsRows.data ?? []) as Array<{ role: 'leader' | 'follower'; team_name: string; participant_num: string; final_rank: number | null }>) {
     if (r.final_rank == null || r.final_rank < 1 || r.final_rank > FINAL_PODIUM_MAX_RANK) continue;
-    const entry: FinalPodiumEntry = { rank: r.final_rank, name: r.team_name, score: '' };
+    const entry: FinalPodiumEntry = { rank: r.final_rank, num: r.participant_num ?? '', name: r.team_name, score: '' };
     if (r.role === 'leader') finalLeaderPodium.push(entry);
     else if (r.role === 'follower') finalFollowerPodium.push(entry);
   }
@@ -189,18 +189,19 @@ async function getFinalPodiumWithScore(
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
     .from('final_results')
-    .select('role,team_name,final_rank,total_score')
+    .select('role,team_name,participant_num,final_rank,total_score')
     .eq('contest_id', contestId);
   if (error) throw new Error(`getFinalPodiumWithScore: ${error.message}`);
 
   const leaders: FinalPodiumEntry[] = [];
   const followers: FinalPodiumEntry[] = [];
   for (const r of (data ?? []) as Array<{
-    role: 'leader' | 'follower'; team_name: string; final_rank: number | null; total_score: number | null;
+    role: 'leader' | 'follower'; team_name: string; participant_num: string; final_rank: number | null; total_score: number | null;
   }>) {
     if (r.final_rank == null || r.final_rank < 1 || r.final_rank > FINAL_PODIUM_MAX_RANK) continue;
     const entry: FinalPodiumEntry = {
       rank: r.final_rank,
+      num: r.participant_num ?? '',
       name: r.team_name,
       score: r.total_score == null ? '' : String(r.total_score),
     };
