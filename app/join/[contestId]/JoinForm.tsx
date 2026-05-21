@@ -128,7 +128,20 @@ export function JoinForm({
         return;
       }
       const assignedNum = (j.data.num as string) ?? suggestedNum;
-      router.push(`/join/${encodeURIComponent(contestId)}/done?num=${encodeURIComponent(assignedNum)}`);
+      // 메일 결과를 query 로 전달 — done 페이지에서 발송 상태 표시.
+      // sent=1 / sent=0&reason=... 형태.
+      const params = new URLSearchParams({ num: assignedNum });
+      const emailRes = j.email as { sent?: boolean; reason?: string } | undefined;
+      if (emailRes) {
+        if (emailRes.sent) {
+          params.set('mail', '1');
+          if (draft.meta['이메일']) params.set('to', draft.meta['이메일']);
+        } else if (emailRes.reason) {
+          params.set('mail', '0');
+          params.set('reason', emailRes.reason);
+        }
+      }
+      router.push(`/join/${encodeURIComponent(contestId)}/done?${params.toString()}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : '네트워크 오류');
     } finally {
