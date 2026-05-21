@@ -47,9 +47,9 @@ export async function POST(req: Request, ctx: RouteCtx) {
   if (!contest) {
     return NextResponse.json({ error: 'CONTEST_NOT_FOUND' }, { status: 404 });
   }
-  // archived/done 대회는 신청 차단.
-  if (contest.status === 'archived' || contest.status === 'done') {
-    return NextResponse.json({ error: 'CONTEST_CLOSED' }, { status: 403 });
+  // ready 상태에서만 신청 가능 — live/done/archived 모두 차단.
+  if (contest.status !== 'ready') {
+    return NextResponse.json({ error: 'CONTEST_CLOSED', status: contest.status }, { status: 403 });
   }
 
   let body: unknown;

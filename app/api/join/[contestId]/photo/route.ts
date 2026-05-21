@@ -52,8 +52,8 @@ export async function POST(req: Request, ctx: RouteCtx) {
   // 존재 + 접수 가능 검증 — 잘못된 contestId 로 스토리지 공간 채우는 것 방지.
   const contest = await getContest(contestId).catch(() => null);
   if (!contest) return NextResponse.json({ error: 'CONTEST_NOT_FOUND' }, { status: 404 });
-  if (contest.status === 'archived' || contest.status === 'done') {
-    return NextResponse.json({ error: 'CONTEST_CLOSED' }, { status: 403 });
+  if (contest.status !== 'ready') {
+    return NextResponse.json({ error: 'CONTEST_CLOSED', status: contest.status }, { status: 403 });
   }
 
   let form: FormData;

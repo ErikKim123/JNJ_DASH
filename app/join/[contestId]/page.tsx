@@ -23,13 +23,33 @@ export default async function JoinFormPage({
   const { contestId } = await params;
   const contest = await getContest(contestId);
   if (!contest) notFound();
-  if (contest.status === 'archived' || contest.status === 'done') {
+  // ready 상태에서만 등록 가능. archived 는 목록에서 이미 숨김.
+  if (contest.status !== 'ready') {
+    const reason =
+      contest.status === 'live' ? '대회가 이미 진행 중입니다.'
+      : contest.status === 'done' ? '대회가 종료되었습니다.'
+      : '현재 등록을 받지 않습니다.';
     return (
-      <main style={{ padding: '24px 20px', maxWidth: 480, margin: '0 auto' }}>
-        <TopNav />
-        <div className="jnj-card" style={{ marginTop: 16, textAlign: 'center', padding: 28 }}>
-          <p className="jnj-h2" style={{ marginBottom: 8 }}>Registration closed.</p>
-          <p className="jnj-caption">This competition is no longer accepting entries.</p>
+      <main style={{ padding: '24px 20px', maxWidth: 480, margin: '0 auto', minHeight: '100dvh' }}>
+        <TopNav homeHref="/join" />
+        <div
+          className="jnj-card"
+          style={{
+            marginTop: 24,
+            textAlign: 'center',
+            padding: 32,
+            background: 'var(--jnj-grey-100)',
+            border: '1px solid var(--jnj-grey-300)',
+          }}
+        >
+          <p
+            className="jnj-mono"
+            style={{ fontSize: 12, color: 'var(--jnj-grey-500)', marginBottom: 8, letterSpacing: '0.08em' }}
+          >
+            REGISTRATION CLOSED
+          </p>
+          <p className="jnj-h2" style={{ marginBottom: 8 }}>{contest.name}</p>
+          <p className="jnj-caption" style={{ color: 'var(--jnj-grey-500)' }}>{reason}</p>
         </div>
       </main>
     );
