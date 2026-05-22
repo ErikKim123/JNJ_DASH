@@ -8,6 +8,8 @@ import { useRouter } from 'next/navigation';
 import type { ParticipantRole } from '@/lib/db/types';
 import { normalizePhotoUrl } from '@/lib/photo';
 
+type Lang = 'ko' | 'en';
+
 const ROLE_OPTIONS: { value: ParticipantRole; label: string }[] = [
   { value: 'leader', label: 'Leader' },
   { value: 'follower', label: 'Follower' },
@@ -17,19 +19,47 @@ const ROLE_OPTIONS: { value: ParticipantRole; label: string }[] = [
 
 const PROFILE_FIELDS: {
   key: string;
-  label: string;
-  placeholder?: string;
+  label: { ko: string; en: string };
+  placeholder?: { ko: string; en: string };
   type?: 'text' | 'email' | 'date' | 'tel';
 }[] = [
-  { key: '부문', label: '부문', placeholder: '예: 소셜댄스' },
-  { key: '장르', label: '장르', placeholder: '예: 바차타' },
-  { key: '연락처', label: '연락처', placeholder: '010-0000-0000', type: 'tel' },
-  { key: '이메일', label: '이메일', placeholder: 'name@example.com', type: 'email' },
-  { key: 'Nationality', label: 'Nationality', placeholder: 'Korea' },
-  { key: '접수일', label: '접수일', type: 'date' },
-  { key: '사진원본', label: '사진원본 URL', placeholder: 'Google Drive 공유 링크 (선택)' },
-  { key: 'X', label: '인스타 (@)', placeholder: '@your_id' },
+  { key: '부문', label: { ko: '부문', en: 'Category' }, placeholder: { ko: '예: 소셜댄스', en: 'e.g. Social Dance' } },
+  { key: '장르', label: { ko: '장르', en: 'Genre' }, placeholder: { ko: '예: 바차타', en: 'e.g. Bachata' } },
+  { key: '연락처', label: { ko: '연락처', en: 'Phone' }, placeholder: { ko: '010-0000-0000', en: '010-0000-0000' }, type: 'tel' },
+  { key: '이메일', label: { ko: '이메일', en: 'Email' }, placeholder: { ko: 'name@example.com', en: 'name@example.com' }, type: 'email' },
+  { key: 'Nationality', label: { ko: '국적', en: 'Nationality' }, placeholder: { ko: 'Korea', en: 'Korea' } },
+  { key: '접수일', label: { ko: '접수일', en: 'Submitted Date' }, type: 'date' },
+  { key: '사진원본', label: { ko: '사진원본 URL', en: 'Original Photo URL' }, placeholder: { ko: 'Google Drive 공유 링크 (선택)', en: 'Google Drive share link (optional)' } },
+  { key: 'X', label: { ko: '인스타 (@)', en: 'Instagram (@)' }, placeholder: { ko: '@your_id', en: '@your_id' } },
 ];
+
+const T = {
+  basic: { ko: 'Basic', en: 'Basic' },
+  profile: { ko: 'Profile', en: 'Profile' },
+  uploadPhoto: { ko: '사진 업로드', en: 'Upload Photo' },
+  uploading: { ko: '업로드 중…', en: 'Uploading…' },
+  photoHint: { ko: 'JPEG / PNG / WebP · 최대 5MB', en: 'JPEG / PNG / WebP · max 5MB' },
+  noPhoto: { ko: '사진 없음', en: 'No photo' },
+  numLabel: { ko: '참가 번호 (자동 부여)', en: 'Entry Number (auto)' },
+  roleLabel: { ko: '역할 (Role)', en: 'Role' },
+  teamLabel: { ko: '팀명 (필수)', en: 'Team Name (required)' },
+  teamPlaceholder: { ko: '팀명', en: 'Team name' },
+  repLabel: { ko: '대표자 (필수)', en: 'Representative (required)' },
+  repPlaceholder: { ko: '대표자 이름', en: 'Representative name' },
+  submit: { ko: '신청하기', en: 'Submit Entry' },
+  submitting: { ko: '제출 중…', en: 'Submitting…' },
+  errTeam: { ko: '팀명을 입력해주세요.', en: 'Please enter a team name.' },
+  errRep: { ko: '대표자를 입력해주세요.', en: 'Please enter a representative.' },
+  errFileSize: { ko: '파일이 너무 큽니다 (최대 5MB).', en: 'File too large (max 5MB).' },
+  errFileType: { ko: '이미지 파일만 업로드 가능합니다 (jpeg/png/webp/gif).', en: 'Only image files allowed (jpeg/png/webp/gif).' },
+  errNet: { ko: '네트워크 오류', en: 'Network error' },
+  errPhoto: { ko: '사진 업로드 실패', en: 'Photo upload failed' },
+  errSubmit: { ko: '신청 실패', en: 'Submission failed' },
+} as const;
+
+function t(key: keyof typeof T, lang: Lang): string {
+  return T[key][lang];
+}
 
 interface Draft {
   team_name: string;
@@ -55,6 +85,7 @@ export function JoinForm({
 }) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
+  const [lang, setLang] = useState<Lang>('ko');
   const [draft, setDraft] = useState<Draft>({
     team_name: '',
     representative: '',
@@ -76,11 +107,11 @@ export function JoinForm({
   async function uploadPhoto(file: File) {
     setError(null);
     if (file.size > 5 * 1024 * 1024) {
-      setError('파일이 너무 큽니다 (최대 5MB).');
+      setError(t('errFileSize', lang));
       return;
     }
     if (!/^image\/(jpeg|png|webp|gif)$/.test(file.type)) {
-      setError('이미지 파일만 업로드 가능합니다 (jpeg/png/webp/gif).');
+      setError(t('errFileType', lang));
       return;
     }
     const fd = new FormData();
@@ -93,12 +124,12 @@ export function JoinForm({
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok || !j.url) {
-        setError(j.error ?? `사진 업로드 실패 (${res.status})`);
+        setError(j.error ?? `${t('errPhoto', lang)} (${res.status})`);
         return;
       }
       setField('photo_url', j.url as string);
     } catch (e) {
-      setError(e instanceof Error ? e.message : '네트워크 오류');
+      setError(e instanceof Error ? e.message : t('errNet', lang));
     } finally {
       setPhotoBusy(false);
       if (fileRef.current) fileRef.current.value = '';
@@ -107,8 +138,8 @@ export function JoinForm({
 
   async function submit() {
     setError(null);
-    if (!draft.team_name.trim()) { setError('팀명을 입력해주세요.'); return; }
-    if (!draft.representative.trim()) { setError('대표자를 입력해주세요.'); return; }
+    if (!draft.team_name.trim()) { setError(t('errTeam', lang)); return; }
+    if (!draft.representative.trim()) { setError(t('errRep', lang)); return; }
     setBusy(true);
     try {
       const res = await fetch(`/api/join/${encodeURIComponent(contestId)}/submit`, {
@@ -124,7 +155,7 @@ export function JoinForm({
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok || !j.data) {
-        setError(j.error ?? `신청 실패 (${res.status})`);
+        setError(j.error ?? `${t('errSubmit', lang)} (${res.status})`);
         return;
       }
       const assignedNum = (j.data.num as string) ?? suggestedNum;
@@ -143,7 +174,7 @@ export function JoinForm({
       }
       router.push(`/join/${encodeURIComponent(contestId)}/done?${params.toString()}`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : '네트워크 오류');
+      setError(e instanceof Error ? e.message : t('errNet', lang));
     } finally {
       setBusy(false);
     }
@@ -153,13 +184,18 @@ export function JoinForm({
 
   return (
     <div className="jnj-stack-6">
+      {/* Language toggle */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <LangToggle lang={lang} onChange={setLang} />
+      </div>
+
       {/* BASIC */}
       <section>
-        <h2 className="jnj-section-title">Basic</h2>
+        <h2 className="jnj-section-title">{t('basic', lang)}</h2>
         <div className="jnj-card jnj-stack-4">
           {/* Photo */}
           <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-            <PhotoPreview url={photoPreview} />
+            <PhotoPreview url={photoPreview} emptyLabel={t('noPhoto', lang)} />
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
               <input
                 ref={fileRef}
@@ -177,13 +213,13 @@ export function JoinForm({
                 onClick={() => fileRef.current?.click()}
                 disabled={photoBusy}
               >
-                {photoBusy ? 'Uploading…' : '사진 업로드'}
+                {photoBusy ? t('uploading', lang) : t('uploadPhoto', lang)}
               </button>
-              <p className="jnj-small">JPEG / PNG / WebP · 최대 5MB</p>
+              <p className="jnj-small">{t('photoHint', lang)}</p>
             </div>
           </div>
 
-          <Field label="참가 번호 (자동 부여)">
+          <Field label={t('numLabel', lang)}>
             <input
               type="text"
               className="jnj-input"
@@ -192,7 +228,7 @@ export function JoinForm({
             />
           </Field>
 
-          <Field label="역할 (Role)">
+          <Field label={t('roleLabel', lang)}>
             <select
               className="jnj-input jnj-select"
               value={draft.role}
@@ -204,24 +240,24 @@ export function JoinForm({
             </select>
           </Field>
 
-          <Field label="팀명 (필수)">
+          <Field label={t('teamLabel', lang)}>
             <input
               type="text"
               className="jnj-input"
               value={draft.team_name}
               onChange={(e) => setField('team_name', e.target.value)}
-              placeholder="팀명"
+              placeholder={t('teamPlaceholder', lang)}
               maxLength={200}
             />
           </Field>
 
-          <Field label="대표자 (필수)">
+          <Field label={t('repLabel', lang)}>
             <input
               type="text"
               className="jnj-input"
               value={draft.representative}
               onChange={(e) => setField('representative', e.target.value)}
-              placeholder="대표자 이름"
+              placeholder={t('repPlaceholder', lang)}
               maxLength={200}
             />
           </Field>
@@ -230,16 +266,16 @@ export function JoinForm({
 
       {/* PROFILE */}
       <section>
-        <h2 className="jnj-section-title">Profile</h2>
+        <h2 className="jnj-section-title">{t('profile', lang)}</h2>
         <div className="jnj-card jnj-stack-4">
           {PROFILE_FIELDS.map((f) => (
-            <Field key={f.key} label={f.label}>
+            <Field key={f.key} label={f.label[lang]}>
               <input
                 type={f.type ?? 'text'}
                 className="jnj-input"
                 value={draft.meta[f.key] ?? ''}
                 onChange={(e) => setMeta(f.key, e.target.value)}
-                placeholder={f.placeholder ?? ''}
+                placeholder={f.placeholder ? f.placeholder[lang] : ''}
                 maxLength={2048}
               />
             </Field>
@@ -278,7 +314,7 @@ export function JoinForm({
           disabled={busy || photoBusy}
           className="jnj-btn jnj-btn-primary jnj-btn-full jnj-btn-lg"
         >
-          {busy ? 'Submitting…' : 'Submit Entry'}
+          {busy ? t('submitting', lang) : t('submit', lang)}
         </button>
       </div>
     </div>
@@ -294,7 +330,62 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function PhotoPreview({ url }: { url: string }) {
+function LangToggle({ lang, onChange }: { lang: Lang; onChange: (l: Lang) => void }) {
+  const baseBtn: React.CSSProperties = {
+    padding: '6px 14px',
+    fontSize: 12,
+    fontWeight: 600,
+    letterSpacing: '0.08em',
+    border: 'none',
+    background: 'transparent',
+    cursor: 'pointer',
+    color: 'var(--jnj-grey-500)',
+    transition: 'all 200ms',
+  };
+  const activeBtn: React.CSSProperties = {
+    ...baseBtn,
+    color: 'var(--jnj-black)',
+    background: 'var(--jnj-white)',
+    borderRadius: 9999,
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+  };
+  return (
+    <div
+      role="group"
+      aria-label="Language"
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 4,
+        padding: 4,
+        background: 'var(--jnj-grey-100)',
+        border: '1px solid var(--jnj-grey-200)',
+        borderRadius: 9999,
+        alignSelf: 'flex-end',
+        marginLeft: 'auto',
+      }}
+    >
+      <button
+        type="button"
+        onClick={() => onChange('ko')}
+        aria-pressed={lang === 'ko'}
+        style={lang === 'ko' ? activeBtn : baseBtn}
+      >
+        KO
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange('en')}
+        aria-pressed={lang === 'en'}
+        style={lang === 'en' ? activeBtn : baseBtn}
+      >
+        EN
+      </button>
+    </div>
+  );
+}
+
+function PhotoPreview({ url, emptyLabel = 'No photo' }: { url: string; emptyLabel?: string }) {
   if (!url) {
     return (
       <div
@@ -312,7 +403,7 @@ function PhotoPreview({ url }: { url: string }) {
           flexShrink: 0,
         }}
       >
-        No photo
+        {emptyLabel}
       </div>
     );
   }

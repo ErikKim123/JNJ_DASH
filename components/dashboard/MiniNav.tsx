@@ -4,6 +4,11 @@
 import type { ContestMeta, RoundKey, StepKey } from '@/lib/sheets/types';
 
 const ROUND_ORDER: RoundKey[] = ['prelim', 'semi', 'final'];
+const ROUND_LABEL_EN: Record<RoundKey, string> = {
+  prelim: 'PRELIM',
+  semi: 'SEMI',
+  final: 'FINAL',
+};
 const STEP_LABEL: Record<StepKey, string> = {
   prep: 'PREP',
   pairing: 'PAIR',
@@ -55,9 +60,9 @@ export function MiniNav({
             className={`px-1.5 py-0.5 text-[9px] font-mono tracking-wider rounded transition-colors ${
               key === round ? 'bg-accent text-[#1A1612] font-semibold' : 'text-ink2 hover:text-ink'
             }`}
-            title={meta.rounds[key].label}
+            title={ROUND_LABEL_EN[key]}
           >
-            {meta.rounds[key].label}
+            {ROUND_LABEL_EN[key]}
           </button>
         ))}
       </div>

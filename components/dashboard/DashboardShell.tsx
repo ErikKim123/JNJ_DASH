@@ -37,6 +37,9 @@ export function DashboardShell({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [fullscreen, setFullscreen] = useState(false);
+  // 풀스크린 모드: 마우스가 움직이면 컨트롤(미니내비/Refresh/Exit/Live)이 잠시 보이고,
+  // 일정 시간(2.5s) 동안 움직임이 없으면 다시 사라짐. 표출 모니터를 깔끔하게 유지.
+  const [controlsVisible, setControlsVisible] = useState(false);
   // 메타(참가자 통계, 결승 순위·점수 등)는 조회 버튼으로 강제 갱신되므로 클라이언트 상태로 보관.
   // 초기값은 서버 컴포넌트가 prop으로 주입한 값.
   const [meta, setMeta] = useState<ContestMeta>(initialMeta);
@@ -113,7 +116,12 @@ export function DashboardShell({
     else if (step === 'pairingB') pretty = 'PAIRING B';
     else if (step === 'pairing' && hasMultiPair) pretty = 'PAIRING A';
     else pretty = step.toUpperCase();
-    return `${meta.rounds[round].label} · ${pretty}`;
+    const roundEn: Record<RoundKey, string> = {
+      prelim: 'PRELIMINARY',
+      semi: 'SEMI-FINAL',
+      final: 'GRAND FINAL',
+    };
+    return `${meta.rounds[round].label} / ${roundEn[round]} · ${pretty}`;
   }, [meta, round, step]);
 
   // 키보드 단축키: 1/2/3 = 라운드, ←/→ = 스텝, F = 풀스크린 토글, Esc는 FullscreenToggle에서 처리
@@ -157,6 +165,28 @@ export function DashboardShell({
     return () => window.removeEventListener('keydown', onKey);
   }, [allowedSteps, step, onRoundSelect, onStepSelect]);
 
+  // 풀스크린에서 마우스 움직임 감지: 움직이면 컨트롤 표시, 2.5초간 정지 시 자동 숨김.
+  // 풀스크린이 아닐 때는 항상 보이므로 effect 비활성.
+  useEffect(() => {
+    if (!fullscreen) {
+      setControlsVisible(false);
+      return;
+    }
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const show = () => {
+      setControlsVisible(true);
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => setControlsVisible(false), 2500);
+    };
+    window.addEventListener('mousemove', show);
+    window.addEventListener('touchstart', show);
+    return () => {
+      window.removeEventListener('mousemove', show);
+      window.removeEventListener('touchstart', show);
+      if (timer) clearTimeout(timer);
+    };
+  }, [fullscreen]);
+
   // Design §11.2 — 풀스크린: 표출 모니터에서 SVG가 화면 전체에 fit.
   // 메뉴는 작고 흐릿하게 보이고, 마우스 hover/포커스 시 선명해짐.
   if (fullscreen) {
@@ -167,8 +197,12 @@ export function DashboardShell({
         ) : (
           <div className="text-center text-sm text-ink2">로딩 중…</div>
         )}
-        {/* 상단 중앙: 작은 미니 네비 (라운드 + 스텝) */}
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10">
+        {/* 상단 중앙: 작은 미니 네비 (라운드 + 스텝) — 마우스 움직임 시에만 표시 */}
+        <div
+          className={`absolute top-2 left-1/2 -translate-x-1/2 z-10 transition-opacity duration-300 ${
+            controlsVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+          }`}
+        >
           <MiniNav
             meta={meta}
             round={round}
@@ -177,27 +211,39 @@ export function DashboardShell({
             onStepSelect={onStepSelect}
           />
         </div>
-        {/* 우상단: 조회 + 풀스크린 해제 (둘 다 dim, hover/focus 시 선명) */}
-        <div className="absolute top-2 right-2 opacity-25 hover:opacity-100 focus-within:opacity-100 transition-opacity z-10 flex items-center gap-2">
+        {/* 우상단: 조회 + 풀스크린 해제 — 마우스 움직임 시에만 표시 */}
+        <div
+          className={`absolute top-2 right-2 transition-opacity duration-300 z-10 flex items-center gap-2 ${
+            controlsVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+          }`}
+        >
           <button
             type="button"
             onClick={onRefreshAll}
             disabled={loading || metaRefreshing}
-            title="DB 에서 페어링/결과 + 참가자수/등수/점수를 모두 다시 가져와 화면을 갱신."
+            title="Re-fetch pairing/results + participant stats from the database."
             className="px-2 py-1 rounded border border-accent2 bg-panel text-[10px] font-mono tracking-widest text-accent hover:bg-accent2 hover:text-bg transition-colors disabled:opacity-40"
           >
-            {loading || metaRefreshing ? 'LOADING…' : '↻ 조회'}
+            {loading || metaRefreshing ? 'LOADING…' : '↻ REFRESH'}
           </button>
           <FullscreenToggle active={fullscreen} onToggle={() => setFullscreen(false)} />
         </div>
-        {/* 좌상단: Live 인디케이터 (Live 단계에만) */}
+        {/* 좌상단: Live 인디케이터 (Live 단계에만) — 마우스 움직임 시에만 표시 */}
         {step === 'live' ? (
-          <div className="absolute top-2 left-2 opacity-40 hover:opacity-100 transition-opacity z-10">
+          <div
+            className={`absolute top-2 left-2 transition-opacity duration-300 z-10 ${
+              controlsVisible ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
             <LiveIndicator loading={loading} lastUpdated={lastUpdated} />
           </div>
         ) : null}
-        {/* 하단 중앙: 키보드 힌트 */}
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[9px] font-mono text-ink2 opacity-20 hover:opacity-80 transition-opacity z-10 select-none">
+        {/* 하단 중앙: 키보드 힌트 — 마우스 움직임 시에만 표시 */}
+        <div
+          className={`absolute bottom-2 left-1/2 -translate-x-1/2 text-[9px] font-mono text-ink2 transition-opacity duration-300 z-10 select-none ${
+            controlsVisible ? 'opacity-80' : 'opacity-0'
+          }`}
+        >
           1/2/3 · ← → · F · Esc
         </div>
       </main>
@@ -209,7 +255,7 @@ export function DashboardShell({
       <header className="flex items-end justify-between gap-4 flex-wrap pb-4 border-b border-border mb-5">
         <div>
           <Link href="/" className="text-xs text-ink2 hover:text-ink">
-            ← 대회 목록
+            ← 대회 목록 / Contest List
           </Link>
           <h1 className="text-xl font-semibold tracking-tight mt-1">
             {meta.name}
@@ -229,7 +275,7 @@ export function DashboardShell({
             title="DB 에서 페어링/결과 + 참가자수/등수/점수를 모두 다시 가져와 화면을 갱신. Admin 에서 변경한 직후 사용."
             className="px-3 py-1.5 rounded border border-accent2 bg-panel text-xs font-mono tracking-widest text-accent hover:bg-accent2 hover:text-bg transition-colors disabled:opacity-40"
           >
-            {loading || metaRefreshing ? 'LOADING…' : '↻ 조회'}
+            {loading || metaRefreshing ? 'LOADING…' : '↻ 조회 / Refresh'}
           </button>
           {step === 'live' ? <LiveIndicator loading={loading} lastUpdated={lastUpdated} /> : null}
           <FullscreenToggle active={fullscreen} onToggle={() => setFullscreen(true)} />

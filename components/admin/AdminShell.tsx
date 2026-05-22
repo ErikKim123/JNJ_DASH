@@ -74,7 +74,7 @@ function AdminShellInner({
             className="px-3 py-1 rounded border border-border text-ink2 hover:text-ink hover:border-ink transition font-mono text-xs uppercase tracking-widest"
             title="참가자 셀프 등록 페이지를 새 창으로 엽니다"
           >
-            참가자 앱 ↗
+            Join App ↗
           </Link>
           <Link href="/" className="text-ink2 hover:text-ink transition">
             {t('header.display')}

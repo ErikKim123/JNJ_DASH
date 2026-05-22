@@ -25,7 +25,9 @@ function PrelimOrSemiPanel({
   round: Exclude<RoundKey, 'final'>;
 }) {
   const isSemi = round === 'semi';
-  const passLabel = isSemi ? '본선 통과 목표 커플' : '예선 통과 목표 커플';
+  const passLabel = isSemi
+    ? '본선 통과 목표 커플 / Couples to Grand Final'
+    : '예선 통과 목표 커플 / Couples to Semi-Final';
   const passSub = isSemi ? 'TO GRAND FINAL' : 'TO SEMI-FINAL';
   const passValue = isSemi ? stats.semiPassCouples : stats.prelimPassCouples;
   const participantLeaders = isSemi ? stats.semiLeaders : stats.leaders;
@@ -42,13 +44,13 @@ function PrelimOrSemiPanel({
         className={`grid ${isSemi ? 'grid-cols-2' : 'grid-cols-3'} gap-3 h-full items-center`}
       >
         <StatCell
-          label={isSemi ? '본선참가자 수' : '예선참가자 수'}
+          label={isSemi ? '본선참가자 수 / Semi-Final Entrants' : '예선참가자 수 / Prelim Entrants'}
           sub="LEADER · FOLLOWER"
           value={`${participantLeaders} · ${participantFollowers}`}
         />
         {isSemi ? null : (
           <StatCell
-            label="헬퍼"
+            label="헬퍼 / Helpers"
             sub="LEADER · FOLLOWER"
             value={`${stats.helperLeaders} · ${stats.helperFollowers}`}
           />
@@ -68,7 +70,7 @@ function FinalPanel({ stats }: { stats: ParticipantStats }) {
       <div className="grid grid-cols-3 gap-3 items-start">
         <div className="self-center">
           <StatCell
-            label="결승참가자 수"
+            label="결승참가자 수 / Grand Final Entrants"
             sub="LEADER · FOLLOWER"
             value={`${stats.finalLeaders} · ${stats.finalFollowers}`}
           />

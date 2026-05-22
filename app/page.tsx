@@ -13,7 +13,7 @@ export default function HomePage() {
           <h1 className="text-3xl font-semibold tracking-tight">
             JNJ <span className="text-accent">Dash</span>
           </h1>
-          <p className="text-sm text-ink2 mt-1">대회를 선택하세요</p>
+          <p className="text-sm text-ink2 mt-1">대회를 선택하세요 / Select a Competition</p>
         </div>
         <div className="flex items-center gap-4">
           <p className="text-xs text-ink2 font-mono tracking-widest uppercase">
@@ -25,7 +25,7 @@ export default function HomePage() {
             rel="noopener"
             className="text-xs font-mono tracking-widest uppercase px-3 py-1.5 rounded border border-border text-ink2 hover:text-ink hover:border-ink transition"
           >
-            참가자 앱 ↗
+            Join App ↗
           </Link>
           <Link
             href="/admin"
