@@ -191,7 +191,10 @@ export function DashboardShell({
   // 메뉴는 작고 흐릿하게 보이고, 마우스 hover/포커스 시 선명해짐.
   if (fullscreen) {
     return (
-      <main className="fixed inset-0 bg-bg flex items-center justify-center">
+      <main
+        className="fixed inset-0 bg-bg flex items-center justify-center"
+        style={{ cursor: controlsVisible ? 'auto' : 'none' }}
+      >
         {!isStepInvalidForRound && result ? (
           <TemplateRenderer templateId={templateId} round={round} step={step} data={result.payload} fit="viewport" />
         ) : (
