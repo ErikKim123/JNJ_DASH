@@ -158,6 +158,19 @@ viewBox: **1280 × 720**.
 
 ---
 
+## 4-1. 대회별 커스텀 배경
+
+- DB: `contests.background_image text` ([0009](../db/migrations/0009_contest_background.sql))
+- Storage 버킷: `contest-backgrounds` (public read, 8MB, jpg/png/webp)
+- Upload API: [POST /api/admin/contests/[id]/background-upload](../app/api/admin/contests/[contestId]/background-upload/route.ts)
+- 동작:
+  1. 어드민이 이미지 업로드 → contests.background_image 자동 저장
+  2. DashboardShell → TemplateRenderer 에 `backgroundOverride` prop 으로 전달
+  3. Template render() 가 SVG 내부 `<!--BG_OVERRIDE_SLOT-->` 마커를 `<image>` 로 치환
+  4. 마커 위치는 BG_LAYER 바로 다음 → 기본 배경 위에 덮어 그림
+- 비어있으면 마커가 빈 문자열로 치환 → 템플릿 기본 배경 유지
+- 적용 범위: PREP / PAIRING / OPEN / LIVE / WRAPUP / RESULT / CLOSE / CEREMONY 모든 화면
+
 ## 5. 광고/스폰서 로고 시스템
 
 ### DB
@@ -186,6 +199,12 @@ contest.sponsor_logos + sponsor_logo_opacities
 ## 6. 최근 커스터마이징 이력 (Changelog)
 
 > 디자인 변경 시 본 섹션에 추가.
+
+### 2026-05-24 (추가)
+- 대회별 커스텀 배경 이미지 업로드 기능 추가 (마이그레이션 0009)
+- TemplateModule.render 가 `opts.backgroundOverride` 받아 SVG `<!--BG_OVERRIDE_SLOT-->` 치환
+- 8개 모든 화면(PREP/PAIRING/OPEN/LIVE/WRAPUP/RESULT/CLOSE/CEREMONY)에 동일 배경 적용
+- ContestForm 의 모든 라벨/버튼/힌트 i18n 화 (EN/KO 토글 연동) — `cf.*` 메시지 키 추가
 
 ### 2026-05-24
 - Template 03 페스티벌 헤더에서 ★ 두 개 제거
