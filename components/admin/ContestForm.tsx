@@ -6,8 +6,15 @@ import { useRouter } from 'next/navigation';
 import { Button, Field, Input, Select } from './ui';
 import type { ContestRow } from '@/lib/db/types';
 import { SCORING_ITEMS, DEFAULT_SCORING_ITEMS, type ScoringItemKey } from '@/lib/db/scoring';
+import { useT } from '@/lib/i18n/LocaleContext';
+import type { MessageKey } from '@/lib/i18n/messages';
 
 const SPONSOR_SLOTS = 6;
+
+/** 간단한 {KEY} → value 치환. messages.ts 의 placeholder 패턴과 일치. */
+function fmt(template: string, vars: Record<string, string | number>): string {
+  return template.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? `{${k}}`));
+}
 
 export type ContestFormMode = 'create' | 'edit';
 
@@ -19,6 +26,7 @@ export function ContestForm({
   initial?: ContestRow;
 }) {
   const router = useRouter();
+  const t = useT();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -54,7 +62,59 @@ export function ContestForm({
         return Math.max(0, Math.min(100, Math.round(v)));
       });
     })(),
+    background_image: initial?.background_image ?? '',
+    background_opacity: ((): number => {
+      const v = initial?.background_opacity;
+      if (typeof v !== 'number' || !Number.isFinite(v)) return 100;
+      return Math.max(0, Math.min(100, Math.round(v)));
+    })(),
   });
+
+  function updateBackgroundOpacity(value: number) {
+    const v = Math.max(0, Math.min(100, Math.round(value)));
+    setForm((s) => ({ ...s, background_opacity: v }));
+  }
+
+  // 배경 이미지 업로드 상태
+  const [bgBusy, setBgBusy] = useState(false);
+  const [bgErr, setBgErr] = useState<string | null>(null);
+  const bgInputRef = useRef<HTMLInputElement | null>(null);
+
+  async function onBackgroundPick(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (mode === 'create' && !form.id.trim()) {
+      setBgErr(t('cf.bgIdRequired'));
+      return;
+    }
+    setBgErr(null);
+    setBgBusy(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const cid = form.id || initial?.id || '';
+      const res = await fetch(`/api/admin/contests/${encodeURIComponent(cid)}/background-upload`, {
+        method: 'POST',
+        body: fd,
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j.error || `upload failed (${res.status})`);
+      }
+      const { url } = await res.json();
+      setForm((s) => ({ ...s, background_image: url }));
+    } catch (err) {
+      setBgErr(err instanceof Error ? err.message : t('cf.bgUploadFailed'));
+    } finally {
+      setBgBusy(false);
+    }
+  }
+
+  function clearBackground() {
+    setForm((s) => ({ ...s, background_image: '' }));
+    setBgErr(null);
+  }
 
   function updateSponsorOpacity(slot: number, value: number) {
     const v = Math.max(0, Math.min(100, Math.round(value)));
@@ -75,7 +135,7 @@ export function ContestForm({
     e.target.value = ''; // 같은 파일 재선택 허용
     if (!file) return;
     if (mode === 'create' && !form.id.trim()) {
-      setSponsorErr((arr) => arr.map((v, i) => (i === slot ? '대회 ID 입력 후 업로드 가능' : v)));
+      setSponsorErr((arr) => arr.map((v, i) => (i === slot ? t('cf.sponsorIdRequired') : v)));
       return;
     }
     setSponsorErr((arr) => arr.map((v, i) => (i === slot ? null : v)));
@@ -103,7 +163,7 @@ export function ContestForm({
       });
     } catch (err) {
       setSponsorErr((arr) =>
-        arr.map((v, i) => (i === slot ? (err instanceof Error ? err.message : 'upload failed') : v))
+        arr.map((v, i) => (i === slot ? (err instanceof Error ? err.message : t('cf.sponsorUploadFailed')) : v))
       );
     } finally {
       setSponsorBusy((arr) => arr.map((v, i) => (i === slot ? false : v)));
@@ -156,7 +216,7 @@ export function ContestForm({
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
-        setError(j.error ?? `Request failed (${res.status})`);
+        setError(j.error ?? fmt(t('cf.requestFailed'), { STATUS: res.status }));
         return;
       }
       const j = await res.json();
@@ -167,13 +227,13 @@ export function ContestForm({
 
   async function onDelete() {
     if (mode !== 'edit') return;
-    if (!confirm(`Delete contest ${form.id} and all related data (participants/pairings/qualifiers/finals). Continue?`)) return;
+    if (!confirm(fmt(t('cf.deleteConfirm'), { ID: form.id }))) return;
     startTransition(async () => {
       const res = await fetch(`/api/admin/contests/${encodeURIComponent(form.id)}`, {
         method: 'DELETE',
       });
       if (!res.ok) {
-        setError(`Delete failed (${res.status})`);
+        setError(fmt(t('cf.deleteFailed'), { STATUS: res.status }));
         return;
       }
       router.push('/admin');
@@ -184,7 +244,7 @@ export function ContestForm({
   return (
     <form onSubmit={onSubmit} className="space-y-4 max-w-3xl">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Field label="Contest ID (slug)" hint="Alnum / - / _ only. e.g. JNJ-004">
+        <Field label={t('cf.id')} hint={t('cf.idHint')}>
           <Input
             value={form.id}
             onChange={(e) => update('id', e.target.value)}
@@ -194,30 +254,30 @@ export function ContestForm({
             pattern="[A-Za-z0-9_-]+"
           />
         </Field>
-        <Field label="Status">
+        <Field label={t('cf.status')}>
           <Select value={form.status} onChange={(e) => update('status', e.target.value as ContestRow['status'])}>
-            <option value="ready">ready</option>
-            <option value="live">live</option>
-            <option value="done">done</option>
-            <option value="archived">archived</option>
+            <option value="ready">{t('cf.statusReady')}</option>
+            <option value="live">{t('cf.statusLive')}</option>
+            <option value="done">{t('cf.statusDone')}</option>
+            <option value="archived">{t('cf.statusArchived')}</option>
           </Select>
         </Field>
 
-        <Field label="Name">
+        <Field label={t('cf.name')}>
           <Input value={form.name} onChange={(e) => update('name', e.target.value)} required />
         </Field>
-        <Field label="Host Organization">
+        <Field label={t('cf.hostOrg')}>
           <Input value={form.host_org} onChange={(e) => update('host_org', e.target.value)} />
         </Field>
 
-        <Field label="Start Date">
+        <Field label={t('cf.startDate')}>
           <Input type="date" value={form.period_start} onChange={(e) => update('period_start', e.target.value)} />
         </Field>
-        <Field label="End Date">
+        <Field label={t('cf.endDate')}>
           <Input type="date" value={form.period_end} onChange={(e) => update('period_end', e.target.value)} />
         </Field>
 
-        <Field label="Design Template Number" hint="DashDesignTemplates/01/02 ...">
+        <Field label={t('cf.templateNumber')} hint={t('cf.templateNumberHint')}>
           <Input
             type="number"
             min={1}
@@ -230,7 +290,7 @@ export function ContestForm({
           <div />
         </Field>
 
-        <Field label="Prelim Qualifiers (per role)">
+        <Field label={t('cf.prelimQualifiers')}>
           <Input
             type="number"
             min={1}
@@ -239,7 +299,7 @@ export function ContestForm({
             onChange={(e) => update('prelim_pass_per_role', Number(e.target.value))}
           />
         </Field>
-        <Field label="Semi Qualifiers (per role)">
+        <Field label={t('cf.semiQualifiers')}>
           <Input
             type="number"
             min={1}
@@ -249,19 +309,93 @@ export function ContestForm({
           />
         </Field>
 
-        <Field label="Festival Header (display)" hint="Defaults to contest name if blank">
+        <Field label={t('cf.festivalHeader')} hint={t('cf.festivalHeaderHint')}>
           <Input value={form.festival_header} onChange={(e) => update('festival_header', e.target.value)} />
         </Field>
-        <Field label="Tagline (display)">
+        <Field label={t('cf.tagline')}>
           <Input value={form.tagline} onChange={(e) => update('tagline', e.target.value)} />
         </Field>
       </div>
 
       <section className="rounded border border-border bg-panel/40 p-4">
+        <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+          <h3 className="text-sm font-semibold">{t('cf.bgTitle')}</h3>
+          <span className="text-xs text-ink2">{t('cf.bgMeta')}</span>
+        </div>
+        <div className="flex flex-col md:flex-row gap-3 items-start">
+          <div className="w-full md:w-80 aspect-[16/9] rounded border border-dashed border-border bg-panel/60 flex items-center justify-center overflow-hidden shrink-0">
+            {form.background_image ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={form.background_image}
+                alt="contest background"
+                className="w-full h-full object-cover"
+                style={{ opacity: form.background_opacity / 100 }}
+              />
+            ) : (
+              <span className="text-xs text-ink2 px-3 text-center">{t('cf.bgNotSet')}</span>
+            )}
+          </div>
+          <div className="flex flex-col gap-2 flex-1 w-full">
+            <input
+              ref={bgInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={onBackgroundPick}
+              className="hidden"
+            />
+            <Button
+              type="button"
+              variant="primary"
+              onClick={() => bgInputRef.current?.click()}
+              disabled={bgBusy}
+            >
+              {bgBusy ? t('cf.bgUploading') : form.background_image ? t('cf.bgReplace') : t('cf.bgUpload')}
+            </Button>
+            <div className="flex items-center gap-2 px-1">
+              <label className="text-xs text-ink2 uppercase tracking-wide shrink-0">
+                {t('cf.bgOpacity')}
+              </label>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={form.background_opacity}
+                onChange={(e) => updateBackgroundOpacity(Number(e.target.value))}
+                className="flex-1 h-1 accent-accent"
+                aria-label={t('cf.bgOpacityAria')}
+                disabled={!form.background_image}
+              />
+              <input
+                type="number"
+                min={0}
+                max={100}
+                value={form.background_opacity}
+                onChange={(e) => updateBackgroundOpacity(Number(e.target.value))}
+                className="w-14 h-6 px-1 text-xs rounded border border-border bg-panel text-ink text-right tabular-nums"
+                disabled={!form.background_image}
+              />
+              <span className="text-ink2 text-xs">%</span>
+            </div>
+            {form.background_image && (
+              <Button type="button" variant="danger" onClick={clearBackground} disabled={bgBusy}>
+                {t('cf.bgRemove')}
+              </Button>
+            )}
+            {bgErr && (
+              <p className="text-xs text-danger" role="alert">
+                {bgErr}
+              </p>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded border border-border bg-panel/40 p-4">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold">PREP 화면 하단 광고 (Sponsor Logos)</h3>
+          <h3 className="text-sm font-semibold">{t('cf.sponsorTitle')}</h3>
           <span className="text-xs text-ink2">
-            최대 {SPONSOR_SLOTS}개 · PREP 단계에서만 표출 · 3MB · jpg/png/webp/gif/svg
+            {fmt(t('cf.sponsorMeta'), { N: SPONSOR_SLOTS })}
           </span>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -275,9 +409,9 @@ export function ContestForm({
                 className="rounded border border-border bg-bg2 p-2 flex flex-col gap-2"
               >
                 <div className="text-xs text-ink2 flex items-center justify-between gap-2">
-                  <span className="shrink-0">슬롯 {slot + 1}</span>
+                  <span className="shrink-0">{fmt(t('cf.sponsorSlot'), { N: slot + 1 })}</span>
                   <div className="flex items-center gap-1 flex-1 justify-end">
-                    <label className="text-ink2 text-[10px] uppercase tracking-wide">투명도</label>
+                    <label className="text-ink2 text-[10px] uppercase tracking-wide">{t('cf.sponsorOpacity')}</label>
                     <input
                       type="number"
                       min={0}
@@ -294,7 +428,7 @@ export function ContestForm({
                       onClick={() => clearSponsor(slot)}
                       className="text-danger hover:underline shrink-0"
                     >
-                      제거
+                      {t('cf.sponsorRemove')}
                     </button>
                   )}
                 </div>
@@ -305,7 +439,7 @@ export function ContestForm({
                   value={op}
                   onChange={(e) => updateSponsorOpacity(slot, Number(e.target.value))}
                   className="w-full h-1 accent-accent"
-                  aria-label={`슬롯 ${slot + 1} 투명도`}
+                  aria-label={fmt(t('cf.sponsorOpacityAria'), { N: slot + 1 })}
                 />
                 <div className="h-20 rounded border border-dashed border-border bg-panel/60 flex items-center justify-center overflow-hidden">
                   {url ? (
@@ -317,7 +451,7 @@ export function ContestForm({
                       style={{ opacity: op / 100 }}
                     />
                   ) : (
-                    <span className="text-xs text-ink2">미설정</span>
+                    <span className="text-xs text-ink2">{t('cf.sponsorNotSet')}</span>
                   )}
                 </div>
                 <input
@@ -335,7 +469,7 @@ export function ContestForm({
                   onClick={() => fileInputs.current[slot]?.click()}
                   disabled={busy}
                 >
-                  {busy ? '업로드 중…' : url ? '교체' : '이미지 업로드'}
+                  {busy ? t('cf.sponsorUploading') : url ? t('cf.sponsorReplace') : t('cf.sponsorUpload')}
                 </Button>
                 {err && (
                   <p className="text-xs text-danger" role="alert">
@@ -346,22 +480,23 @@ export function ContestForm({
             );
           })}
         </div>
-        <p className="text-xs text-ink2 mt-3">
-          이미지는 Supabase Storage 의 <code>contest-sponsors</code> 버킷에 저장됩니다.
-          업로드 후에는 <b>Save</b> 를 눌러 대회 레코드와 연결을 마무리하세요.
-        </p>
+        <p
+          className="text-xs text-ink2 mt-3"
+          dangerouslySetInnerHTML={{ __html: t('cf.sponsorHint') }}
+        />
       </section>
 
       <section className="rounded border border-border bg-panel/40 p-4">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold">Final Round Scoring Items</h3>
+          <h3 className="text-sm font-semibold">{t('cf.scoringTitle')}</h3>
           <span className="text-xs text-ink2">
-            {form.scoring_items.length} active · at least 1 required
+            {fmt(t('cf.scoringMeta'), { N: form.scoring_items.length })}
           </span>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
           {SCORING_ITEMS.map((item) => {
             const active = form.scoring_items.includes(item.key);
+            const labelKey = `cf.scoring.${item.key}` as MessageKey;
             return (
               <label
                 key={item.key}
@@ -377,14 +512,12 @@ export function ContestForm({
                   onChange={() => toggleScoringItem(item.key)}
                   className="w-4 h-4 accent-accent"
                 />
-                <span className="text-sm">{item.label}</span>
+                <span className="text-sm">{t(labelKey)}</span>
               </label>
             );
           })}
         </div>
-        <p className="text-xs text-ink2 mt-3">
-          Only active items appear on the Final Judging matrix. Existing scores for deactivated items are preserved in DB.
-        </p>
+        <p className="text-xs text-ink2 mt-3">{t('cf.scoringHint')}</p>
       </section>
 
       {error && (
@@ -395,11 +528,11 @@ export function ContestForm({
 
       <div className="flex items-center gap-2 pt-2">
         <Button type="submit" variant="primary" disabled={pending}>
-          {pending ? 'Saving…' : mode === 'create' ? 'Create' : 'Save'}
+          {pending ? t('cf.saving') : mode === 'create' ? t('cf.create') : t('cf.save')}
         </Button>
         {mode === 'edit' && (
           <Button type="button" variant="danger" onClick={onDelete} disabled={pending}>
-            Delete Contest
+            {t('cf.delete')}
           </Button>
         )}
       </div>
