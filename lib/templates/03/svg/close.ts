@@ -13,7 +13,7 @@ export function closeSvg(): string {
 
   return shell(`
     ${topHeader()}
-    <text x="640" y="160" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="22" letter-spacing="8" fill="#FFD56B">{{stage_label}}</text>
+    <text x="640" y="160" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="22" letter-spacing="8" fill="#FFD56B">{{stage_label}}</text>
 
     <g transform="translate(640 360)">
       <circle r="118" fill="none" stroke="url(#goldg)" stroke-width="2.4"/>
@@ -24,9 +24,9 @@ export function closeSvg(): string {
       <path d="M -32 4 L -10 28 L 32 -22" fill="none" stroke="url(#goldg)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
     </g>
 
-    <text x="640" y="540" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-weight="bold" font-size="50" letter-spacing="6" fill="url(#goldg)">{{close_title}}</text>
-    <text x="640" y="582" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-size="20" letter-spacing="8" fill="#E8E6DA" opacity="0.85">{{close_subtitle}}</text>
-    <text x="640" y="616" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="14" letter-spacing="4" fill="#D4AF37">{{close_message}}</text>
+    <text x="640" y="540" text-anchor="middle" font-family="'Cinzel', 'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-weight="bold" font-size="50" letter-spacing="6" fill="url(#goldg)">{{close_title}}</text>
+    <text x="640" y="582" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-size="20" letter-spacing="8" fill="#E8E6DA" opacity="0.85">{{close_subtitle}}</text>
+    <text x="640" y="616" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="14" letter-spacing="4" fill="#D4AF37">{{close_message}}</text>
 
     ${bottomSeal()}
   `);

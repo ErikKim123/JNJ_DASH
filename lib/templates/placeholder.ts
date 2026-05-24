@@ -95,8 +95,24 @@ export function flattenStepData(payload: StepDataPayload): Record<string, string
       fillResultEntries(out, 'result', leaders, followers, 3);
       break;
     }
+    case 'prep': {
+      // sponsor_logos / sponsor_logo_opacities 를 1-indexed placeholder 로 평탄화 (PREP 전용)
+      const logos = Array.isArray(d.sponsor_logos) ? (d.sponsor_logos as unknown[]) : [];
+      const opacities = Array.isArray(d.sponsor_logo_opacities)
+        ? (d.sponsor_logo_opacities as unknown[])
+        : [];
+      for (let i = 0; i < 6; i++) {
+        const v = logos[i];
+        out[`sponsor_logo_${i + 1}`] = typeof v === 'string' ? v : '';
+        const op = opacities[i];
+        const num = typeof op === 'number' && !Number.isNaN(op) ? op : 100;
+        const clamped = Math.max(0, Math.min(100, num));
+        out[`sponsor_opacity_${i + 1}`] = (clamped / 100).toString();
+      }
+      break;
+    }
     default:
-      // 그 외 스텝(prep/open/live/wrapup/close): 스칼라만 사용 — 위 평탄화로 충분
+      // 그 외 스텝(open/live/wrapup/close): 스칼라만 사용 — 위 평탄화로 충분
       break;
   }
 

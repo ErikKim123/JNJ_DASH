@@ -78,8 +78,8 @@ export function resultListSvg(count: number): string {
 
   return shell(`
     ${topHeader()}
-    <text x="640" y="156" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-weight="bold" font-size="50" letter-spacing="10" fill="url(#goldg)">{{result_title}}</text>
-    <text x="640" y="190" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="17" letter-spacing="6" fill="#E8E6DA" opacity="0.9">{{result_subtitle}}</text>
+    <text x="640" y="156" text-anchor="middle" font-family="'Cinzel', 'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-weight="bold" font-size="50" letter-spacing="10" fill="url(#goldg)">{{result_title}}</text>
+    <text x="640" y="190" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="17" letter-spacing="6" fill="#E8E6DA" opacity="0.9">{{result_subtitle}}</text>
 
     <g transform="translate(0 ${headerY})">
       <text x="${leaderCx}" y="0" text-anchor="middle" font-family="ui-monospace, monospace" font-size="22" font-weight="600" letter-spacing="8" fill="#D4AF37">{{label_leader}}</text>

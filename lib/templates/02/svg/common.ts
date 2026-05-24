@@ -87,7 +87,7 @@ export function divider(y: number, w = 380): string {
 
 export function topHeader(): string {
   return `
-    <text x="640" y="78" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-size="14" letter-spacing="6" fill="#D4AF37">{{festival_header}}</text>
+    <text x="640" y="78" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-size="22" letter-spacing="5" fill="#D4AF37" font-style="italic" font-weight="500">{{festival_header}}</text>
     ${divider(96, 320)}
   `;
 }
@@ -97,7 +97,7 @@ export function bottomSeal(): string {
     <g transform="translate(640 660)">
       <line x1="-180" y1="0" x2="-30" y2="0" stroke="url(#goldgh)" stroke-width="0.8"/>
       <line x1="30" y1="0" x2="180" y2="0" stroke="url(#goldgh)" stroke-width="0.8"/>
-      <text text-anchor="middle" y="4" font-family="Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="13" fill="#D4AF37" letter-spacing="2">{{tagline}}</text>
+      <text text-anchor="middle" y="4" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="13" fill="#D4AF37" letter-spacing="2">{{tagline}}</text>
     </g>
   `;
 }
@@ -238,23 +238,46 @@ export function trophyIcon(cx = 640, cy = 420, scale = 1): string {
   `;
 }
 
-export function citiesFooter(): string {
+export function citiesFooter(y = 660): string {
   return `
-    <g transform="translate(640 660)">
+    <g transform="translate(640 ${y})">
       <line x1="-380" y1="-14" x2="-100" y2="-14" stroke="url(#goldgh)" stroke-width="0.5" opacity="0.7"/>
       <line x1="100" y1="-14" x2="380" y2="-14" stroke="url(#goldgh)" stroke-width="0.5" opacity="0.7"/>
-      <text text-anchor="middle" y="4" font-family="Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="13" fill="#D4AF37" letter-spacing="2">{{tagline}}</text>
+      <text text-anchor="middle" y="4" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="13" fill="#D4AF37" letter-spacing="2">{{tagline}}</text>
     </g>
   `;
+}
+
+/**
+ * PREP 화면 하단 광고/스폰서 로고 6개 가로 배치.
+ * 빈 URL 슬롯은 <image href=""/> 로 렌더 → 브라우저가 표시하지 않음.
+ */
+export function sponsorRow(y = 658, boxW = 140, boxH = 48, gap = 44): string {
+  const total = 6 * boxW + 5 * gap;
+  const startX = (1280 - total) / 2;
+  let body = '';
+  for (let i = 0; i < 6; i++) {
+    const x = startX + i * (boxW + gap);
+    body += `
+      <image
+        href="{{sponsor_logo_${i + 1}}}"
+        x="${x}" y="${y - boxH / 2}"
+        width="${boxW}" height="${boxH}"
+        preserveAspectRatio="xMidYMid meet"
+        opacity="{{sponsor_opacity_${i + 1}}}"
+      />
+    `;
+  }
+  return `<g>${body}</g>`;
 }
 
 export function heroHeader(): string {
   return `
     ${jlcfStamp(640, 110, 160)}
     <g transform="translate(640 212)">
-      <text text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-size="14" letter-spacing="6" fill="#D4AF37">{{festival_header}}</text>
-      <text x="-228" y="-3" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-size="14" fill="#D4AF37">★</text>
-      <text x="228" y="-3" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-size="14" fill="#D4AF37">★</text>
+      <text text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-size="22" letter-spacing="5" fill="#D4AF37" font-style="italic" font-weight="500">{{festival_header}}</text>
+      <text x="-228" y="-3" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-size="14" fill="#D4AF37">★</text>
+      <text x="228" y="-3" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-size="14" fill="#D4AF37">★</text>
     </g>
     ${divider(232, 320)}
   `;

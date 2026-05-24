@@ -4,10 +4,10 @@ import { shell, topHeader, bottomSeal } from './common';
 export function wrapupSvg(): string {
   return shell(`
     ${topHeader()}
-    <text x="640" y="160" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="22" letter-spacing="8" fill="#FFD56B">{{stage_label}}</text>
+    <text x="640" y="160" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="22" letter-spacing="8" fill="#FFD56B">{{stage_label}}</text>
 
-    <text x="640" y="280" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-weight="bold" font-size="68" letter-spacing="6" fill="url(#goldg)">{{wrap_title}}</text>
-    <text x="640" y="328" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-size="26" letter-spacing="14" fill="#E8E6DA" opacity="0.85">{{wrap_subtitle}}</text>
+    <text x="640" y="280" text-anchor="middle" font-family="'Cinzel', 'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-weight="bold" font-size="68" letter-spacing="6" fill="url(#goldg)">{{wrap_title}}</text>
+    <text x="640" y="328" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-size="26" letter-spacing="14" fill="#E8E6DA" opacity="0.85">{{wrap_subtitle}}</text>
 
     <g transform="translate(640 440)" opacity="0.95">
       <polygon points="-60,-30 -30,-60 30,-60 60,-30 60,30 30,60 -30,60 -60,30"
@@ -32,7 +32,7 @@ export function wrapupSvg(): string {
         <animate attributeName="opacity" values="0.3;1;0.3" dur="1.4s" begin="0.4s" repeatCount="indefinite"/>
       </circle>
     </g>
-    <text x="640" y="585" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="14" letter-spacing="4" fill="#9A98A8">{{wrap_message}}</text>
+    <text x="640" y="585" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="14" letter-spacing="4" fill="#9A98A8">{{wrap_message}}</text>
 
     ${bottomSeal()}
   `);

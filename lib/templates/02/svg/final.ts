@@ -21,7 +21,7 @@ export function finalPrepSvg(): string {
   return shell(`
     ${heroHeader()}
 
-    <text x="640" y="288" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="20" letter-spacing="10" fill="#FFD56B">{{stage_label}}</text>
+    <text x="640" y="288" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="20" letter-spacing="10" fill="#FFD56B">{{stage_label}}</text>
 
     <g transform="translate(640 380)">
       <circle r="100" fill="url(#sgw)" opacity="0.35"/>
@@ -70,13 +70,13 @@ export function finalPrepSvg(): string {
       </g>
     </g>
 
-    <text x="640" y="510" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-weight="bold" font-size="76" letter-spacing="12" fill="url(#goldg)">{{round_title}}</text>
-    <text x="640" y="552" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-size="20" letter-spacing="14" fill="#E8E6DA" opacity="0.85">{{round_subtitle}}</text>
+    <text x="640" y="510" text-anchor="middle" font-family="'Cinzel', 'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-weight="bold" font-size="76" letter-spacing="12" fill="url(#goldg)">{{round_title}}</text>
+    <text x="640" y="552" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-size="20" letter-spacing="14" fill="#E8E6DA" opacity="0.85">{{round_subtitle}}</text>
 
     <g transform="translate(640 612)">
       <line x1="-300" y1="0" x2="-110" y2="0" stroke="url(#goldgh)" stroke-width="0.7"/>
       <line x1="110" y1="0" x2="300" y2="0" stroke="url(#goldgh)" stroke-width="0.7"/>
-      <text text-anchor="middle" y="6" font-family="Georgia, 'Gulim', '굴림', serif" font-size="15" letter-spacing="6" fill="#D4AF37">{{participants}}</text>
+      <text text-anchor="middle" y="6" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-size="15" letter-spacing="6" fill="#D4AF37">{{participants}}</text>
     </g>
 
     ${citiesFooter()}
@@ -109,10 +109,10 @@ export function finalWrapupSvg(): string {
 
   return shell(`
     ${topHeader()}
-    <text x="640" y="160" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="22" letter-spacing="10" fill="#FFD56B">{{stage_label}}</text>
+    <text x="640" y="160" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="22" letter-spacing="10" fill="#FFD56B">{{stage_label}}</text>
 
-    <text x="640" y="270" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-weight="bold" font-size="62" letter-spacing="6" fill="url(#goldg)">{{wrap_title}}</text>
-    <text x="640" y="316" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-size="24" letter-spacing="14" fill="#E8E6DA" opacity="0.9">{{wrap_subtitle}}</text>
+    <text x="640" y="270" text-anchor="middle" font-family="'Cinzel', 'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-weight="bold" font-size="62" letter-spacing="6" fill="url(#goldg)">{{wrap_title}}</text>
+    <text x="640" y="316" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-size="24" letter-spacing="14" fill="#E8E6DA" opacity="0.9">{{wrap_subtitle}}</text>
 
     <g transform="translate(640 450)">
       <circle r="92" fill="url(#sgw)" opacity="0.45"/>
@@ -142,7 +142,7 @@ export function finalWrapupSvg(): string {
       <circle cx="0" cy="0" r="5"><animate attributeName="opacity" values="0.3;1;0.3" dur="1.4s" begin="0.2s" repeatCount="indefinite"/></circle>
       <circle cx="32" cy="0" r="5"><animate attributeName="opacity" values="0.3;1;0.3" dur="1.4s" begin="0.4s" repeatCount="indefinite"/></circle>
     </g>
-    <text x="640" y="606" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="15" letter-spacing="4" fill="#9A98A8">{{wrap_message}}</text>
+    <text x="640" y="606" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="15" letter-spacing="4" fill="#9A98A8">{{wrap_message}}</text>
 
     ${bottomSeal()}
   `);
@@ -234,8 +234,8 @@ export function finalResultSvg(): string {
 
     ${heroHeader()}
 
-    <text x="640" y="296" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-weight="bold" font-size="54" letter-spacing="12" fill="url(#goldg)">{{result_title}}</text>
-    <text x="640" y="328" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="15" letter-spacing="6" fill="#E8E6DA" opacity="0.9">{{result_subtitle}}</text>
+    <text x="640" y="296" text-anchor="middle" font-family="'Cinzel', 'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-weight="bold" font-size="54" letter-spacing="12" fill="url(#goldg)">{{result_title}}</text>
+    <text x="640" y="328" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="15" letter-spacing="6" fill="#E8E6DA" opacity="0.9">{{result_subtitle}}</text>
 
     ${trophyIcon(640, 488, 0.95)}
 
@@ -246,27 +246,80 @@ export function finalResultSvg(): string {
   `);
 }
 
-// 결승 Pairing은 라우트 레벨에서 차단되나 폴백용 — Design §1.1
+// 결승 Pairing — 심사위원과 결승 진출자가 함께 추는 인비테이셔널 댄스 시간.
+function pairingSparkles(cx: number, cy: number, count: number): string {
+  let body = '';
+  for (let i = 0; i < count; i++) {
+    const angle = (i * (360 / count)) * Math.PI / 180;
+    const radius = 200 + ((i * 37) % 70);
+    const x = cx + Math.cos(angle) * radius;
+    const y = cy + Math.sin(angle) * radius * 0.55;
+    const delay = ((i * 0.31) % 3).toFixed(2);
+    const r = (1.2 + ((i * 0.7) % 1.5)).toFixed(1);
+    body += `
+      <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" fill="#FFEBA0">
+        <animate attributeName="opacity" values="0;1;0" dur="3.4s" begin="${delay}s" repeatCount="indefinite"/>
+      </circle>`;
+  }
+  return `<g opacity="0.7">${body}</g>`;
+}
+
+function coupleDots(cx: number, cy: number, count: number): string {
+  const stepX = 64;
+  const totalW = (count - 1) * stepX;
+  const startX = cx - totalW / 2;
+  let body = '';
+  for (let i = 0; i < count; i++) {
+    const x = startX + i * stepX;
+    const d1 = (i * 0.18).toFixed(2);
+    const d2 = (i * 0.18 + 0.4).toFixed(2);
+    body += `
+      <g transform="translate(${x.toFixed(1)} ${cy})">
+        <circle cx="-7" cy="0" r="5" fill="url(#goldg)">
+          <animate attributeName="opacity" values="0.35;1;0.35" dur="2.4s" begin="${d1}s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="7" cy="0" r="5" fill="url(#silverg)">
+          <animate attributeName="opacity" values="0.35;1;0.35" dur="2.4s" begin="${d2}s" repeatCount="indefinite"/>
+        </circle>
+        <line x1="-7" y1="8" x2="7" y2="8" stroke="url(#goldgh)" stroke-width="0.6" opacity="0.6"/>
+      </g>`;
+  }
+  return `<g>${body}</g>`;
+}
+
 export function finalPairingSvg(): string {
   return shell(`
     ${topHeader()}
 
-    <text x="640" y="216" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="22" letter-spacing="10" fill="#FFD56B">{{stage_label}}</text>
+    <text x="640" y="216" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="22" letter-spacing="10" fill="#FFD56B">{{stage_label}}</text>
 
-    <g transform="translate(640 410)">
-      <circle r="280" fill="url(#sgw)" opacity="0.4"/>
+    <g transform="translate(640 420)">
+      <circle r="320" fill="url(#sgw)" opacity="0.28"/>
+      <circle r="200" fill="url(#sgw)" opacity="0.18"/>
     </g>
+
+    ${pairingSparkles(640, 420, 18)}
 
     <g>
       <animate attributeName="opacity" values="0.92;1;0.92" dur="3s" repeatCount="indefinite"/>
-      <text x="640" y="438" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-weight="bold" font-size="118" letter-spacing="24" fill="url(#goldg)">{{round_title}}</text>
+      <text x="640" y="438" text-anchor="middle" font-family="'Cinzel', 'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-weight="bold" font-size="118" letter-spacing="24" fill="url(#goldg)">{{round_title}}</text>
     </g>
 
-    <g transform="translate(640 510)">
-      <line x1="-220" y1="0" x2="-30" y2="0" stroke="url(#goldgh)" stroke-width="0.7"/>
-      <line x1="30" y1="0" x2="220" y2="0" stroke="url(#goldgh)" stroke-width="0.7"/>
-      <text x="0" y="7" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-size="20" fill="#D4AF37">✦</text>
+    <g transform="translate(640 502)">
+      <line x1="-240" y1="0" x2="-32" y2="0" stroke="url(#goldgh)" stroke-width="0.7"/>
+      <line x1="32" y1="0" x2="240" y2="0" stroke="url(#goldgh)" stroke-width="0.7"/>
+      <g fill="#D4AF37">
+        <circle cx="-14" cy="0" r="1.6" opacity="0.55"/>
+        <circle cx="0" cy="0" r="2.2"/>
+        <circle cx="14" cy="0" r="1.6" opacity="0.55"/>
+      </g>
     </g>
+
+    <text x="640" y="552" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, serif" font-style="italic" font-size="16" letter-spacing="5" fill="#D4AF37" opacity="0.9">
+      Where the judges share the floor with the finalists
+    </text>
+
+    ${coupleDots(640, 622, 6)}
 
     ${citiesFooter()}
   `);

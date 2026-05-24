@@ -98,7 +98,7 @@ export function ceremonySvg(): string {
       <g transform="translate(${cx} ${cy})">
         <line x1="${-halfTxt - lineGap}" y1="0" x2="${-lineGap / 2}" y2="0" stroke="${color}" stroke-width="0.5" opacity="0.55"/>
         <line x1="${lineGap / 2}" y1="0" x2="${halfTxt + lineGap}" y2="0" stroke="${color}" stroke-width="0.5" opacity="0.55"/>
-        <text x="0" y="${fontSize * 0.35}" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="${fontSize}" letter-spacing="${fontSize * 0.5}" fill="${color}" opacity="0.9">${text}</text>
+        <text x="0" y="${fontSize * 0.35}" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="${fontSize}" letter-spacing="${fontSize * 0.5}" fill="${color}" opacity="0.9">${text}</text>
       </g>
     `;
   };
@@ -125,8 +125,8 @@ export function ceremonySvg(): string {
 
     ${topHeader()}
 
-    <text x="640" y="146" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-weight="bold" font-size="46" letter-spacing="12" fill="url(#goldg)">{{ceremony_title}}</text>
-    <text x="640" y="178" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="17" letter-spacing="6" fill="#E8E6DA" opacity="0.9">{{ceremony_subtitle}}</text>
+    <text x="640" y="146" text-anchor="middle" font-family="'Cinzel', 'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-weight="bold" font-size="46" letter-spacing="12" fill="url(#goldg)">{{ceremony_title}}</text>
+    <text x="640" y="178" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="17" letter-spacing="6" fill="#E8E6DA" opacity="0.9">{{ceremony_subtitle}}</text>
 
     ${rankLabel((firstLeaderX + firstFollowerX) / 2, firstY - HEX_1ST - 22, '1ST', 18, '#D4AF37')}
     ${leader1}

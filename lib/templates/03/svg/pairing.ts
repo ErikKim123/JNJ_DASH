@@ -39,9 +39,9 @@ function renderCirclePairing(pairCount: number): string {
   const centerMark = `
     <g transform="translate(${cx} ${cy})" opacity="0">
       <animate attributeName="opacity" values="0;1" dur="0.9s" begin="0s" fill="freeze"/>
-      <text text-anchor="middle" y="-8" font-family="Georgia, serif" font-size="22" letter-spacing="6" fill="#D4AF37" opacity="0.55">✦</text>
+      <text text-anchor="middle" y="-8" font-family="'Cormorant Garamond', Georgia, serif" font-size="22" letter-spacing="6" fill="#D4AF37" opacity="0.55">✦</text>
       <line x1="-34" y1="10" x2="34" y2="10" stroke="url(#goldgh)" stroke-width="0.7" opacity="0.65"/>
-      <text text-anchor="middle" y="28" font-family="Georgia, serif" font-style="italic" font-size="11" letter-spacing="5" fill="#D4AF37" opacity="0.55">stage</text>
+      <text text-anchor="middle" y="28" font-family="'Cormorant Garamond', Georgia, serif" font-style="italic" font-size="11" letter-spacing="5" fill="#D4AF37" opacity="0.55">stage</text>
     </g>
   `;
 
@@ -86,7 +86,7 @@ function renderCirclePairing(pairCount: number): string {
     body += `
       <g opacity="0">
         <animate attributeName="opacity" values="0;1" dur="0.5s" begin="${delay}s" fill="freeze"/>
-        <g transform="translate(${px.toFixed(1)} ${py.toFixed(1)})" font-family="Georgia, 'Gulim', '굴림', serif">
+        <g transform="translate(${px.toFixed(1)} ${py.toFixed(1)})" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif">
           <text text-anchor="${anchor}" y="${leaderY}" font-size="${nameFontSize}" font-weight="600" letter-spacing="0.4" fill="#FFD56B">
             <tspan font-size="${partNumSize}" letter-spacing="1.5">{{leader_num_${i}}}</tspan>
             <tspan dx="7">{{leader_${i}}}</tspan>
@@ -103,8 +103,8 @@ function renderCirclePairing(pairCount: number): string {
 
   return shell(`
     ${topHeader()}
-    <text x="640" y="146" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-weight="bold" font-size="36" letter-spacing="10" fill="url(#goldg)">{{round_title}}</text>
-    <text x="640" y="176" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="15" letter-spacing="6" fill="#E8E6DA" opacity="0.85">{{stage_label}}</text>
+    <text x="640" y="146" text-anchor="middle" font-family="'Cinzel', 'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-weight="bold" font-size="36" letter-spacing="10" fill="url(#goldg)">{{round_title}}</text>
+    <text x="640" y="176" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="15" letter-spacing="6" fill="#E8E6DA" opacity="0.85">{{stage_label}}</text>
 
     ${centerMark}
     ${body}

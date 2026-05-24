@@ -10,9 +10,9 @@ export function liveSvg(): string {
       </circle>
       <text x="32" y="24" font-family="ui-monospace, monospace" font-size="15" font-weight="bold" letter-spacing="3" fill="#fff">LIVE</text>
     </g>
-    <text x="200" y="103" font-family="Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="13" letter-spacing="4" fill="#9A98A8">{{stage_label}}</text>
+    <text x="200" y="103" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="13" letter-spacing="4" fill="#9A98A8">{{stage_label}}</text>
 
-    <text x="1200" y="103" text-anchor="end" font-family="Georgia, 'Gulim', '굴림', serif" font-weight="bold" font-size="20" letter-spacing="6" fill="#FFD56B">{{round_title}}</text>
+    <text x="1200" y="103" text-anchor="end" font-family="'Cinzel', 'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-weight="bold" font-size="20" letter-spacing="6" fill="#FFD56B">{{round_title}}</text>
 
     <g transform="translate(640 200)">
       <line x1="-110" y1="0" x2="-40" y2="0" stroke="url(#goldgh)" stroke-width="0.8"/>
@@ -31,10 +31,10 @@ export function liveSvg(): string {
       </circle>
       <circle r="148" fill="#0F2C20" stroke="url(#goldg)" stroke-width="2.5"/>
       <circle r="134" fill="none" stroke="#D4AF37" stroke-width="0.6" opacity="0.6"/>
-      <text y="22" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-weight="bold" font-size="68" letter-spacing="12" fill="url(#goldg)">LIVE</text>
+      <text y="22" text-anchor="middle" font-family="'Cinzel', 'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-weight="bold" font-size="68" letter-spacing="12" fill="url(#goldg)">LIVE</text>
     </g>
 
-    <text x="640" y="610" text-anchor="middle" font-family="Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="22" letter-spacing="4" fill="#FFEBA0">{{live_message}}</text>
+    <text x="640" y="610" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="22" letter-spacing="4" fill="#FFEBA0">{{live_message}}</text>
 
     ${citiesFooter()}
   `);
