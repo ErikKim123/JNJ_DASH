@@ -396,7 +396,13 @@ async function computeFinalTieInfo(contestId: string): Promise<FinalTieInfo | un
 
 // ─── Static steps ───────────────────────────────────────────────────────
 
-function staticPrep(roundLabel: string, festivalHeader: string, tagline: string): StepDataPayload {
+function staticPrep(
+  roundLabel: string,
+  festivalHeader: string,
+  tagline: string,
+  sponsorLogos: string[] = [],
+  sponsorOpacities: number[] = [],
+): StepDataPayload {
   return {
     kind: 'prep',
     data: {
@@ -406,6 +412,8 @@ function staticPrep(roundLabel: string, festivalHeader: string, tagline: string)
       round_subtitle: 'Get ready · take your places',
       participants: '',
       tagline,
+      sponsor_logos: sponsorLogos,
+      sponsor_logo_opacities: sponsorOpacities,
     },
   };
 }
@@ -602,7 +610,13 @@ export async function getStepData(params: GetStepDataParams): Promise<StepDataPa
   // ── Static ──
   switch (step) {
     case 'prep':
-      return staticPrep(roundLabel, festivalHeader, tagline);
+      return staticPrep(
+        roundLabel,
+        festivalHeader,
+        tagline,
+        Array.isArray(contest.sponsor_logos) ? contest.sponsor_logos : [],
+        Array.isArray(contest.sponsor_logo_opacities) ? contest.sponsor_logo_opacities : [],
+      );
     case 'open':
       return staticOpen(roundLabel, festivalHeader, tagline);
     case 'live':

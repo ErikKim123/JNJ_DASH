@@ -37,6 +37,10 @@ export interface ContestRow {
   legacy_spreadsheet_id: string | null;
   /** 결승 채점 활성 항목 키 배열. 기본값: ['fundamentals','connection','musicality']. */
   scoring_items: ScoringItemKey[];
+  /** PREP 화면 하단 광고/스폰서 로고 (최대 6개 public URL). */
+  sponsor_logos: string[];
+  /** sponsor_logos 와 1:1 매칭되는 슬롯별 투명도 (0-100). 값 미설정 시 100. */
+  sponsor_logo_opacities: number[];
   created_at: string;
   updated_at: string;
 }

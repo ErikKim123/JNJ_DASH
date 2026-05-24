@@ -1,11 +1,13 @@
 'use client';
 
 // 대회 생성/편집 폼. mode='create' 면 id 입력 허용, mode='edit' 면 id 락.
-import { useState, useTransition, type FormEvent } from 'react';
+import { useRef, useState, useTransition, type ChangeEvent, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Field, Input, Select } from './ui';
 import type { ContestRow } from '@/lib/db/types';
 import { SCORING_ITEMS, DEFAULT_SCORING_ITEMS, type ScoringItemKey } from '@/lib/db/scoring';
+
+const SPONSOR_SLOTS = 6;
 
 export type ContestFormMode = 'create' | 'edit';
 
@@ -36,7 +38,86 @@ export function ContestForm({
       Array.isArray(initial?.scoring_items) && initial!.scoring_items.length > 0
         ? initial!.scoring_items
         : ([...DEFAULT_SCORING_ITEMS] as ScoringItemKey[]),
+    sponsor_logos: ((): string[] => {
+      const src = Array.isArray(initial?.sponsor_logos) ? initial!.sponsor_logos : [];
+      const arr = [...src];
+      while (arr.length < SPONSOR_SLOTS) arr.push('');
+      return arr.slice(0, SPONSOR_SLOTS);
+    })(),
+    sponsor_logo_opacities: ((): number[] => {
+      const src = Array.isArray(initial?.sponsor_logo_opacities) ? initial!.sponsor_logo_opacities : [];
+      const arr = [...src];
+      while (arr.length < SPONSOR_SLOTS) arr.push(100);
+      return arr.slice(0, SPONSOR_SLOTS).map((n) => {
+        const v = Number(n);
+        if (!Number.isFinite(v)) return 100;
+        return Math.max(0, Math.min(100, Math.round(v)));
+      });
+    })(),
   });
+
+  function updateSponsorOpacity(slot: number, value: number) {
+    const v = Math.max(0, Math.min(100, Math.round(value)));
+    setForm((s) => {
+      const next = [...s.sponsor_logo_opacities];
+      next[slot] = v;
+      return { ...s, sponsor_logo_opacities: next };
+    });
+  }
+
+  // 슬롯별 업로드 진행/에러 상태
+  const [sponsorBusy, setSponsorBusy] = useState<boolean[]>(() => Array(SPONSOR_SLOTS).fill(false));
+  const [sponsorErr, setSponsorErr] = useState<(string | null)[]>(() => Array(SPONSOR_SLOTS).fill(null));
+  const fileInputs = useRef<Array<HTMLInputElement | null>>(Array(SPONSOR_SLOTS).fill(null));
+
+  async function onSponsorPick(slot: number, e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // 같은 파일 재선택 허용
+    if (!file) return;
+    if (mode === 'create' && !form.id.trim()) {
+      setSponsorErr((arr) => arr.map((v, i) => (i === slot ? '대회 ID 입력 후 업로드 가능' : v)));
+      return;
+    }
+    setSponsorErr((arr) => arr.map((v, i) => (i === slot ? null : v)));
+    setSponsorBusy((arr) => arr.map((v, i) => (i === slot ? true : v)));
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      // create 모드에서는 slot 인덱스만 클라이언트 state 에 반영 (서버 PATCH 는 저장 시 같이 전송).
+      // edit 모드에서는 slot 도 함께 보내 contests.sponsor_logos 를 즉시 동기화.
+      if (mode === 'edit') fd.append('slot', String(slot));
+      const cid = form.id || initial?.id || '';
+      const res = await fetch(`/api/admin/contests/${encodeURIComponent(cid)}/sponsor-upload`, {
+        method: 'POST',
+        body: fd,
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j.error || `upload failed (${res.status})`);
+      }
+      const { url } = await res.json();
+      setForm((s) => {
+        const next = [...s.sponsor_logos];
+        next[slot] = url;
+        return { ...s, sponsor_logos: next };
+      });
+    } catch (err) {
+      setSponsorErr((arr) =>
+        arr.map((v, i) => (i === slot ? (err instanceof Error ? err.message : 'upload failed') : v))
+      );
+    } finally {
+      setSponsorBusy((arr) => arr.map((v, i) => (i === slot ? false : v)));
+    }
+  }
+
+  function clearSponsor(slot: number) {
+    setForm((s) => {
+      const next = [...s.sponsor_logos];
+      next[slot] = '';
+      return { ...s, sponsor_logos: next };
+    });
+    setSponsorErr((arr) => arr.map((v, i) => (i === slot ? null : v)));
+  }
 
   function toggleScoringItem(key: ScoringItemKey) {
     setForm((s) => {
@@ -175,6 +256,101 @@ export function ContestForm({
           <Input value={form.tagline} onChange={(e) => update('tagline', e.target.value)} />
         </Field>
       </div>
+
+      <section className="rounded border border-border bg-panel/40 p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold">PREP 화면 하단 광고 (Sponsor Logos)</h3>
+          <span className="text-xs text-ink2">
+            최대 {SPONSOR_SLOTS}개 · PREP 단계에서만 표출 · 3MB · jpg/png/webp/gif/svg
+          </span>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {form.sponsor_logos.map((url, slot) => {
+            const busy = sponsorBusy[slot];
+            const err = sponsorErr[slot];
+            const op = form.sponsor_logo_opacities[slot] ?? 100;
+            return (
+              <div
+                key={slot}
+                className="rounded border border-border bg-bg2 p-2 flex flex-col gap-2"
+              >
+                <div className="text-xs text-ink2 flex items-center justify-between gap-2">
+                  <span className="shrink-0">슬롯 {slot + 1}</span>
+                  <div className="flex items-center gap-1 flex-1 justify-end">
+                    <label className="text-ink2 text-[10px] uppercase tracking-wide">투명도</label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={op}
+                      onChange={(e) => updateSponsorOpacity(slot, Number(e.target.value))}
+                      className="w-12 h-6 px-1 text-xs rounded border border-border bg-panel text-ink text-right tabular-nums"
+                    />
+                    <span className="text-ink2 text-[10px]">%</span>
+                  </div>
+                  {url && (
+                    <button
+                      type="button"
+                      onClick={() => clearSponsor(slot)}
+                      className="text-danger hover:underline shrink-0"
+                    >
+                      제거
+                    </button>
+                  )}
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={op}
+                  onChange={(e) => updateSponsorOpacity(slot, Number(e.target.value))}
+                  className="w-full h-1 accent-accent"
+                  aria-label={`슬롯 ${slot + 1} 투명도`}
+                />
+                <div className="h-20 rounded border border-dashed border-border bg-panel/60 flex items-center justify-center overflow-hidden">
+                  {url ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      src={url}
+                      alt={`sponsor ${slot + 1}`}
+                      className="max-h-full max-w-full object-contain"
+                      style={{ opacity: op / 100 }}
+                    />
+                  ) : (
+                    <span className="text-xs text-ink2">미설정</span>
+                  )}
+                </div>
+                <input
+                  ref={(el) => {
+                    fileInputs.current[slot] = el;
+                  }}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
+                  onChange={(e) => onSponsorPick(slot, e)}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="primary"
+                  onClick={() => fileInputs.current[slot]?.click()}
+                  disabled={busy}
+                >
+                  {busy ? '업로드 중…' : url ? '교체' : '이미지 업로드'}
+                </Button>
+                {err && (
+                  <p className="text-xs text-danger" role="alert">
+                    {err}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <p className="text-xs text-ink2 mt-3">
+          이미지는 Supabase Storage 의 <code>contest-sponsors</code> 버킷에 저장됩니다.
+          업로드 후에는 <b>Save</b> 를 눌러 대회 레코드와 연결을 마무리하세요.
+        </p>
+      </section>
 
       <section className="rounded border border-border bg-panel/40 p-4">
         <div className="flex items-center justify-between mb-3">

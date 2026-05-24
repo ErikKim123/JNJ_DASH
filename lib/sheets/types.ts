@@ -69,6 +69,10 @@ export interface PrepData {
   round_subtitle: string;
   participants: string;
   tagline: string;
+  /** 하단 광고/스폰서 로고 public URL 배열 (최대 6개). */
+  sponsor_logos?: string[];
+  /** 슬롯별 투명도 (0-100). 미설정 슬롯은 100 으로 간주. */
+  sponsor_logo_opacities?: number[];
 }
 
 export interface Pair {

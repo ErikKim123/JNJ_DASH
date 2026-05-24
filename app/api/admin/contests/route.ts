@@ -30,6 +30,16 @@ const CreateContestSchema = z.object({
   semi_pass_per_role: z.number().int().min(1).max(200).optional().default(5),
   status: z.enum(['ready', 'live', 'done', 'archived']).optional().default('ready'),
   scoring_items: z.array(ScoringItemEnum).min(1).optional(),
+  sponsor_logos: z
+    .array(z.union([z.literal(''), z.string().url().max(2000)]))
+    .max(6)
+    .optional()
+    .default([]),
+  sponsor_logo_opacities: z
+    .array(z.number().int().min(0).max(100))
+    .max(6)
+    .optional()
+    .default([]),
 });
 
 export async function GET() {
