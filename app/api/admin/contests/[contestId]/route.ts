@@ -38,6 +38,8 @@ const PatchSchema = z.object({
     .array(z.number().int().min(0).max(100))
     .max(6)
     .optional(),
+  background_image: z.union([z.literal(''), z.string().url().max(2000)]).optional(),
+  background_opacity: z.number().int().min(0).max(100).optional(),
   prelim_status: RoundStatusEnum.optional(),
   semi_status: RoundStatusEnum.optional(),
   final_status: RoundStatusEnum.optional(),

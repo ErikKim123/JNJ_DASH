@@ -196,7 +196,15 @@ export function DashboardShell({
         style={{ cursor: controlsVisible ? 'auto' : 'none' }}
       >
         {!isStepInvalidForRound && result ? (
-          <TemplateRenderer templateId={templateId} round={round} step={step} data={result.payload} fit="viewport" />
+          <TemplateRenderer
+            templateId={templateId}
+            round={round}
+            step={step}
+            data={result.payload}
+            fit="viewport"
+            backgroundOverride={meta.backgroundImage}
+            backgroundOpacity={meta.backgroundOpacity}
+          />
         ) : (
           <div className="text-center text-sm text-ink2">로딩 중…</div>
         )}
@@ -339,6 +347,8 @@ export function DashboardShell({
             round={round}
             step={step}
             data={result.payload}
+            backgroundOverride={meta.backgroundImage}
+            backgroundOpacity={meta.backgroundOpacity}
           />
         )}
       </section>

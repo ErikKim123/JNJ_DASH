@@ -95,10 +95,13 @@ export function bottomSeal(): string {
   `;
 }
 
+// BG_OVERRIDE_SLOT 마커: 사용자가 대회별 커스텀 배경을 업로드한 경우
+// template 의 render() 에서 이 마커를 <image> 로 치환하여 기본 배경 위에 덮어 그림.
 export function shell(content: string): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" preserveAspectRatio="xMidYMid meet">
   <defs>${COMMON_DEFS}</defs>
   ${BG_LAYER}
+  <!--BG_OVERRIDE_SLOT-->
   ${FRAME_LAYER}
   ${content}
 </svg>`;

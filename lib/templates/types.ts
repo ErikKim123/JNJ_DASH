@@ -8,5 +8,14 @@ export interface TemplateModule {
    * 주어진 (round, step, data) 조합에 대해 placeholder 치환이 완료된 SVG 문자열을 반환.
    * 호출 측은 `dangerouslySetInnerHTML`로 그대로 렌더 가능.
    */
-  render(round: RoundKey, step: StepKey, data: StepDataPayload): string;
+  render(
+    round: RoundKey,
+    step: StepKey,
+    data: StepDataPayload,
+    opts?: {
+      backgroundOverride?: string;
+      /** 0-100. backgroundOverride 가 설정된 경우에만 적용. 미지정 시 100 (불투명). */
+      backgroundOpacity?: number;
+    }
+  ): string;
 }

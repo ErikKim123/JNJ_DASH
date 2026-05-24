@@ -14,6 +14,10 @@ export interface TemplateRendererProps {
   step: StepKey;
   data: StepDataPayload;
   fit?: 'width' | 'viewport';
+  /** 대회별 커스텀 배경 이미지 URL — 설정 시 디자인 템플릿 기본 배경 위에 덮어 그림. */
+  backgroundOverride?: string;
+  /** 커스텀 배경 투명도 (0-100). 미지정 시 100. */
+  backgroundOpacity?: number;
 }
 
 // 결승 Result 발표 순서: 팔로워 3 → 리더 3 → 팔로워 2 → 리더 2 → 팔로워 1 → 리더 1
@@ -35,12 +39,12 @@ const SvgHost = memo(
   })
 );
 
-export function TemplateRenderer({ templateId, round, step, data, fit = 'width' }: TemplateRendererProps) {
+export function TemplateRenderer({ templateId, round, step, data, fit = 'width', backgroundOverride, backgroundOpacity }: TemplateRendererProps) {
   const template = getTemplate(templateId);
-  // svg 문자열을 메모이즈 — data/round/step이 같으면 이전 결과 재사용
+  // svg 문자열을 메모이즈 — data/round/step/배경 override/opacity 가 같으면 이전 결과 재사용
   const svg = useMemo(
-    () => template.render(round, step, data),
-    [template, round, step, data]
+    () => template.render(round, step, data, { backgroundOverride, backgroundOpacity }),
+    [template, round, step, data, backgroundOverride, backgroundOpacity]
   );
 
   const isFinalResult = round === 'final' && step === 'result';

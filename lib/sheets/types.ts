@@ -266,4 +266,8 @@ export interface ContestMeta {
   tagline: string;
   /** 참가자 통계. 시트 읽기 실패 시 0으로 폴백. */
   participantStats: ParticipantStats;
+  /** 대회별 커스텀 배경 이미지 URL. 비어있으면 디자인 템플릿 기본 배경 사용. */
+  backgroundImage?: string;
+  /** 커스텀 배경 투명도 (0-100). 미지정 시 100. */
+  backgroundOpacity?: number;
 }

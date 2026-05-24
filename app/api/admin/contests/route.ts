@@ -40,6 +40,11 @@ const CreateContestSchema = z.object({
     .max(6)
     .optional()
     .default([]),
+  background_image: z
+    .union([z.literal(''), z.string().url().max(2000)])
+    .optional()
+    .default(''),
+  background_opacity: z.number().int().min(0).max(100).optional().default(100),
 });
 
 export async function GET() {

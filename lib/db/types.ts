@@ -41,6 +41,10 @@ export interface ContestRow {
   sponsor_logos: string[];
   /** sponsor_logos 와 1:1 매칭되는 슬롯별 투명도 (0-100). 값 미설정 시 100. */
   sponsor_logo_opacities: number[];
+  /** 대회별 커스텀 배경 이미지 public URL. 비어있으면 디자인 템플릿 기본 배경. */
+  background_image: string;
+  /** 커스텀 배경 투명도 (0-100). 100 불투명 기본. */
+  background_opacity: number;
   created_at: string;
   updated_at: string;
 }

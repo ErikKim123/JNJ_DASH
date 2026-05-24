@@ -237,6 +237,9 @@ export async function getContestMeta(contestId: string): Promise<ContestMeta | n
     festivalHeader: contest.festival_header || contest.name,
     tagline: contest.tagline ?? '',
     participantStats: stats,
+    backgroundImage: contest.background_image ?? '',
+    backgroundOpacity:
+      typeof contest.background_opacity === 'number' ? contest.background_opacity : 100,
     rounds: {
       prelim: { label: '예선', steps: STEPS_BY_ROUND.prelim },
       semi: { label: '본선', steps: STEPS_BY_ROUND.semi },

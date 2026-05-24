@@ -62,12 +62,27 @@ function selectSvg(round: RoundKey, _step: StepKey, data: StepDataPayload): stri
   }
 }
 
+/**
+ * shell() 안의 <!--BG_OVERRIDE_SLOT--> 마커를 커스텀 배경 <image> 로 치환.
+ * URL 비어있으면 마커 제거 (기본 배경 유지).
+ */
+function applyBackgroundOverride(svg: string, override?: string, opacityPct?: number): string {
+  const marker = '<!--BG_OVERRIDE_SLOT-->';
+  if (!override) return svg.replace(marker, '');
+  const safe = override.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+  const clamped = Math.max(0, Math.min(100, typeof opacityPct === 'number' && !Number.isNaN(opacityPct) ? opacityPct : 100));
+  const op = (clamped / 100).toString();
+  const img = `<image href="${safe}" x="0" y="0" width="1280" height="720" preserveAspectRatio="xMidYMid slice" opacity="${op}"/>`;
+  return svg.replace(marker, img);
+}
+
 export const Template03: TemplateModule = {
   id: 3,
   name: 'Jeju Latin Culture Festival (03)',
-  render(round, step, data) {
+  render(round, step, data, opts) {
     const svg = selectSvg(round, step, data);
     const placeholders = flattenStepData(data);
-    return applyPlaceholders(svg, placeholders);
+    const filled = applyPlaceholders(svg, placeholders);
+    return applyBackgroundOverride(filled, opts?.backgroundOverride, opts?.backgroundOpacity);
   },
 };
