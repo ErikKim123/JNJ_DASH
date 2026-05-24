@@ -169,7 +169,7 @@ config/env.ts                            zod로 환경변수 검증
 
 docs/                                    PDCA 문서 (Plan/Design/Analysis/Report)
 
-DashDisignTemplates/                     디자이너 원본 HTML (.vercelignore)
+DashDesignTemplates/                     디자이너 원본 HTML (.vercelignore)
 ```
 
 ---

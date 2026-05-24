@@ -1,5 +1,5 @@
 // Design Ref: 설명.txt — Prep 화면의 모래시계 자리에 돌하르방 3개 애니메이션 표출.
-// 원본: DashDisignTemplates/ani/three_dol_animated.svg
+// 원본: DashDesignTemplates/ani/three_dol_animated.svg
 // 색상: 부모 SVG의 url(#goldg) 골드 그라디언트로 채움 (CSS가 path의 presentation attribute보다 우선).
 // 애니메이션: 3개의 돌하르방이 0.5초 간격으로 pulse(scale up/down).
 

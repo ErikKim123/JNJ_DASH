@@ -136,7 +136,7 @@ export function ContestForm({
           <Input type="date" value={form.period_end} onChange={(e) => update('period_end', e.target.value)} />
         </Field>
 
-        <Field label="Design Template Number" hint="DashDisignTemplates/01/02 ...">
+        <Field label="Design Template Number" hint="DashDesignTemplates/01/02 ...">
           <Input
             type="number"
             min={1}

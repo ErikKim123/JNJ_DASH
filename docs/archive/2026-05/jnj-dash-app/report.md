@@ -181,7 +181,7 @@ config/env.ts                               zod 환경변수 검증
 | `lib/api/client.ts` (AbortSignal 지원) | 폴링 중 round/step 변경 시 이전 fetch 즉시 취소 |
 | 4개 에러 경계 (root + dashboard, error.tsx + not-found.tsx) | env 미설정 같은 운영 사고에 친화적 메시지 |
 | `vercel.json` (icn1 리전 + API no-store) | 한국 사용자 대기시간 최소화 |
-| `.vercelignore` | DashDisignTemplates/docs/.bkit 배포 제외 |
+| `.vercelignore` | DashDesignTemplates/docs/.bkit 배포 제외 |
 
 ---
 

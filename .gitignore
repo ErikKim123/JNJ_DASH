@@ -22,7 +22,7 @@ next-env.d.ts
 data/snapshots/
 
 # 디자인 원본 (PSD/AI/PDF — 대용량, 런타임 미사용)
-DashDisignTemplates/02/
+DashDesignTemplates/02/
 
 # bkit 플러그인 로컬 상태
 .bkit/

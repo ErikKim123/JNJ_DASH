@@ -43,7 +43,7 @@ owner: bandnara123@gmail.com
 - Vercel에 배포된 Next.js 15 풀스택 웹 앱
 - HOME(대회 선택) → 대시보드(라운드/스텝 표출) 2단계 구조
 - Google Sheet API Key 기반 공개 시트 조회
-- `DashDisignTemplates/{N}/`의 디자인 템플릿을 React 컴포넌트로 포팅
+- `DashDesignTemplates/{N}/`의 디자인 템플릿을 React 컴포넌트로 포팅
 
 ---
 
@@ -105,7 +105,7 @@ owner: bandnara123@gmail.com
 - FR-4.3 화면 우측 상단에 "마지막 갱신 N초 전" 인디케이터
 
 #### FR-5. 디자인 템플릿
-- FR-5.1 `DashDisignTemplates/01/jeju_bachata_process_templates.html` 파일을 React 컴포넌트로 포팅
+- FR-5.1 `DashDesignTemplates/01/jeju_bachata_process_templates.html` 파일을 React 컴포넌트로 포팅
 - FR-5.2 템플릿은 라운드 × 스텝 조합별 화면 슬롯을 가짐 (`<RoundStepView round="prelim" step="pairing" data={...} />`)
 - FR-5.3 신규 템플릿 추가 시 `DesignTemplate{N}.tsx` 1개 파일을 만들고 라우터에 등록하면 자동 인식되도록 폴더 컨벤션 정의
 
@@ -206,7 +206,7 @@ owner: bandnara123@gmail.com
 - Google Sheets API (https://sheets.googleapis.com/v4/spreadsheets)
 - 대회목록시트(1bRclkuN8fuSfhoSrRUEtBjPPx6TePofxojE72qHV6iU)
 - 대회별 원본시트 (001/002/003 외 추가)
-- DashDisignTemplates/ 폴더의 HTML 템플릿
+- DashDesignTemplates/ 폴더의 HTML 템플릿
 
 ### 8.3 Process Dependencies
 - 운영팀: 시트 권한을 "링크 보유자 보기"로 설정

@@ -62,9 +62,9 @@ function selectSvg(round: RoundKey, _step: StepKey, data: StepDataPayload): stri
   }
 }
 
-export const Template02: TemplateModule = {
-  id: 2,
-  name: 'Jeju Latin Culture Festival',
+export const Template03: TemplateModule = {
+  id: 3,
+  name: 'Jeju Latin Culture Festival (03)',
   render(round, step, data) {
     const svg = selectSvg(round, step, data);
     const placeholders = flattenStepData(data);

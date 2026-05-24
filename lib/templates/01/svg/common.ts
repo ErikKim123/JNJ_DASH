@@ -1,5 +1,5 @@
 // Design Ref: §11.1 #6 — Template 01의 공통 SVG 빌딩 블록.
-// 원본: DashDisignTemplates/01/jeju_bachata_process_templates.html (lines 184-456)
+// 원본: DashDesignTemplates/01/jeju_bachata_process_templates.html (lines 184-456)
 // 함수 시그니처는 그대로 유지하되 TS로 마이그레이션. 모든 함수는 SVG 문자열 반환.
 
 export const COMMON_DEFS = `

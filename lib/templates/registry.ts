@@ -3,10 +3,12 @@
 import type { TemplateModule } from './types';
 import { Template01 } from './01';
 import { Template02 } from './02';
+import { Template03 } from './03';
 
 export const TEMPLATES: Record<number, TemplateModule> = {
   1: Template01,
   2: Template02,
+  3: Template03,
 };
 
 export const DEFAULT_TEMPLATE_ID = 1;
