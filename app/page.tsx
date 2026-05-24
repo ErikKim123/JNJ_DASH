@@ -29,9 +29,11 @@ export default function HomePage() {
           </Link>
           <Link
             href="/admin"
+            target="_blank"
+            rel="noopener"
             className="text-xs font-mono tracking-widest uppercase px-3 py-1.5 rounded border border-accent/40 text-accent hover:bg-accent/10 hover:border-accent transition"
           >
-            Admin →
+            Admin ↗
           </Link>
         </div>
       </header>

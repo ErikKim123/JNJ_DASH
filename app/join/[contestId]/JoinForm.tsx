@@ -17,20 +17,76 @@ const ROLE_OPTIONS: { value: ParticipantRole; label: string }[] = [
   { value: 'helper_follower', label: 'Helper (Follower)' },
 ];
 
+// 부문/장르 선택지 — 한/영 라벨, value는 한국어 키 (DB 호환).
+const CATEGORY_OPTIONS: { value: string; label: { ko: string; en: string } }[] = [
+  { value: '소셜', label: { ko: '소셜', en: 'Social' } },
+  { value: '쇼케이스', label: { ko: '쇼케이스', en: 'Showcase' } },
+  { value: '솔로', label: { ko: '솔로', en: 'Solo' } },
+  { value: '대회', label: { ko: '대회', en: 'Competition' } },
+];
+
+const GENRE_OPTIONS: { value: string; label: { ko: string; en: string } }[] = [
+  { value: '바차타', label: { ko: '바차타', en: 'Bachata' } },
+  { value: '살사', label: { ko: '살사', en: 'Salsa' } },
+  { value: '주크', label: { ko: '주크', en: 'Zouk' } },
+  { value: '먼보', label: { ko: '먼보', en: 'Mambo' } },
+  { value: '탱고', label: { ko: '탱고', en: 'Tango' } },
+  { value: 'Other', label: { ko: '기타', en: 'Other' } },
+];
+
 const PROFILE_FIELDS: {
   key: string;
   label: { ko: string; en: string };
   placeholder?: { ko: string; en: string };
-  type?: 'text' | 'email' | 'date' | 'tel';
+  type?: 'text' | 'email' | 'date' | 'tel' | 'whatsapp' | 'select';
+  options?: { value: string; label: { ko: string; en: string } }[];
 }[] = [
-  { key: '부문', label: { ko: '부문', en: 'Category' }, placeholder: { ko: '예: 소셜댄스', en: 'e.g. Social Dance' } },
-  { key: '장르', label: { ko: '장르', en: 'Genre' }, placeholder: { ko: '예: 바차타', en: 'e.g. Bachata' } },
-  { key: '연락처', label: { ko: '연락처', en: 'Phone' }, placeholder: { ko: '010-0000-0000', en: '010-0000-0000' }, type: 'tel' },
+  { key: '부문', label: { ko: '부문', en: 'Category' }, type: 'select', options: CATEGORY_OPTIONS, placeholder: { ko: '부문 선택', en: 'Select category' } },
+  { key: '장르', label: { ko: '장르', en: 'Genre' }, type: 'select', options: GENRE_OPTIONS, placeholder: { ko: '장르 선택', en: 'Select genre' } },
+  { key: '연락처', label: { ko: '연락처', en: 'WhatsApp Number' }, placeholder: { ko: '010-0000-0000', en: '10-1234-5678' }, type: 'whatsapp' },
   { key: '이메일', label: { ko: '이메일', en: 'Email' }, placeholder: { ko: 'name@example.com', en: 'name@example.com' }, type: 'email' },
   { key: 'Nationality', label: { ko: '국적', en: 'Nationality' }, placeholder: { ko: 'Korea', en: 'Korea' } },
   { key: '접수일', label: { ko: '접수일', en: 'Submitted Date' }, type: 'date' },
   { key: '사진원본', label: { ko: '사진원본 URL', en: 'Original Photo URL' }, placeholder: { ko: 'Google Drive 공유 링크 (선택)', en: 'Google Drive share link (optional)' } },
   { key: 'X', label: { ko: '인스타 (@)', en: 'Instagram (@)' }, placeholder: { ko: '@your_id', en: '@your_id' } },
+];
+
+// WhatsApp 국가 코드 — 라틴/아시아/북미/유럽 위주.
+// 라벨은 "국기 +코드 국가명" 포맷. dial 은 + 제외 숫자.
+const COUNTRY_CODES: { code: string; dial: string; flag: string; name: string }[] = [
+  { code: 'KR', dial: '82', flag: '🇰🇷', name: 'Korea' },
+  { code: 'US', dial: '1', flag: '🇺🇸', name: 'United States' },
+  { code: 'JP', dial: '81', flag: '🇯🇵', name: 'Japan' },
+  { code: 'CN', dial: '86', flag: '🇨🇳', name: 'China' },
+  { code: 'TW', dial: '886', flag: '🇹🇼', name: 'Taiwan' },
+  { code: 'HK', dial: '852', flag: '🇭🇰', name: 'Hong Kong' },
+  { code: 'SG', dial: '65', flag: '🇸🇬', name: 'Singapore' },
+  { code: 'MY', dial: '60', flag: '🇲🇾', name: 'Malaysia' },
+  { code: 'TH', dial: '66', flag: '🇹🇭', name: 'Thailand' },
+  { code: 'VN', dial: '84', flag: '🇻🇳', name: 'Vietnam' },
+  { code: 'PH', dial: '63', flag: '🇵🇭', name: 'Philippines' },
+  { code: 'ID', dial: '62', flag: '🇮🇩', name: 'Indonesia' },
+  { code: 'IN', dial: '91', flag: '🇮🇳', name: 'India' },
+  { code: 'AU', dial: '61', flag: '🇦🇺', name: 'Australia' },
+  { code: 'NZ', dial: '64', flag: '🇳🇿', name: 'New Zealand' },
+  { code: 'GB', dial: '44', flag: '🇬🇧', name: 'United Kingdom' },
+  { code: 'DE', dial: '49', flag: '🇩🇪', name: 'Germany' },
+  { code: 'FR', dial: '33', flag: '🇫🇷', name: 'France' },
+  { code: 'ES', dial: '34', flag: '🇪🇸', name: 'Spain' },
+  { code: 'IT', dial: '39', flag: '🇮🇹', name: 'Italy' },
+  { code: 'NL', dial: '31', flag: '🇳🇱', name: 'Netherlands' },
+  { code: 'RU', dial: '7', flag: '🇷🇺', name: 'Russia' },
+  { code: 'CA', dial: '1', flag: '🇨🇦', name: 'Canada' },
+  { code: 'MX', dial: '52', flag: '🇲🇽', name: 'Mexico' },
+  { code: 'BR', dial: '55', flag: '🇧🇷', name: 'Brazil' },
+  { code: 'AR', dial: '54', flag: '🇦🇷', name: 'Argentina' },
+  { code: 'CO', dial: '57', flag: '🇨🇴', name: 'Colombia' },
+  { code: 'CL', dial: '56', flag: '🇨🇱', name: 'Chile' },
+  { code: 'PE', dial: '51', flag: '🇵🇪', name: 'Peru' },
+  { code: 'CU', dial: '53', flag: '🇨🇺', name: 'Cuba' },
+  { code: 'DO', dial: '1', flag: '🇩🇴', name: 'Dominican Republic' },
+  { code: 'PR', dial: '1', flag: '🇵🇷', name: 'Puerto Rico' },
+  { code: 'VE', dial: '58', flag: '🇻🇪', name: 'Venezuela' },
 ];
 
 const T = {
@@ -270,14 +326,34 @@ export function JoinForm({
         <div className="jnj-card jnj-stack-4">
           {PROFILE_FIELDS.map((f) => (
             <Field key={f.key} label={f.label[lang]}>
-              <input
-                type={f.type ?? 'text'}
-                className="jnj-input"
-                value={draft.meta[f.key] ?? ''}
-                onChange={(e) => setMeta(f.key, e.target.value)}
-                placeholder={f.placeholder ? f.placeholder[lang] : ''}
-                maxLength={2048}
-              />
+              {f.type === 'whatsapp' ? (
+                <WhatsAppInput
+                  value={draft.meta[f.key] ?? ''}
+                  onChange={(v) => setMeta(f.key, v)}
+                  placeholder={f.placeholder ? f.placeholder[lang] : ''}
+                  defaultDial="82"
+                />
+              ) : f.type === 'select' && f.options ? (
+                <select
+                  className="jnj-input jnj-select"
+                  value={draft.meta[f.key] ?? ''}
+                  onChange={(e) => setMeta(f.key, e.target.value)}
+                >
+                  <option value="">{f.placeholder ? f.placeholder[lang] : ''}</option>
+                  {f.options.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label[lang]}</option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type={f.type ?? 'text'}
+                  className="jnj-input"
+                  value={draft.meta[f.key] ?? ''}
+                  onChange={(e) => setMeta(f.key, e.target.value)}
+                  placeholder={f.placeholder ? f.placeholder[lang] : ''}
+                  maxLength={2048}
+                />
+              )}
             </Field>
           ))}
         </div>
@@ -319,6 +395,94 @@ export function JoinForm({
       </div>
     </div>
   );
+}
+
+// WhatsApp 스타일 전화번호 입력 — 좌측 국가 코드 셀렉터 + 우측 번호 입력.
+// 저장 포맷: "+{dial} {number}" (예: "+82 10-1234-5678").
+function WhatsAppInput({
+  value,
+  onChange,
+  placeholder,
+  defaultDial,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  defaultDial: string;
+}) {
+  const parsed = parseWhatsApp(value, defaultDial);
+  const dial = parsed.dial;
+  const number = parsed.number;
+
+  const update = (nextDial: string, nextNumber: string) => {
+    const trimmed = nextNumber.trim();
+    onChange(trimmed ? `+${nextDial} ${trimmed}` : `+${nextDial}`);
+  };
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        gap: 0,
+        alignItems: 'stretch',
+        border: '1px solid var(--jnj-grey-300)',
+        borderRadius: 8,
+        overflow: 'hidden',
+        background: 'var(--jnj-white)',
+      }}
+    >
+      <select
+        aria-label="Country code"
+        value={dial}
+        onChange={(e) => update(e.target.value, number)}
+        style={{
+          border: 'none',
+          background: 'var(--jnj-grey-100)',
+          padding: '0 10px',
+          fontSize: 14,
+          fontWeight: 500,
+          color: 'var(--jnj-black)',
+          cursor: 'pointer',
+          outline: 'none',
+          borderRight: '1px solid var(--jnj-grey-300)',
+          minWidth: 96,
+          maxWidth: 120,
+        }}
+      >
+        {COUNTRY_CODES.map((c) => (
+          <option key={c.code} value={c.dial}>
+            {c.flag} +{c.dial} {c.name}
+          </option>
+        ))}
+      </select>
+      <input
+        type="tel"
+        inputMode="tel"
+        value={number}
+        onChange={(e) => update(dial, e.target.value)}
+        placeholder={placeholder}
+        maxLength={32}
+        style={{
+          flex: 1,
+          border: 'none',
+          outline: 'none',
+          padding: '12px 14px',
+          fontSize: 16,
+          background: 'transparent',
+          color: 'var(--jnj-black)',
+          minWidth: 0,
+        }}
+      />
+    </div>
+  );
+}
+
+function parseWhatsApp(raw: string, defaultDial: string): { dial: string; number: string } {
+  const trimmed = raw.trim();
+  if (!trimmed) return { dial: defaultDial, number: '' };
+  const m = trimmed.match(/^\+(\d{1,4})\s*(.*)$/);
+  if (m) return { dial: m[1], number: m[2].trim() };
+  return { dial: defaultDial, number: trimmed };
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
