@@ -1,6 +1,6 @@
 // Design Ref: §11.1 #6 — Grand Final 전용 스크린 (Prep / Wrapup / Result / Pairing*)
 // *Pairing은 라우트 레벨에서 차단되지만 폴백 표시용으로 유지
-import { shell, heroHeader, topHeader, citiesFooter, bottomSeal, hexagonFrame, trophyIcon } from './common';
+import { shell, heroHeader, topHeader, citiesFooter, bottomSeal, hexagonFrame, trophyIcon, sponsorRow } from './common';
 
 export function finalPrepSvg(): string {
   const rays = Array.from({ length: 16 })
@@ -73,13 +73,14 @@ export function finalPrepSvg(): string {
     <text x="640" y="510" text-anchor="middle" font-family="'Cinzel', 'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-weight="bold" font-size="76" letter-spacing="12" fill="url(#goldg)">{{round_title}}</text>
     <text x="640" y="552" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-size="20" letter-spacing="14" fill="#E8E6DA" opacity="0.85">{{round_subtitle}}</text>
 
-    <g transform="translate(640 612)">
+    <g transform="translate(640 594)">
       <line x1="-300" y1="0" x2="-110" y2="0" stroke="url(#goldgh)" stroke-width="0.7"/>
       <line x1="110" y1="0" x2="300" y2="0" stroke="url(#goldgh)" stroke-width="0.7"/>
       <text text-anchor="middle" y="6" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-size="15" letter-spacing="6" fill="#D4AF37">{{participants}}</text>
     </g>
 
-    ${citiesFooter()}
+    ${citiesFooter(620)}
+    ${sponsorRow()}
   `);
 }
 
