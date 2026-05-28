@@ -98,14 +98,14 @@ const T = {
   noPhoto: { ko: '사진 없음', en: 'No photo' },
   numLabel: { ko: '참가 번호 (자동 부여)', en: 'Entry Number (auto)' },
   roleLabel: { ko: '역할 (Role)', en: 'Role' },
-  teamLabel: { ko: '팀명 (필수)', en: 'Team Name (required)' },
-  teamPlaceholder: { ko: '팀명', en: 'Team name' },
-  repLabel: { ko: '대표자 (필수)', en: 'Representative (required)' },
-  repPlaceholder: { ko: '대표자 이름', en: 'Representative name' },
+  teamLabel: { ko: '이름 (필수)', en: 'Name (required)' },
+  teamPlaceholder: { ko: '이름', en: 'Name' },
+  repLabel: { ko: '국가 (필수)', en: 'Country (required)' },
+  repPlaceholder: { ko: '국가', en: 'Country' },
   submit: { ko: '신청하기', en: 'Submit Entry' },
   submitting: { ko: '제출 중…', en: 'Submitting…' },
-  errTeam: { ko: '팀명을 입력해주세요.', en: 'Please enter a team name.' },
-  errRep: { ko: '대표자를 입력해주세요.', en: 'Please enter a representative.' },
+  errTeam: { ko: '이름을 입력해주세요.', en: 'Please enter a name.' },
+  errRep: { ko: '국가를 입력해주세요.', en: 'Please enter a country.' },
   errFileSize: { ko: '파일이 너무 큽니다 (최대 5MB).', en: 'File too large (max 5MB).' },
   errFileType: { ko: '이미지 파일만 업로드 가능합니다 (jpeg/png/webp/gif).', en: 'Only image files allowed (jpeg/png/webp/gif).' },
   errNet: { ko: '네트워크 오류', en: 'Network error' },
@@ -531,19 +531,19 @@ function LangToggle({ lang, onChange }: { lang: Lang; onChange: (l: Lang) => voi
     >
       <button
         type="button"
-        onClick={() => onChange('ko')}
-        aria-pressed={lang === 'ko'}
-        style={lang === 'ko' ? activeBtn : baseBtn}
-      >
-        KO
-      </button>
-      <button
-        type="button"
         onClick={() => onChange('en')}
         aria-pressed={lang === 'en'}
         style={lang === 'en' ? activeBtn : baseBtn}
       >
         EN
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange('ko')}
+        aria-pressed={lang === 'ko'}
+        style={lang === 'ko' ? activeBtn : baseBtn}
+      >
+        KO
       </button>
     </div>
   );
