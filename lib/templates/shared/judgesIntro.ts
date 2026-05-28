@@ -168,14 +168,16 @@ function emptyState(cy: number): string {
  * 타이틀 블록 — "OUR JUDGES" + 부제.
  */
 function titleBlock(): string {
+  // 타이틀 블록 전체를 32px 위로 — heroHeader(y≈212) 와의 간격을 좁히고
+  // 1행 카드(cy≈437)와의 공백을 정리해 시각 무게 중심을 위로 이동.
   return `
-    <text x="640" y="288" text-anchor="middle"
+    <text x="640" y="256" text-anchor="middle"
           font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif"
           font-size="20" letter-spacing="10" fill="#FFD56B" font-style="italic">{{stage_label}}</text>
-    <text x="640" y="338" text-anchor="middle"
+    <text x="640" y="306" text-anchor="middle"
           font-family="'Cinzel', 'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif"
           font-weight="bold" font-size="48" letter-spacing="8" fill="url(#goldg)">{{intro_title}}</text>
-    <text x="640" y="368" text-anchor="middle"
+    <text x="640" y="336" text-anchor="middle"
           font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif"
           font-size="15" letter-spacing="6" fill="#E8E6DA" opacity="0.75" font-style="italic">{{intro_subtitle}}</text>
   `;
