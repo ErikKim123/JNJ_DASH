@@ -35,6 +35,11 @@ export interface ContestRow {
   semi_status: RoundStatus;
   final_status: RoundStatus;
   legacy_spreadsheet_id: string | null;
+  /**
+   * JOIN APP 의 그룹 폴더 키. 같은 값을 가진 대회들이 한 폴더에 묶임.
+   * 빈 문자열은 "미분류(Other)" 로 분류.
+   */
+  group_name: string;
   /** 결승 채점 활성 항목 키 배열. 기본값: ['fundamentals','connection','musicality']. */
   scoring_items: ScoringItemKey[];
   /** PREP 화면 하단 광고/스폰서 로고 (최대 6개 public URL). */

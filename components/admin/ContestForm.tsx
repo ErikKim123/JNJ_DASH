@@ -37,6 +37,7 @@ export function ContestForm({
     period_start: initial?.period_start ?? '',
     period_end: initial?.period_end ?? '',
     design_template_number: initial?.design_template_number ?? 1,
+    group_name: initial?.group_name ?? '',
     festival_header: initial?.festival_header ?? '',
     tagline: initial?.tagline ?? '',
     prelim_pass_per_role: initial?.prelim_pass_per_role ?? 10,
@@ -290,8 +291,13 @@ export function ContestForm({
             onChange={(e) => update('design_template_number', Number(e.target.value))}
           />
         </Field>
-        <Field label=" ">
-          <div />
+        <Field label={t('cf.group')} hint={t('cf.groupHint')}>
+          <Input
+            value={form.group_name}
+            onChange={(e) => update('group_name', e.target.value)}
+            placeholder="JLCL"
+            maxLength={100}
+          />
         </Field>
 
         <Field label={t('cf.prelimQualifiers')}>

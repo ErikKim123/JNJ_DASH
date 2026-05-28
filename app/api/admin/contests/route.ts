@@ -29,6 +29,8 @@ const CreateContestSchema = z.object({
   prelim_pass_per_role: z.number().int().min(1).max(200).optional().default(10),
   semi_pass_per_role: z.number().int().min(1).max(200).optional().default(5),
   status: z.enum(['ready', 'live', 'done', 'archived']).optional().default('ready'),
+  // JOIN APP 그룹 폴더 키. 자유 텍스트 (예: 'JLCL', 'PSLF'). 빈 문자열 = 미분류.
+  group_name: z.string().max(100).optional().default(''),
   scoring_items: z.array(ScoringItemEnum).min(1).optional(),
   sponsor_logos: z
     .array(z.union([z.literal(''), z.string().url().max(2000)]))
