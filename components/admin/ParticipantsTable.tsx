@@ -57,9 +57,10 @@ interface DraftRow {
 
 // 신규 폼에서 노출할 PROFILE 키 목록 (participant-meta.ts 의 PROFILE_KEYS 와 동일 순서).
 // label/hint 는 런타임에 locale 따라 번역 — useFieldLabel/useFieldHint 사용.
-const PROFILE_FIELDS: { key: string; type?: 'date' | 'email' | 'text' }[] = [
+const PROFILE_FIELDS: { key: string; type?: 'date' | 'email' | 'text' | 'select'; options?: readonly string[] }[] = [
   { key: '부문' },
   { key: '장르' },
+  { key: 'Division', type: 'select', options: ['Solo', 'Couple', 'Team'] },
   { key: '연락처' },
   { key: '이메일', type: 'email' },
   { key: 'Nationality' },
@@ -67,6 +68,12 @@ const PROFILE_FIELDS: { key: string; type?: 'date' | 'email' | 'text' }[] = [
   { key: '사진원본' },
   { key: 'X' },
 ];
+
+// 펼침 행(MetaKeyRow) 에서도 dropdown 으로 렌더할 키 → 옵션 매핑.
+// 신규 폼/펼침 양쪽이 동일한 옵션을 공유하도록 단일 출처(SOT) 유지.
+const FIELD_SELECT_OPTIONS: Record<string, readonly string[]> = {
+  Division: ['Solo', 'Couple', 'Team'],
+};
 
 const EMPTY_DRAFT: DraftRow = {
   num: '',
@@ -634,16 +641,32 @@ function MetaKeyRow({ k, value, onCommit }: { k: string; value: string; onCommit
   const [v, setV] = useState(value);
   const empty = value === '';
   const fieldLabel = useFieldLabel();
+  const options = FIELD_SELECT_OPTIONS[k];
   // title 속성에는 원본 DB 키를 그대로 노출 — 디버깅·매핑 확인 용도.
   return (
     <label className="flex flex-col gap-1">
       <span className={`text-xs truncate ${empty ? 'text-ink2/50' : 'text-ink2'}`} title={k}>{fieldLabel(k)}</span>
-      <Input
-        value={v}
-        onChange={(e) => setV(e.target.value)}
-        onBlur={() => { if (v !== value) onCommit(v); }}
-        className={empty ? 'opacity-60' : ''}
-      />
+      {options ? (
+        <Select
+          value={v}
+          onChange={(e) => {
+            const nv = e.target.value;
+            setV(nv);
+            if (nv !== value) onCommit(nv);
+          }}
+          className={empty ? 'opacity-60' : ''}
+        >
+          <option value="">—</option>
+          {options.map((o) => <option key={o} value={o}>{o}</option>)}
+        </Select>
+      ) : (
+        <Input
+          value={v}
+          onChange={(e) => setV(e.target.value)}
+          onBlur={() => { if (v !== value) onCommit(v); }}
+          className={empty ? 'opacity-60' : ''}
+        />
+      )}
     </label>
   );
 }
@@ -998,12 +1021,22 @@ function NewParticipantCard({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {PROFILE_FIELDS.map((f) => (
             <Field key={f.key} label={fieldLabel(f.key)} hint={fieldHint(f.key)}>
-              <Input
-                type={f.type ?? 'text'}
-                value={draft.meta[f.key] ?? ''}
-                onChange={(e) => setMetaField(f.key, e.target.value)}
-                placeholder={fieldHint(f.key) ?? ''}
-              />
+              {f.type === 'select' && f.options ? (
+                <Select
+                  value={draft.meta[f.key] ?? ''}
+                  onChange={(e) => setMetaField(f.key, e.target.value)}
+                >
+                  <option value="">—</option>
+                  {f.options.map((o) => <option key={o} value={o}>{o}</option>)}
+                </Select>
+              ) : (
+                <Input
+                  type={f.type ?? 'text'}
+                  value={draft.meta[f.key] ?? ''}
+                  onChange={(e) => setMetaField(f.key, e.target.value)}
+                  placeholder={fieldHint(f.key) ?? ''}
+                />
+              )}
             </Field>
           ))}
         </div>

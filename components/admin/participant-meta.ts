@@ -14,7 +14,7 @@ export type MetaCategory =
 const CIRCLED = '①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮';
 
 const PROFILE_KEYS = new Set<string>([
-  '부문', '장르', '연락처', '이메일', 'Nationality', '접수일', '사진원본',
+  '부문', '장르', 'Division', '연락처', '이메일', 'Nationality', '접수일', '사진원본',
   'X', // 생일/생년월일이 시트 첫 칸에 X 라벨로 들어있음
 ]);
 
@@ -96,7 +96,7 @@ export function groupMeta(meta: Record<string, unknown>): Record<MetaCategory, [
   groups.prelim_vote.sort((a, b) => circledOrdinal(a[0]) - circledOrdinal(b[0]) || a[0].localeCompare(b[0]));
   groups.final_score.sort((a, b) => circledOrdinal(a[0]) - circledOrdinal(b[0]) || a[0].localeCompare(b[0]));
 
-  const profileOrder = ['부문', '장르', '연락처', '이메일', 'Nationality', '접수일', '사진원본', 'X'];
+  const profileOrder = ['부문', '장르', 'Division', '연락처', '이메일', 'Nationality', '접수일', '사진원본', 'X'];
   groups.profile.sort((a, b) => {
     const ai = profileOrder.indexOf(a[0]); const bi = profileOrder.indexOf(b[0]);
     if (ai < 0 && bi < 0) return a[0].localeCompare(b[0]);

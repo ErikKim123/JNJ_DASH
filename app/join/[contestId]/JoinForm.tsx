@@ -34,6 +34,12 @@ const GENRE_OPTIONS: { value: string; label: { ko: string; en: string } }[] = [
   { value: 'Other', label: { ko: '기타', en: 'Other' } },
 ];
 
+const DIVISION_OPTIONS: { value: string; label: { ko: string; en: string } }[] = [
+  { value: 'Solo', label: { ko: 'Solo', en: 'Solo' } },
+  { value: 'Couple', label: { ko: 'Couple', en: 'Couple' } },
+  { value: 'Team', label: { ko: 'Team', en: 'Team' } },
+];
+
 const PROFILE_FIELDS: {
   key: string;
   label: { ko: string; en: string };
@@ -43,6 +49,7 @@ const PROFILE_FIELDS: {
 }[] = [
   { key: '부문', label: { ko: '부문', en: 'Category' }, type: 'select', options: CATEGORY_OPTIONS, placeholder: { ko: '부문 선택', en: 'Select category' } },
   { key: '장르', label: { ko: '장르', en: 'Genre' }, type: 'select', options: GENRE_OPTIONS, placeholder: { ko: '장르 선택', en: 'Select genre' } },
+  { key: 'Division', label: { ko: '구분', en: 'Division' }, type: 'select', options: DIVISION_OPTIONS, placeholder: { ko: 'Solo / Couple / Team', en: 'Solo / Couple / Team' } },
   { key: '연락처', label: { ko: '연락처', en: 'WhatsApp Number' }, placeholder: { ko: '010-0000-0000', en: '10-1234-5678' }, type: 'whatsapp' },
   { key: '이메일', label: { ko: '이메일', en: 'Email' }, placeholder: { ko: 'name@example.com', en: 'name@example.com' }, type: 'email' },
   { key: 'Nationality', label: { ko: '국적', en: 'Nationality' }, placeholder: { ko: 'Korea', en: 'Korea' } },

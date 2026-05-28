@@ -188,6 +188,7 @@ export const MESSAGES_EN = {
   // DB 컬럼명(meta key) 은 한글이지만 운영자 UI 라벨은 EN/KO 로 분기.
   'pf.field.부문': 'Category',
   'pf.field.장르': 'Genre',
+  'pf.field.Division': 'Division',
   'pf.field.연락처': 'Contact',
   'pf.field.이메일': 'Email',
   'pf.field.Nationality': 'Nationality',
@@ -384,6 +385,7 @@ export const MESSAGES_KO: Record<MessageKey, string> = {
   // ── Participants : PROFILE field labels ───────────────────────
   'pf.field.부문': '부문',
   'pf.field.장르': '장르',
+  'pf.field.Division': '구분',
   'pf.field.연락처': '연락처',
   'pf.field.이메일': '이메일',
   'pf.field.Nationality': '국적',
