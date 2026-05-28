@@ -275,15 +275,6 @@ export function JoinForm({
             </div>
           </div>
 
-          <Field label={t('numLabel', lang)}>
-            <input
-              type="text"
-              className="jnj-input"
-              value={suggestedNum}
-              readOnly
-            />
-          </Field>
-
           <Field label={t('roleLabel', lang)}>
             <select
               className="jnj-input jnj-select"
