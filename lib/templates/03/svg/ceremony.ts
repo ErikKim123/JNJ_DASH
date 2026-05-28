@@ -2,7 +2,7 @@
 // 레이아웃: 상단 중앙 1위 (리더 + 팔로워), 하단 좌 2위, 하단 우 3위.
 // 벚꽃(sakura) 토글: TemplateRenderer가 .jnj-sakura에 .active 클래스를 토글해 보임/숨김.
 //                    SMIL은 페이지 로드부터 계속 돌고, opacity로 가시성 제어.
-import { shell, topHeader, hexagonFrame, citiesFooter } from './common';
+import { shell, topHeader, hexagonFrame, citiesFooter, sponsorRow } from './common';
 
 // 결정적 의사난수 — 매 빌드마다 동일한 결과(스냅샷 안정성).
 function seeded(i: number): number {
@@ -143,6 +143,7 @@ export function ceremonySvg(): string {
     <!-- 벚꽃 — SMIL은 계속 돌지만 .jnj-sakura의 opacity로 가시성 토글 -->
     <g class="jnj-sakura" pointer-events="none">${sakuraFall()}</g>
 
-    ${citiesFooter()}
+    ${citiesFooter(620)}
+    ${sponsorRow()}
   `);
 }

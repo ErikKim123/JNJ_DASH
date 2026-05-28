@@ -1,5 +1,5 @@
 // Design Ref: §11.1 #6 — Wrapup (Calculate Total) 스크린
-import { shell, topHeader, bottomSeal } from './common';
+import { shell, topHeader, bottomSeal, sponsorRow } from './common';
 
 export function wrapupSvg(): string {
   return shell(`
@@ -32,8 +32,9 @@ export function wrapupSvg(): string {
         <animate attributeName="opacity" values="0.3;1;0.3" dur="1.4s" begin="0.4s" repeatCount="indefinite"/>
       </circle>
     </g>
-    <text x="640" y="585" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="14" letter-spacing="4" fill="#9A98A8">{{wrap_message}}</text>
+    <text x="640" y="582" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="14" letter-spacing="4" fill="#9A98A8">{{wrap_message}}</text>
 
-    ${bottomSeal()}
+    ${bottomSeal(610)}
+    ${sponsorRow()}
   `);
 }

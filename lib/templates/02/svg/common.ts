@@ -92,9 +92,9 @@ export function topHeader(): string {
   `;
 }
 
-export function bottomSeal(): string {
+export function bottomSeal(y = 660): string {
   return `
-    <g transform="translate(640 660)">
+    <g transform="translate(640 ${y})">
       <line x1="-180" y1="0" x2="-30" y2="0" stroke="url(#goldgh)" stroke-width="0.8"/>
       <line x1="30" y1="0" x2="180" y2="0" stroke="url(#goldgh)" stroke-width="0.8"/>
       <text text-anchor="middle" y="4" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="13" fill="#D4AF37" letter-spacing="2">{{tagline}}</text>

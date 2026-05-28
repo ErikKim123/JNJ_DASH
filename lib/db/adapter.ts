@@ -423,7 +423,13 @@ function staticPrep(
   };
 }
 
-function staticOpen(roundLabel: string, festivalHeader: string, tagline: string): StepDataPayload {
+function staticOpen(
+  roundLabel: string,
+  festivalHeader: string,
+  tagline: string,
+  sponsorLogos: string[] = [],
+  sponsorOpacities: number[] = [],
+): StepDataPayload {
   return {
     kind: 'open',
     data: {
@@ -432,11 +438,19 @@ function staticOpen(roundLabel: string, festivalHeader: string, tagline: string)
       open_quote: '"Let the rhythm guide you."',
       open_subline: 'LET THE DANCE BEGIN',
       tagline,
+      sponsor_logos: sponsorLogos,
+      sponsor_logo_opacities: sponsorOpacities,
     },
   };
 }
 
-function staticLive(roundLabel: string, festivalHeader: string, tagline: string): StepDataPayload {
+function staticLive(
+  roundLabel: string,
+  festivalHeader: string,
+  tagline: string,
+  sponsorLogos: string[] = [],
+  sponsorOpacities: number[] = [],
+): StepDataPayload {
   return {
     kind: 'live',
     data: {
@@ -445,11 +459,19 @@ function staticLive(roundLabel: string, festivalHeader: string, tagline: string)
       round_title: roundLabel.toUpperCase(),
       live_message: 'The stage belongs to the dancers',
       tagline,
+      sponsor_logos: sponsorLogos,
+      sponsor_logo_opacities: sponsorOpacities,
     },
   };
 }
 
-function staticClose(roundLabel: string, festivalHeader: string, tagline: string): StepDataPayload {
+function staticClose(
+  roundLabel: string,
+  festivalHeader: string,
+  tagline: string,
+  sponsorLogos: string[] = [],
+  sponsorOpacities: number[] = [],
+): StepDataPayload {
   return {
     kind: 'close',
     data: {
@@ -459,6 +481,8 @@ function staticClose(roundLabel: string, festivalHeader: string, tagline: string
       close_subtitle: `${roundLabel.toUpperCase()} · CLOSED`,
       close_message: 'Thank you to all dancers',
       tagline,
+      sponsor_logos: sponsorLogos,
+      sponsor_logo_opacities: sponsorOpacities,
     },
   };
 }
@@ -511,7 +535,13 @@ async function buildJudgesIntro(
   return { kind: 'judgesIntro', data: out };
 }
 
-function staticWrapup(roundLabel: string, festivalHeader: string, tagline: string): StepDataPayload {
+function staticWrapup(
+  roundLabel: string,
+  festivalHeader: string,
+  tagline: string,
+  sponsorLogos: string[] = [],
+  sponsorOpacities: number[] = [],
+): StepDataPayload {
   return {
     kind: 'wrapup',
     data: {
@@ -521,6 +551,8 @@ function staticWrapup(roundLabel: string, festivalHeader: string, tagline: strin
       wrap_subtitle: 'IN PROGRESS',
       wrap_message: 'Please stand by — results coming up shortly',
       tagline,
+      sponsor_logos: sponsorLogos,
+      sponsor_logo_opacities: sponsorOpacities,
     },
   };
 }
@@ -656,6 +688,8 @@ export async function getStepData(params: GetStepDataParams): Promise<StepDataPa
       leaders: leaders.slice(0, 3),
       followers: followers.slice(0, 3),
       tagline: '',
+      sponsor_logos: Array.isArray(contest.sponsor_logos) ? contest.sponsor_logos : [],
+      sponsor_logo_opacities: Array.isArray(contest.sponsor_logo_opacities) ? contest.sponsor_logo_opacities : [],
     };
     return { kind: 'ceremony', data: out };
   }
@@ -666,21 +700,18 @@ export async function getStepData(params: GetStepDataParams): Promise<StepDataPa
   }
 
   // ── Static ──
+  // PREP / OPEN / LIVE / CALC(wrapup) / CLOSE 모두 하단 6슬롯 광고 노출 — sponsor 데이터 공통 전달.
+  const sponsorLogos = Array.isArray(contest.sponsor_logos) ? contest.sponsor_logos : [];
+  const sponsorOpacities = Array.isArray(contest.sponsor_logo_opacities) ? contest.sponsor_logo_opacities : [];
   switch (step) {
     case 'prep':
-      return staticPrep(
-        roundLabel,
-        festivalHeader,
-        tagline,
-        Array.isArray(contest.sponsor_logos) ? contest.sponsor_logos : [],
-        Array.isArray(contest.sponsor_logo_opacities) ? contest.sponsor_logo_opacities : [],
-      );
+      return staticPrep(roundLabel, festivalHeader, tagline, sponsorLogos, sponsorOpacities);
     case 'open':
-      return staticOpen(roundLabel, festivalHeader, tagline);
+      return staticOpen(roundLabel, festivalHeader, tagline, sponsorLogos, sponsorOpacities);
     case 'live':
-      return staticLive(roundLabel, festivalHeader, tagline);
+      return staticLive(roundLabel, festivalHeader, tagline, sponsorLogos, sponsorOpacities);
     case 'wrapup': {
-      const base = staticWrapup(roundLabel, festivalHeader, tagline);
+      const base = staticWrapup(roundLabel, festivalHeader, tagline, sponsorLogos, sponsorOpacities);
       if (base.kind === 'wrapup') {
         if (round === 'final') {
           base.data.finalTie = await computeFinalTieInfo(contestId);
@@ -692,7 +723,7 @@ export async function getStepData(params: GetStepDataParams): Promise<StepDataPa
       return base;
     }
     case 'close':
-      return staticClose(roundLabel, festivalHeader, tagline);
+      return staticClose(roundLabel, festivalHeader, tagline, sponsorLogos, sponsorOpacities);
   }
 
   throw new StepNotAvailableError(round, step);

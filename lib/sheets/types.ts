@@ -102,6 +102,8 @@ export interface OpenData {
   open_quote: string;
   open_subline: string;
   tagline: string;
+  sponsor_logos?: string[];
+  sponsor_logo_opacities?: number[];
 }
 
 export interface LiveData {
@@ -110,6 +112,8 @@ export interface LiveData {
   round_title: string;
   live_message: string;
   tagline: string;
+  sponsor_logos?: string[];
+  sponsor_logo_opacities?: number[];
 }
 
 export interface WrapupData {
@@ -127,6 +131,8 @@ export interface WrapupData {
   overflow?: ResultData['overflow'];
   /** 결승 라운드 한정 — 1·2·3위 안에 동점자가 있을 때 채워짐. */
   finalTie?: FinalTieInfo;
+  sponsor_logos?: string[];
+  sponsor_logo_opacities?: number[];
 }
 
 export interface CloseData {
@@ -136,6 +142,8 @@ export interface CloseData {
   close_subtitle: string;
   close_message: string;
   tagline: string;
+  sponsor_logos?: string[];
+  sponsor_logo_opacities?: number[];
 }
 
 export interface ResultEntry {
@@ -213,6 +221,8 @@ export interface CeremonyData {
   leaders: ResultEntry[];
   followers: ResultEntry[];
   tagline: string;
+  sponsor_logos?: string[];
+  sponsor_logo_opacities?: number[];
 }
 
 export type StepDataPayload =

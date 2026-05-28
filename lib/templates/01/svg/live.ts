@@ -1,5 +1,5 @@
 // Design Ref: §11.1 #6 — Live 스크린 (라운드 무관 공통)
-import { shell, citiesFooter } from './common';
+import { shell, citiesFooter, sponsorRow } from './common';
 
 export function liveSvg(): string {
   return shell(`
@@ -34,8 +34,9 @@ export function liveSvg(): string {
       <text y="22" text-anchor="middle" font-family="'Cinzel', 'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-weight="bold" font-size="68" letter-spacing="12" fill="url(#goldg)">LIVE</text>
     </g>
 
-    <text x="640" y="610" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="22" letter-spacing="4" fill="#FFEBA0">{{live_message}}</text>
+    <text x="640" y="592" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="22" letter-spacing="4" fill="#FFEBA0">{{live_message}}</text>
 
-    ${citiesFooter()}
+    ${citiesFooter(620)}
+    ${sponsorRow()}
   `);
 }

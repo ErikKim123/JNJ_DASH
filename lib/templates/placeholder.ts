@@ -120,26 +120,36 @@ export function flattenStepData(payload: StepDataPayload): Record<string, string
       fillJudges(out, ji.judges ?? []);
       break;
     }
-    case 'prep': {
-      // sponsor_logos / sponsor_logo_opacities 를 1-indexed placeholder 로 평탄화 (PREP 전용)
-      const logos = Array.isArray(d.sponsor_logos) ? (d.sponsor_logos as unknown[]) : [];
-      const opacities = Array.isArray(d.sponsor_logo_opacities)
-        ? (d.sponsor_logo_opacities as unknown[])
-        : [];
-      for (let i = 0; i < 6; i++) {
-        const v = logos[i];
-        out[`sponsor_logo_${i + 1}`] = typeof v === 'string' ? v : '';
-        const op = opacities[i];
-        const num = typeof op === 'number' && !Number.isNaN(op) ? op : 100;
-        const clamped = Math.max(0, Math.min(100, num));
-        out[`sponsor_opacity_${i + 1}`] = (clamped / 100).toString();
-      }
+    case 'prep':
+    case 'open':
+    case 'live':
+    case 'wrapup':
+    case 'close':
+    case 'ceremony': {
+      // sponsor_logos / sponsor_logo_opacities 를 1-indexed placeholder 로 평탄화
+      // PREP 외 OPEN/LIVE/CALC(wrapup)/CLOSE/CEREMONY 도 하단 광고 6슬롯 표출.
+      flattenSponsors(out, d);
       break;
     }
     default:
-      // 그 외 스텝(open/live/wrapup/close): 스칼라만 사용 — 위 평탄화로 충분
+      // judgesIntro 등 자체 footer 가 별도인 스텝은 적용 안 함.
       break;
   }
 
   return out;
+}
+
+function flattenSponsors(out: Record<string, string>, d: Record<string, unknown>): void {
+  const logos = Array.isArray(d.sponsor_logos) ? (d.sponsor_logos as unknown[]) : [];
+  const opacities = Array.isArray(d.sponsor_logo_opacities)
+    ? (d.sponsor_logo_opacities as unknown[])
+    : [];
+  for (let i = 0; i < 6; i++) {
+    const v = logos[i];
+    out[`sponsor_logo_${i + 1}`] = typeof v === 'string' ? v : '';
+    const op = opacities[i];
+    const num = typeof op === 'number' && !Number.isNaN(op) ? op : 100;
+    const clamped = Math.max(0, Math.min(100, num));
+    out[`sponsor_opacity_${i + 1}`] = (clamped / 100).toString();
+  }
 }

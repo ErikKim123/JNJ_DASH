@@ -1,5 +1,5 @@
 // Design Ref: §11.1 #6 — Open 스크린
-import { shell, topHeader, bottomSeal } from './common';
+import { shell, topHeader, bottomSeal, sponsorRow } from './common';
 
 export function openSvg(): string {
   const rays = Array.from({ length: 24 })
@@ -37,6 +37,7 @@ export function openSvg(): string {
     <text x="640" y="568" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="20" letter-spacing="3" fill="#FFEBA0">{{open_quote}}</text>
     <text x="640" y="600" text-anchor="middle" font-family="ui-monospace, monospace" font-size="12" letter-spacing="6" fill="#D4AF37">{{open_subline}}</text>
 
-    ${bottomSeal()}
+    ${bottomSeal(610)}
+    ${sponsorRow()}
   `);
 }
