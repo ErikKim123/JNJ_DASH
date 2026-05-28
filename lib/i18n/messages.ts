@@ -183,6 +183,27 @@ export const MESSAGES_EN = {
   'cf.deleteConfirm': 'Delete contest {ID} and all related data (participants/pairings/qualifiers/finals). Continue?',
   'cf.deleteFailed': 'Delete failed ({STATUS})',
   'cf.requestFailed': 'Request failed ({STATUS})',
+
+  // ── Participants : PROFILE field labels (DB 키 → 표시 라벨) ───
+  // DB 컬럼명(meta key) 은 한글이지만 운영자 UI 라벨은 EN/KO 로 분기.
+  'pf.field.부문': 'Category',
+  'pf.field.장르': 'Genre',
+  'pf.field.연락처': 'Contact',
+  'pf.field.이메일': 'Email',
+  'pf.field.Nationality': 'Nationality',
+  'pf.field.접수일': 'Submitted Date',
+  'pf.field.사진원본': 'Original Photo URL',
+  'pf.field.X': 'Instagram (@)',
+  // PROFILE hint (신규 등록 폼)
+  'pf.hint.부문': 'e.g., Social',
+  'pf.hint.장르': 'e.g., Bachata',
+  'pf.hint.연락처': 'e.g., 010-0000-0000',
+  'pf.hint.사진원본': 'Google Drive share URL (optional)',
+  'pf.hint.X': 'e.g., @your_id',
+  // Resend confirmation email
+  'pf.resend': '✉ Resend confirmation email',
+  'pf.resendSending': 'Sending…',
+  'pf.resendEmailMissing': 'No email — fill the PROFILE.Email field first',
 } as const;
 
 export const MESSAGES_KO: Record<MessageKey, string> = {
@@ -359,6 +380,24 @@ export const MESSAGES_KO: Record<MessageKey, string> = {
   'cf.deleteConfirm': '대회 {ID}와 관련 데이터(참가자/페어링/통과자/결승 결과)를 모두 삭제할까요?',
   'cf.deleteFailed': '삭제 실패 ({STATUS})',
   'cf.requestFailed': '요청 실패 ({STATUS})',
+
+  // ── Participants : PROFILE field labels ───────────────────────
+  'pf.field.부문': '부문',
+  'pf.field.장르': '장르',
+  'pf.field.연락처': '연락처',
+  'pf.field.이메일': '이메일',
+  'pf.field.Nationality': '국적',
+  'pf.field.접수일': '접수일',
+  'pf.field.사진원본': '사진원본 URL',
+  'pf.field.X': '인스타 (@)',
+  'pf.hint.부문': '예: 소셜댄스',
+  'pf.hint.장르': '예: 바차타',
+  'pf.hint.연락처': '예: 010-0000-0000',
+  'pf.hint.사진원본': 'Google Drive 공유 URL (선택)',
+  'pf.hint.X': '예: @your_id',
+  'pf.resend': '✉ 확인 메일 재발송',
+  'pf.resendSending': '전송 중…',
+  'pf.resendEmailMissing': '이메일 미입력 — PROFILE.이메일 필드를 먼저 채우세요',
 };
 
 export const MESSAGES: Record<Locale, Record<MessageKey, string>> = {

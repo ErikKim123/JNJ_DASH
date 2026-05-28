@@ -14,6 +14,30 @@ import {
 } from './participant-meta';
 import { resolveActiveDefs, type ScoringItemKey, type ScoringItemDef } from '@/lib/db/scoring';
 import { resolvePhotoUrl, normalizePhotoUrl } from './photo-url';
+import { useT } from '@/lib/i18n/LocaleContext';
+import type { MessageKey } from '@/lib/i18n/messages';
+
+/**
+ * meta key('부문' 등) → 현재 locale 라벨 변환.
+ * 사전(messages.ts) 에 정의되지 않은 키는 원본 키를 그대로 사용 (커스텀 컬럼 대비).
+ */
+function useFieldLabel(): (key: string) => string {
+  const t = useT();
+  return (key: string) => {
+    const mk = `pf.field.${key}` as MessageKey;
+    const v = t(mk);
+    return v === mk ? key : v;
+  };
+}
+
+function useFieldHint(): (key: string) => string | undefined {
+  const t = useT();
+  return (key: string) => {
+    const mk = `pf.hint.${key}` as MessageKey;
+    const v = t(mk);
+    return v === mk ? undefined : v;
+  };
+}
 
 const ROLE_LABEL: Record<ParticipantRole, string> = {
   leader: 'Leader',
@@ -32,15 +56,16 @@ interface DraftRow {
 }
 
 // 신규 폼에서 노출할 PROFILE 키 목록 (participant-meta.ts 의 PROFILE_KEYS 와 동일 순서).
-const PROFILE_FIELDS: { key: string; label: string; hint?: string; type?: 'date' | 'email' | 'text' }[] = [
-  { key: '부문', label: '부문', hint: '예: 소셜댄스' },
-  { key: '장르', label: '장르', hint: '예: 바차타' },
-  { key: '연락처', label: '연락처', hint: '예: 010-0000-0000' },
-  { key: '이메일', label: '이메일', type: 'email' },
-  { key: 'Nationality', label: 'Nationality' },
-  { key: '접수일', label: '접수일', type: 'date' },
-  { key: '사진원본', label: '사진원본', hint: 'Google Drive 공유 URL (선택)' },
-  { key: 'X', label: '인스타 (@)', hint: '예: @your_id' },
+// label/hint 는 런타임에 locale 따라 번역 — useFieldLabel/useFieldHint 사용.
+const PROFILE_FIELDS: { key: string; type?: 'date' | 'email' | 'text' }[] = [
+  { key: '부문' },
+  { key: '장르' },
+  { key: '연락처' },
+  { key: '이메일', type: 'email' },
+  { key: 'Nationality' },
+  { key: '접수일', type: 'date' },
+  { key: '사진원본' },
+  { key: 'X' },
 ];
 
 const EMPTY_DRAFT: DraftRow = {
@@ -608,9 +633,11 @@ function KeyValueGrid({
 function MetaKeyRow({ k, value, onCommit }: { k: string; value: string; onCommit: (v: string) => void }) {
   const [v, setV] = useState(value);
   const empty = value === '';
+  const fieldLabel = useFieldLabel();
+  // title 속성에는 원본 DB 키를 그대로 노출 — 디버깅·매핑 확인 용도.
   return (
     <label className="flex flex-col gap-1">
-      <span className={`text-xs truncate ${empty ? 'text-ink2/50' : 'text-ink2'}`} title={k}>{k}</span>
+      <span className={`text-xs truncate ${empty ? 'text-ink2/50' : 'text-ink2'}`} title={k}>{fieldLabel(k)}</span>
       <Input
         value={v}
         onChange={(e) => setV(e.target.value)}
@@ -893,6 +920,8 @@ function NewParticipantCard({
   onSave: () => void;
   onCancel: () => void;
 }) {
+  const fieldLabel = useFieldLabel();
+  const fieldHint = useFieldHint();
   function setField<K extends keyof typeof draft>(key: K, value: typeof draft[K]) {
     setDraft((d) => ({ ...d, [key]: value }));
   }
@@ -968,12 +997,12 @@ function NewParticipantCard({
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {PROFILE_FIELDS.map((f) => (
-            <Field key={f.key} label={f.label} hint={f.hint}>
+            <Field key={f.key} label={fieldLabel(f.key)} hint={fieldHint(f.key)}>
               <Input
                 type={f.type ?? 'text'}
                 value={draft.meta[f.key] ?? ''}
                 onChange={(e) => setMetaField(f.key, e.target.value)}
-                placeholder={f.hint ?? ''}
+                placeholder={fieldHint(f.key) ?? ''}
               />
             </Field>
           ))}
@@ -995,6 +1024,7 @@ function ResendEmailButton({
   participantId: string;
   email: string;
 }) {
+  const t = useT();
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; msg: string } | null>(null);
 
@@ -1025,10 +1055,10 @@ function ResendEmailButton({
   return (
     <div className="mt-3 flex items-center gap-3 flex-wrap">
       <Button variant="secondary" onClick={send} disabled={disabled}>
-        {busy ? 'Sending…' : '✉ 확인 메일 재발송'}
+        {busy ? t('pf.resendSending') : t('pf.resend')}
       </Button>
       <span className="text-xs text-ink2">
-        {email ? `→ ${email}` : '이메일 미입력 — PROFILE.이메일 필드를 먼저 채우세요'}
+        {email ? `→ ${email}` : t('pf.resendEmailMissing')}
       </span>
       {result && (
         <span className={`text-xs ${result.ok ? 'text-ok' : 'text-danger'}`}>{result.msg}</span>
