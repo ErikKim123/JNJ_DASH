@@ -67,11 +67,11 @@ function judgeCard(
   // 카드 1장을 (cx, cy) 기준 위→아래로 쌓는다.
   //   photo (원형) → name → alias
   // cy 는 카드 전체의 수직 중앙. photo 는 cy 보다 살짝 위로 올려 텍스트 공간 확보.
-  // 사진/이름 간격은 photoR 의 30% (최소 14) — 그리드가 빽빽해져도 시각적 숨통 유지.
-  // 이름/별칭 간격은 metaFont 의 70% (최소 6) — 두 텍스트의 어색한 밀착 방지.
-  const photoCY = cy - photoR * 0.3;
-  const photoToName = Math.max(14, photoR * 0.3);
-  const nameToMeta = Math.max(6, metaFont * 0.7);
+  // 사진/이름 간격은 photoR 의 45% (최소 22) — 답답해 보이지 않게 시각적 호흡 확보.
+  // 이름/별칭 간격은 metaFont 의 90% (최소 10) — 두 텍스트가 분리되어 읽히도록.
+  const photoCY = cy - photoR * 0.35;
+  const photoToName = Math.max(22, photoR * 0.45);
+  const nameToMeta = Math.max(10, metaFont * 0.9);
   const nameY = photoCY + photoR + nameFont + photoToName;
   const metaY = nameY + metaFont + nameToMeta;
 
@@ -141,10 +141,10 @@ function singleHeroCard(): string {
              preserveAspectRatio="xMidYMid slice" clip-path="url(#${clipId})"/>
       <circle cx="${cx}" cy="${photoCY}" r="${photoR}" fill="none" stroke="url(#goldg)" stroke-width="2.5"/>
       <circle cx="${cx}" cy="${photoCY}" r="${photoR - 6}" fill="none" stroke="#D4AF37" stroke-width="0.6" opacity="0.55"/>
-      <text x="${cx}" y="${(photoCY + photoR + 62).toFixed(1)}" text-anchor="middle"
+      <text x="${cx}" y="${(photoCY + photoR + 78).toFixed(1)}" text-anchor="middle"
             font-family="'Cinzel', 'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif"
             font-size="34" letter-spacing="6" fill="url(#goldg)" font-weight="700">{{judge_name_1}}</text>
-      <text x="${cx}" y="${(photoCY + photoR + 98).toFixed(1)}" text-anchor="middle"
+      <text x="${cx}" y="${(photoCY + photoR + 118).toFixed(1)}" text-anchor="middle"
             font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif"
             font-style="italic" font-size="18" letter-spacing="3" fill="#D4AF37" opacity="0.9">{{judge_alias_1}}</text>
     </g>
@@ -188,7 +188,8 @@ function titleBlock(): string {
 export function judgesIntroContent(opts: JudgesIntroLayoutOpts): string {
   const count = Math.max(0, Math.min(20, Math.floor(opts.count)));
   const contentTop = opts.contentTop ?? 400;     // 타이틀(약 380) 아래
-  const contentBottom = opts.contentBottom ?? 640;
+  // citiesFooter 가 y=700 에 있으므로 그 위까지 활용. 240px → 280px (+40) 로 행간 시원하게.
+  const contentBottom = opts.contentBottom ?? 680;
   const paddingX = opts.paddingX ?? 60;
 
   // 타이틀은 항상 표출. 카드는 count 에 따라 분기.
@@ -206,9 +207,9 @@ export function judgesIntroContent(opts: JudgesIntroLayoutOpts): string {
   const cellW = usableW / cols;
   const cellH = usableH / rows;
 
-  // 카드 photo 반경 — 사진/이름 간격을 넉넉히 두기 위해 cellH 비중을 줄여 사진을 살짝 작게.
-  // cellW * 0.32 = 가로 여유, cellH * 0.26 = 텍스트 2줄 + 상하 마진 확보용.
-  const photoR = Math.min(cellW * 0.32, cellH * 0.26);
+  // 카드 photo 반경 — 사진/이름 간격을 넉넉히 두고 행 사이도 시원하게 띄우기 위해 cellH 비중 축소.
+  // cellW * 0.30 = 가로 여유, cellH * 0.23 = 텍스트 2줄 + 상하 마진 + 행간 확보용.
+  const photoR = Math.min(cellW * 0.30, cellH * 0.23);
   // 행 수가 많을수록 글자 크기 축소
   const baseNameFont = rows >= 4 ? 12 : rows === 3 ? 14 : rows === 2 ? 16 : 18;
   const baseMetaFont = rows >= 4 ? 9 : rows === 3 ? 10 : rows === 2 ? 12 : 14;
