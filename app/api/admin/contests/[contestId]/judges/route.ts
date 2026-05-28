@@ -22,6 +22,7 @@ const Body = z.object({
   email: z.string().max(200).optional(),
   memo: z.string().max(2000).optional(),
   max_votes: z.number().int().min(0).max(999).nullable().optional(),
+  photo_url: z.string().max(1024).optional(),
 });
 
 interface RouteCtx { params: Promise<{ contestId: string }> }
@@ -68,6 +69,7 @@ export async function POST(req: Request, ctx: RouteCtx) {
     phone: parsed.data.phone ?? '',
     email: parsed.data.email ?? '',
     memo: parsed.data.memo ?? '',
+    photo_url: parsed.data.photo_url ?? '',
   };
 
   const { data, error } = await sb

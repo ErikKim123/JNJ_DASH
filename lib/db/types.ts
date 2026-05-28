@@ -127,6 +127,8 @@ export interface JudgeRow {
   memo: string;
   /** 이 라운드에서 줄 수 있는 최대 O 표 수. null = 제한 없음. */
   max_votes: number | null;
+  /** 심사위원 프로필 사진 URL (Supabase Storage public CDN). 비어있으면 미등록. */
+  photo_url: string;
   created_at: string;
   updated_at: string;
 }

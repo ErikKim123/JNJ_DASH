@@ -10,7 +10,7 @@
 //   del  : DELETE /admin/contests/[id]/judges/[id]→ 같은 display_order 의 3 row 동시 삭제
 //
 // display_order 직접 편집은 차단 (3 row swap 시 unique 충돌). 순서 변경 필요 시 삭제→재추가.
-import { useMemo, useState, useTransition } from 'react';
+import { useMemo, useRef, useState, useTransition, type ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Badge, Button, Field, Input, Select, Textarea } from './ui';
 import type { JudgeRow, JudgeTargetRole, JudgingRound } from '@/lib/db/types';
@@ -175,6 +175,7 @@ export function JudgesAdmin({
               <tr>
                 <th className="text-left px-3 py-2 w-10"></th>
                 <th className="text-left px-3 py-2 w-16">#</th>
+                <th className="text-left px-3 py-2 w-20">Photo</th>
                 <th className="text-left px-3 py-2 min-w-[8rem]">Name</th>
                 <th className="text-left px-3 py-2 min-w-[8rem]">Alias</th>
                 <th className="text-left px-3 py-2 min-w-[10rem]">Specialty</th>
@@ -187,7 +188,7 @@ export function JudgesAdmin({
             <tbody>
               {groups.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="text-center text-ink2 py-8">
+                  <td colSpan={10} className="text-center text-ink2 py-8">
                     No judges registered yet.
                   </td>
                 </tr>
@@ -199,6 +200,7 @@ export function JudgesAdmin({
                 return (
                   <JudgeRowEditor
                     key={g.display_order}
+                    contestId={contestId}
                     group={g}
                     voteCounts={{ prelim: prelimVotes, semi: semiVotes, final: finalVotes }}
                     prelimQuota={prelimQuotaPerRole}
@@ -209,13 +211,20 @@ export function JudgesAdmin({
                     onPatch={(p) => patchJudge(g, p)}
                     onPatchMaxVotes={(round, v) => patchMaxVotes(g, round, v)}
                     onDelete={() => deleteJudge(g)}
+                    onPhotoUploaded={(url) => {
+                      setGroups((s) => s.map((x) =>
+                        x.display_order === g.display_order
+                          ? { ...x, canonical: { ...x.canonical, photo_url: url } }
+                          : x
+                      ));
+                    }}
                   />
                 );
               })}
             </tbody>
             <tfoot className="border-t border-border bg-bg2/30">
               <tr>
-                <td className="px-3 py-3" colSpan={3}>
+                <td className="px-3 py-3" colSpan={4}>
                   <Input
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -225,7 +234,7 @@ export function JudgesAdmin({
                   />
                 </td>
                 <td className="px-3 py-3 text-xs text-ink2" colSpan={5}>
-                  Order auto-assigned to {(groups.at(-1)?.display_order ?? 0) + 1}. 한 번 추가하면 예선·본선·결승에 동시 등록됩니다.
+                  Order auto-assigned to {(groups.at(-1)?.display_order ?? 0) + 1}. 한 번 추가하면 예선·본선·결승에 동시 등록됩니다. 사진은 추가 후 업로드.
                 </td>
                 <td className="px-3 py-3 text-right">
                   <Button variant="primary" onClick={addJudge} disabled={pending || !name.trim()}>
@@ -248,6 +257,7 @@ export function JudgesAdmin({
 }
 
 function JudgeRowEditor({
+  contestId,
   group,
   voteCounts,
   prelimQuota,
@@ -258,7 +268,9 @@ function JudgeRowEditor({
   onPatch,
   onPatchMaxVotes,
   onDelete,
+  onPhotoUploaded,
 }: {
+  contestId: string;
   group: JudgeGroup;
   voteCounts: { prelim: number; semi: number; final: number };
   prelimQuota: number;
@@ -269,6 +281,7 @@ function JudgeRowEditor({
   onPatch: (patch: Partial<JudgeRow>) => void;
   onPatchMaxVotes: (round: JudgingRound, value: number | null) => void;
   onDelete: () => void;
+  onPhotoUploaded: (url: string) => void;
 }) {
   const judge = group.canonical;
   // local mirror — autosave on blur
@@ -287,6 +300,45 @@ function JudgeRowEditor({
     prelim: group.maxVotesByRound.prelim ?? null,
     semi: group.maxVotesByRound.semi ?? null,
   });
+
+  // 사진 업로드 상태
+  const photoInputRef = useRef<HTMLInputElement | null>(null);
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [photoErr, setPhotoErr] = useState<string | null>(null);
+
+  async function onPhotoPick(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setPhotoErr(null);
+    setPhotoBusy(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('judgeId', judge.id);
+      const res = await fetch(
+        `/api/admin/contests/${encodeURIComponent(contestId)}/judge-photo-upload`,
+        { method: 'POST', body: fd },
+      );
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j.url) {
+        setPhotoErr(j.error ?? `Upload failed (${res.status})`);
+        return;
+      }
+      onPhotoUploaded(j.url as string);
+    } catch (err) {
+      setPhotoErr(err instanceof Error ? err.message : 'UPLOAD_ERROR');
+    } finally {
+      setPhotoBusy(false);
+    }
+  }
+
+  function clearPhoto() {
+    if (!judge.photo_url) return;
+    if (!confirm(`Remove photo for "${judge.name}"?`)) return;
+    onPatch({ photo_url: '' });
+    onPhotoUploaded('');
+  }
 
   function commit<K extends keyof typeof d>(field: K, value: (typeof d)[K]) {
     if (value === judge[field as keyof JudgeRow]) return;
@@ -314,6 +366,47 @@ function JudgeRowEditor({
         </td>
         <td className="px-2 py-2">
           <span className="inline-block w-14 font-mono text-center text-ink2">{group.display_order}</span>
+        </td>
+        <td className="px-2 py-2">
+          <div className="flex flex-col items-center gap-1">
+            <button
+              type="button"
+              onClick={() => photoInputRef.current?.click()}
+              disabled={photoBusy}
+              className="block w-12 h-12 rounded-full overflow-hidden border border-border bg-bg2 hover:border-accent disabled:opacity-50"
+              title={judge.photo_url ? 'Click to replace photo' : 'Click to upload photo'}
+              aria-label={judge.photo_url ? 'Replace photo' : 'Upload photo'}
+            >
+              {judge.photo_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={judge.photo_url}
+                  alt={judge.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="block text-[10px] text-ink2/60 leading-[3rem] text-center">+ Add</span>
+              )}
+            </button>
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              className="hidden"
+              onChange={onPhotoPick}
+            />
+            {judge.photo_url && !photoBusy && (
+              <button
+                type="button"
+                onClick={clearPhoto}
+                className="text-[10px] text-danger/80 hover:text-danger underline"
+              >
+                Remove
+              </button>
+            )}
+            {photoBusy && <span className="text-[10px] text-ink2">Uploading…</span>}
+            {photoErr && <span className="text-[10px] text-danger" title={photoErr}>Failed</span>}
+          </div>
         </td>
         <td className="px-2 py-2">
           <Input value={d.name} onChange={(e) => setD({ ...d, name: e.target.value })}
@@ -413,7 +506,7 @@ function JudgeRowEditor({
       </tr>
       {expanded && (
         <tr className="border-t border-border bg-bg2/40">
-          <td colSpan={9} className="px-6 py-4">
+          <td colSpan={10} className="px-6 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Field label="Career" hint="Brief résumé / notable wins">
                 <Textarea
