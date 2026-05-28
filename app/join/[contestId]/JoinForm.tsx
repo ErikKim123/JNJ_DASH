@@ -47,7 +47,6 @@ const PROFILE_FIELDS: {
   { key: '이메일', label: { ko: '이메일', en: 'Email' }, placeholder: { ko: 'name@example.com', en: 'name@example.com' }, type: 'email' },
   { key: 'Nationality', label: { ko: '국적', en: 'Nationality' }, placeholder: { ko: 'Korea', en: 'Korea' } },
   { key: '접수일', label: { ko: '접수일', en: 'Submitted Date' }, type: 'date' },
-  { key: '사진원본', label: { ko: '사진원본 URL', en: 'Original Photo URL' }, placeholder: { ko: 'Google Drive 공유 링크 (선택)', en: 'Google Drive share link (optional)' } },
   { key: 'X', label: { ko: '인스타 (@)', en: 'Instagram (@)' }, placeholder: { ko: '@your_id', en: '@your_id' } },
 ];
 

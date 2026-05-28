@@ -2,7 +2,7 @@
 // 레이아웃: 상단 중앙 1위 (리더 + 팔로워), 하단 좌 2위, 하단 우 3위.
 // 벚꽃(sakura) 토글: TemplateRenderer가 .jnj-sakura에 .active 클래스를 토글해 보임/숨김.
 //                    SMIL은 페이지 로드부터 계속 돌고, opacity로 가시성 제어.
-import { shell, topHeader, hexagonFrame, citiesFooter, sponsorRow } from './common';
+import { shell, topHeader, hexagonFrame, sponsorRow } from './common';
 
 // 결정적 의사난수 — 매 빌드마다 동일한 결과(스냅샷 안정성).
 function seeded(i: number): number {
@@ -143,7 +143,16 @@ export function ceremonySvg(): string {
     <!-- 벚꽃 — SMIL은 계속 돌지만 .jnj-sakura의 opacity로 가시성 토글 -->
     <g class="jnj-sakura" pointer-events="none">${sakuraFall()}</g>
 
-    ${citiesFooter(620)}
-    ${sponsorRow()}
+    <!-- Sponsor showcase — Grand Final 시상식 하단 광고 영역
+         · 얇은 골드 디바이더 + 중앙 다이아몬드 오너먼트로 본문/광고 시각적 분리
+         · 6슬롯 로고: 박스 150×52, 간격 32 → 좌우 균등 정렬 (총 폭 1060) -->
+    <g transform="translate(640 628)">
+      <line x1="-400" y1="0" x2="-12" y2="0" stroke="url(#goldgh)" stroke-width="0.5" opacity="0.55"/>
+      <line x1="12" y1="0" x2="400" y2="0" stroke="url(#goldgh)" stroke-width="0.5" opacity="0.55"/>
+      <g transform="rotate(45)" opacity="0.85">
+        <rect x="-3" y="-3" width="6" height="6" fill="#D4AF37"/>
+      </g>
+    </g>
+    ${sponsorRow(666, 150, 52, 32)}
   `);
 }
