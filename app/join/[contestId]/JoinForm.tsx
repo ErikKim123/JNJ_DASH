@@ -141,7 +141,7 @@ export function JoinForm({
 }) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
-  const [lang, setLang] = useState<Lang>('ko');
+  const [lang, setLang] = useState<Lang>('en');
   const [draft, setDraft] = useState<Draft>({
     team_name: '',
     representative: '',
