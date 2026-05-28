@@ -143,12 +143,6 @@ export function TemplateRenderer({ templateId, round, step, data, fit = 'width',
   };
 
   const revealCount = revealed.size;
-  const hint = useMemo(() => {
-    if (!isFinalResult) return null;
-    return revealCount < totalReveal
-      ? `▸ 클릭 / SPACE 로 발표 (${revealCount}/${totalReveal})`
-      : '✦ 발표 완료 ✦';
-  }, [isFinalResult, revealCount, totalReveal]);
 
   return (
     <ScalingFrame fit={fit}>
@@ -164,14 +158,6 @@ export function TemplateRenderer({ templateId, round, step, data, fit = 'width',
         }
       >
         <SvgHost ref={wrapRef} svg={svg} />
-        {hint ? (
-          <div
-            className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-mono tracking-widest text-[#D4AF37] opacity-50 select-none"
-            aria-live="polite"
-          >
-            {hint}
-          </div>
-        ) : null}
       </div>
     </ScalingFrame>
   );
