@@ -104,6 +104,9 @@ export function ContestForm({
       }
       const { url } = await res.json();
       setForm((s) => ({ ...s, background_image: url }));
+      // 업로드 라우트가 contests.background_image 를 이미 DB 에 기록함.
+      // 서버 컴포넌트 캐시를 비워 다음 SSR 에서 최신 값이 반영되도록 한다.
+      router.refresh();
     } catch (err) {
       setBgErr(err instanceof Error ? err.message : t('cf.bgUploadFailed'));
     } finally {
@@ -161,6 +164,7 @@ export function ContestForm({
         next[slot] = url;
         return { ...s, sponsor_logos: next };
       });
+      router.refresh();
     } catch (err) {
       setSponsorErr((arr) =>
         arr.map((v, i) => (i === slot ? (err instanceof Error ? err.message : t('cf.sponsorUploadFailed')) : v))
@@ -527,11 +531,20 @@ export function ContestForm({
       )}
 
       <div className="flex items-center gap-2 pt-2">
-        <Button type="submit" variant="primary" disabled={pending}>
+        <Button
+          type="submit"
+          variant="primary"
+          disabled={pending || bgBusy || sponsorBusy.some(Boolean)}
+        >
           {pending ? t('cf.saving') : mode === 'create' ? t('cf.create') : t('cf.save')}
         </Button>
         {mode === 'edit' && (
-          <Button type="button" variant="danger" onClick={onDelete} disabled={pending}>
+          <Button
+            type="button"
+            variant="danger"
+            onClick={onDelete}
+            disabled={pending || bgBusy || sponsorBusy.some(Boolean)}
+          >
             {t('cf.delete')}
           </Button>
         )}
