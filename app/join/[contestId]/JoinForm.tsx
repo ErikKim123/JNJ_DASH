@@ -17,21 +17,18 @@ const ROLE_OPTIONS: { value: ParticipantRole; label: string }[] = [
   { value: 'helper_follower', label: 'Helper (Follower)' },
 ];
 
-// 부문/장르 선택지 — 한/영 라벨, value는 한국어 키 (DB 호환).
+// 부문/장르 선택지 — value 와 라벨 모두 영문 단일 키 (대회 운영 표준 명칭).
 const CATEGORY_OPTIONS: { value: string; label: { ko: string; en: string } }[] = [
-  { value: '소셜', label: { ko: '소셜', en: 'Social' } },
-  { value: '쇼케이스', label: { ko: '쇼케이스', en: 'Showcase' } },
-  { value: '솔로', label: { ko: '솔로', en: 'Solo' } },
-  { value: '대회', label: { ko: '대회', en: 'Competition' } },
+  { value: 'Jack & Jill', label: { ko: 'Jack & Jill', en: 'Jack & Jill' } },
+  { value: 'Battle', label: { ko: 'Battle', en: 'Battle' } },
+  { value: 'Competition', label: { ko: 'Competition', en: 'Competition' } },
 ];
 
 const GENRE_OPTIONS: { value: string; label: { ko: string; en: string } }[] = [
-  { value: '바차타', label: { ko: '바차타', en: 'Bachata' } },
-  { value: '살사', label: { ko: '살사', en: 'Salsa' } },
-  { value: '주크', label: { ko: '주크', en: 'Zouk' } },
-  { value: '먼보', label: { ko: '먼보', en: 'Mambo' } },
-  { value: '탱고', label: { ko: '탱고', en: 'Tango' } },
-  { value: 'Other', label: { ko: '기타', en: 'Other' } },
+  { value: 'Salsa', label: { ko: 'Salsa', en: 'Salsa' } },
+  { value: 'Bachata', label: { ko: 'Bachata', en: 'Bachata' } },
+  { value: 'Kizomba', label: { ko: 'Kizomba', en: 'Kizomba' } },
+  { value: 'Zouk', label: { ko: 'Zouk', en: 'Zouk' } },
 ];
 
 const DIVISION_OPTIONS: { value: string; label: { ko: string; en: string } }[] = [
