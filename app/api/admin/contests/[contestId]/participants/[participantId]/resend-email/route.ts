@@ -1,7 +1,7 @@
 // POST /api/admin/contests/[id]/participants/[participantId]/resend-email
 //
 // 이미 등록된 참가자에게 확인 메일을 재발송. admin 미들웨어로 보호됨.
-// 본인 등록 시 RESEND_API_KEY 가 없어서 발송 못 했거나, 사용자가 메일 분실한 경우에 사용.
+// 본인 등록 시 BREVO_API_KEY 가 없어서 발송 못 했거나, 사용자가 메일 분실한 경우에 사용.
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/db/client';
 import { getContest } from '@/lib/db/queries';

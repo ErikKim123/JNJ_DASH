@@ -159,7 +159,7 @@ export default async function DonePage({
               margin: 0,
             }}
           >
-            <strong>대회 시작 10분 전</strong>에 도착해 주세요.
+            <strong>대회 시작 30분 전</strong>에 도착해 주세요.
             <br />
             체크인 시 위 <strong>참가 번호</strong>를 알려주시면 됩니다.
           </p>

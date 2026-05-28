@@ -49,7 +49,6 @@ const PROFILE_FIELDS: {
   { key: 'Division', label: { ko: '구분', en: 'Division' }, type: 'select', options: DIVISION_OPTIONS, placeholder: { ko: '구분 선택', en: 'Select division' } },
   { key: '연락처', label: { ko: '연락처', en: 'WhatsApp Number' }, placeholder: { ko: '010-0000-0000', en: '10-1234-5678' }, type: 'whatsapp' },
   { key: '이메일', label: { ko: '이메일', en: 'Email' }, placeholder: { ko: 'name@example.com', en: 'name@example.com' }, type: 'email' },
-  { key: 'Nationality', label: { ko: '국적', en: 'Nationality' }, placeholder: { ko: 'Korea', en: 'Korea' } },
   { key: '접수일', label: { ko: '접수일', en: 'Submitted Date' }, type: 'date' },
   { key: 'X', label: { ko: '인스타 (@)', en: 'Instagram (@)' }, placeholder: { ko: '@your_id', en: '@your_id' } },
 ];
@@ -104,7 +103,7 @@ const T = {
   teamLabel: { ko: '이름 (필수)', en: 'Name (required)' },
   teamPlaceholder: { ko: '이름', en: 'Name' },
   repLabel: { ko: '국가 (필수)', en: 'Country (required)' },
-  repPlaceholder: { ko: '국가', en: 'Country' },
+  repPlaceholder: { ko: '국가 선택', en: 'Select country' },
   submit: { ko: '신청하기', en: 'Submit Entry' },
   submitting: { ko: '제출 중…', en: 'Submitting…' },
   errTeam: { ko: '이름을 입력해주세요.', en: 'Please enter a name.' },
@@ -302,14 +301,18 @@ export function JoinForm({
           </Field>
 
           <Field label={t('repLabel', lang)}>
-            <input
-              type="text"
-              className="jnj-input"
+            <select
+              className="jnj-input jnj-select"
               value={draft.representative}
               onChange={(e) => setField('representative', e.target.value)}
-              placeholder={t('repPlaceholder', lang)}
-              maxLength={200}
-            />
+            >
+              <option value="">{t('repPlaceholder', lang)}</option>
+              {COUNTRY_CODES.map((c) => (
+                <option key={c.code} value={c.name}>
+                  {c.flag} {c.name}
+                </option>
+              ))}
+            </select>
           </Field>
         </div>
       </section>

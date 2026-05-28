@@ -57,16 +57,19 @@ function CardShell({
   );
 }
 
-// 그룹 폴더 카드 — 그룹명 + 해당 그룹의 대회 수
+// 그룹 폴더 카드 — 그룹명 + 해당 그룹의 대회 수 + 그룹 링크 QR
 function GroupFolderCard({
   groupKey,
   groupLabel,
   count,
+  origin,
 }: {
   groupKey: string;
   groupLabel: string;
   count: number;
+  origin: string;
 }) {
+  const groupUrl = `${origin}/join/competitions?group=${encodeURIComponent(groupKey)}`;
   return (
     <Link
       href={`/join/competitions?group=${encodeURIComponent(groupKey)}`}
@@ -117,6 +120,31 @@ function GroupFolderCard({
           {count} {count === 1 ? 'competition' : 'competitions'}
         </div>
       </div>
+      <div
+        title={groupUrl}
+        style={{
+          flexShrink: 0,
+          width: 72,
+          height: 72,
+          background: 'var(--jnj-white)',
+          borderRadius: 8,
+          padding: 5,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={buildQrSrc(groupUrl, 120)}
+          alt={`QR for ${groupLabel}`}
+          width={62}
+          height={62}
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          style={{ display: 'block', width: '100%', height: '100%' }}
+        />
+      </div>
       <span
         aria-hidden
         style={{
@@ -166,9 +194,10 @@ export default async function CompetitionsPage({ searchParams }: PageProps) {
         <TopNav variant="dark" homeHref="/join" />
 
         {selectedGroup === null
-          ? renderGroupList(contests, keyOf, labelOf)
+          ? renderGroupList(contests, keyOf, labelOf, origin)
           : renderContestList(
               contests.filter((c) => keyOf(c) === selectedGroup),
+              selectedGroup,
               labelOf(selectedGroup),
               origin,
             )}
@@ -182,6 +211,7 @@ function renderGroupList(
   contests: ContestRow[],
   keyOf: (c: ContestRow) => string,
   labelOf: (k: string) => string,
+  origin: string,
 ) {
   // 그룹별 카운트 집계. 정렬: Other 는 항상 맨 마지막, 나머지는 알파벳/한글 순.
   const counts = new Map<string, number>();
@@ -226,7 +256,7 @@ function renderGroupList(
         <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 12 }}>
           {groupKeys.map((k) => (
             <li key={k}>
-              <GroupFolderCard groupKey={k} groupLabel={labelOf(k)} count={counts.get(k) ?? 0} />
+              <GroupFolderCard groupKey={k} groupLabel={labelOf(k)} count={counts.get(k) ?? 0} origin={origin} />
             </li>
           ))}
         </ul>
@@ -238,29 +268,68 @@ function renderGroupList(
 // ── 그룹 내 대회 카드 리스트 ──────────────────────────────────────────
 function renderContestList(
   contests: ContestRow[],
+  groupKey: string,
   groupLabel: string,
   origin: string,
 ) {
+  const groupUrl = `${origin}/join/competitions?group=${encodeURIComponent(groupKey)}`;
   return (
     <>
-      <div style={{ marginBottom: 8, marginTop: 12 }}>
-        <Link
-          href="/join/competitions"
-          className="jnj-caption"
-          style={{ color: 'var(--jnj-grey-400)', textDecoration: 'none' }}
-        >
-          ← All groups
-        </Link>
-      </div>
-      <h1
-        className="jnj-display"
-        style={{ fontSize: 'clamp(36px, 11vw, 52px)', marginBottom: 8 }}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 16,
+          marginBottom: 24,
+        }}
       >
-        {groupLabel}
-      </h1>
-      <p className="jnj-caption" style={{ color: 'var(--jnj-grey-300)', marginBottom: 24 }}>
-        Select a competition to join.
-      </p>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ marginBottom: 8, marginTop: 12 }}>
+            <Link
+              href="/join/competitions"
+              className="jnj-caption"
+              style={{ color: 'var(--jnj-grey-400)', textDecoration: 'none' }}
+            >
+              ← All groups
+            </Link>
+          </div>
+          <h1
+            className="jnj-display"
+            style={{ fontSize: 'clamp(36px, 11vw, 52px)', marginBottom: 8 }}
+          >
+            {groupLabel}
+          </h1>
+          <p className="jnj-caption" style={{ color: 'var(--jnj-grey-300)', margin: 0 }}>
+            Select a competition to join.
+          </p>
+        </div>
+        <div
+          title={groupUrl}
+          style={{
+            flexShrink: 0,
+            width: 120,
+            height: 120,
+            background: 'var(--jnj-white)',
+            borderRadius: 10,
+            padding: 8,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginTop: 12,
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={buildQrSrc(groupUrl, 200)}
+            alt={`QR for ${groupLabel}`}
+            width={104}
+            height={104}
+            loading="lazy"
+            referrerPolicy="no-referrer"
+            style={{ display: 'block', width: '100%', height: '100%' }}
+          />
+        </div>
+      </div>
 
       {contests.length === 0 ? (
         <div
