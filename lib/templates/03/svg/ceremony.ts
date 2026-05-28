@@ -73,17 +73,19 @@ function sakuraFall(): string {
  * 화면 클릭 시 벚꽃이 떨어짐(SMIL 이벤트 트리거).
  */
 export function ceremonySvg(): string {
-  // 1·2·3위 헥사곤 사진 크기 — 기존 70/56에서 15% 확대
-  const HEX_1ST = 80;     // 70 × 1.15 ≈ 80
-  const HEX_RUNNER = 64;  // 56 × 1.15 ≈ 64
+  // 1·2·3위 헥사곤 사진 크기 — 1위는 크게, 2·3위는 살짝 줄여 위계를 또렷이.
+  // 하단 스폰서 광고(디바이더 y=628, 로고 y=666)와 겹치지 않도록 2·3위 블록 전체를 상향.
+  const HEX_1ST = 80;
+  const HEX_RUNNER = 58;
   const NAME_1ST = 24;
-  const NAME_RUNNER = 18;
+  const NAME_RUNNER = 17;
 
   const firstY = 280;
   const firstLeaderX = 540;
   const firstFollowerX = 740;
 
-  const secondY = 520;
+  // secondY 494 + HEX_RUNNER 58 → 이름 baseline ≈ 593, 디바이더(628)까지 ~35px 여백 확보.
+  const secondY = 494;
   const secondLeaderX = 230;
   const secondFollowerX = 410;
 
@@ -144,14 +146,10 @@ export function ceremonySvg(): string {
     <g class="jnj-sakura" pointer-events="none">${sakuraFall()}</g>
 
     <!-- Sponsor showcase — Grand Final 시상식 하단 광고 영역
-         · 얇은 골드 디바이더 + 중앙 다이아몬드 오너먼트로 본문/광고 시각적 분리
+         · 얇은 골드 디바이더로 본문/광고 시각적 분리
          · 6슬롯 로고: 박스 150×52, 간격 32 → 좌우 균등 정렬 (총 폭 1060) -->
     <g transform="translate(640 628)">
-      <line x1="-400" y1="0" x2="-12" y2="0" stroke="url(#goldgh)" stroke-width="0.5" opacity="0.55"/>
-      <line x1="12" y1="0" x2="400" y2="0" stroke="url(#goldgh)" stroke-width="0.5" opacity="0.55"/>
-      <g transform="rotate(45)" opacity="0.85">
-        <rect x="-3" y="-3" width="6" height="6" fill="#D4AF37"/>
-      </g>
+      <line x1="-400" y1="0" x2="400" y2="0" stroke="url(#goldgh)" stroke-width="0.5" opacity="0.55"/>
     </g>
     ${sponsorRow(666, 150, 52, 32)}
   `);

@@ -588,6 +588,7 @@ export async function getStepData(params: GetStepDataParams): Promise<StepDataPa
   if (step === 'pairing' || step === 'pairingB' || step === 'pairingC') {
     if (round === 'final') {
       // 결승은 자동 매핑 없음 — 빈 페어 + PAIRING 화면만.
+      // 하단 광고는 PREP 과 동일한 스폰서 로고 6슬롯 표출.
       return {
         kind: 'pairing',
         data: {
@@ -598,6 +599,8 @@ export async function getStepData(params: GetStepDataParams): Promise<StepDataPa
           label_follower: 'FOLLOWER',
           pairs: [],
           tagline: '',
+          sponsor_logos: Array.isArray(contest.sponsor_logos) ? contest.sponsor_logos : [],
+          sponsor_logo_opacities: Array.isArray(contest.sponsor_logo_opacities) ? contest.sponsor_logo_opacities : [],
         },
       };
     }

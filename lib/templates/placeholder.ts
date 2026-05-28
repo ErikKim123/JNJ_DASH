@@ -91,6 +91,8 @@ export function flattenStepData(payload: StepDataPayload): Record<string, string
       // pairs 길이에 따라 SVG가 20/10/5중 선택되므로 pair 수와 동일하게 채움
       const max = pairs.length;
       fillPairs(out, pairs, max);
+      // 결승 PAIRING 하단 광고 6슬롯 — PREP 과 동일한 스폰서 로고 표출.
+      flattenSponsors(out, d);
       break;
     }
     case 'result': {
@@ -113,6 +115,8 @@ export function flattenStepData(payload: StepDataPayload): Record<string, string
       fillResultEntries(out, 'champ', leaders, followers, 3);
       // 결승 result 화면과 placeholder 키 공유 가능하도록 result_ prefix도 채움
       fillResultEntries(out, 'result', leaders, followers, 3);
+      // CEREMONY 하단 광고 6슬롯 — PREP 과 동일한 스폰서 로고 표출.
+      flattenSponsors(out, d);
       break;
     }
     case 'judgesIntro': {
@@ -124,10 +128,9 @@ export function flattenStepData(payload: StepDataPayload): Record<string, string
     case 'open':
     case 'live':
     case 'wrapup':
-    case 'close':
-    case 'ceremony': {
+    case 'close': {
       // sponsor_logos / sponsor_logo_opacities 를 1-indexed placeholder 로 평탄화
-      // PREP 외 OPEN/LIVE/CALC(wrapup)/CLOSE/CEREMONY 도 하단 광고 6슬롯 표출.
+      // PREP 외 OPEN/LIVE/CALC(wrapup)/CLOSE 도 하단 광고 6슬롯 표출.
       flattenSponsors(out, d);
       break;
     }

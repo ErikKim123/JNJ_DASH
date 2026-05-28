@@ -94,6 +94,9 @@ export interface PairingData {
   label_follower: string;
   pairs: Pair[];
   tagline: string;
+  /** 결승 PAIRING 하단 광고 6슬롯 — PREP 과 동일한 스폰서 로고. */
+  sponsor_logos?: string[];
+  sponsor_logo_opacities?: number[];
 }
 
 export interface OpenData {

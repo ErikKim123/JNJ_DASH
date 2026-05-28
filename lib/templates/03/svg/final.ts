@@ -145,7 +145,8 @@ export function finalWrapupSvg(): string {
     </g>
     <text x="640" y="606" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="15" letter-spacing="4" fill="#9A98A8">{{wrap_message}}</text>
 
-    ${bottomSeal()}
+    ${bottomSeal(620)}
+    ${sponsorRow()}
   `);
 }
 
@@ -248,7 +249,7 @@ export function finalResultSvg(): string {
 }
 
 // 결승 Pairing — 심사위원과 결승 진출자가 함께 추는 인비테이셔널 댄스 시간.
-// 시적 부제 + 떠다니는 스파클 + 6쌍 펄스 도트로 분위기를 연출.
+// 시적 부제 + 떠다니는 스파클로 분위기를 연출. 하단은 PREP 과 동일한 스폰서 광고 로고 6개.
 function pairingSparkles(cx: number, cy: number, count: number): string {
   let body = '';
   for (let i = 0; i < count; i++) {
@@ -264,29 +265,6 @@ function pairingSparkles(cx: number, cy: number, count: number): string {
       </circle>`;
   }
   return `<g opacity="0.7">${body}</g>`;
-}
-
-function coupleDots(cx: number, cy: number, count: number): string {
-  const stepX = 64;
-  const totalW = (count - 1) * stepX;
-  const startX = cx - totalW / 2;
-  let body = '';
-  for (let i = 0; i < count; i++) {
-    const x = startX + i * stepX;
-    const d1 = (i * 0.18).toFixed(2);
-    const d2 = (i * 0.18 + 0.4).toFixed(2);
-    body += `
-      <g transform="translate(${x.toFixed(1)} ${cy})">
-        <circle cx="-7" cy="0" r="5" fill="url(#goldg)">
-          <animate attributeName="opacity" values="0.35;1;0.35" dur="2.4s" begin="${d1}s" repeatCount="indefinite"/>
-        </circle>
-        <circle cx="7" cy="0" r="5" fill="url(#silverg)">
-          <animate attributeName="opacity" values="0.35;1;0.35" dur="2.4s" begin="${d2}s" repeatCount="indefinite"/>
-        </circle>
-        <line x1="-7" y1="8" x2="7" y2="8" stroke="url(#goldgh)" stroke-width="0.6" opacity="0.6"/>
-      </g>`;
-  }
-  return `<g>${body}</g>`;
 }
 
 export function finalPairingSvg(): string {
@@ -321,8 +299,7 @@ export function finalPairingSvg(): string {
       Where the judges share the floor with the finalists
     </text>
 
-    ${coupleDots(640, 622, 6)}
-
-    ${citiesFooter()}
+    ${citiesFooter(620)}
+    ${sponsorRow()}
   `);
 }
