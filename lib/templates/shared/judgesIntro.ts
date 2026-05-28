@@ -65,15 +65,20 @@ function judgeCard(
   uid: number,
 ): string {
   // 카드 1장을 (cx, cy) 기준 위→아래로 쌓는다.
-  //   photo (원형) → name → specialty
-  // cy 는 카드 전체의 수직 중앙. photo 는 cy - photoR (위쪽).
-  const photoCY = cy - photoR * 0.25; // 텍스트 공간 확보용 살짝 위로
-  const nameY = photoCY + photoR + nameFont + 6;
-  const metaY = nameY + metaFont + 4;
+  //   photo (원형) → name → alias
+  // cy 는 카드 전체의 수직 중앙. photo 는 cy 보다 살짝 위로 올려 텍스트 공간 확보.
+  // 사진/이름 간격은 photoR 의 30% (최소 14) — 그리드가 빽빽해져도 시각적 숨통 유지.
+  // 이름/별칭 간격은 metaFont 의 70% (최소 6) — 두 텍스트의 어색한 밀착 방지.
+  const photoCY = cy - photoR * 0.3;
+  const photoToName = Math.max(14, photoR * 0.3);
+  const nameToMeta = Math.max(6, metaFont * 0.7);
+  const nameY = photoCY + photoR + nameFont + photoToName;
+  const metaY = nameY + metaFont + nameToMeta;
 
   const photoKey = `{{judge_photo_${idx}}}`;
   const nameKey = `{{judge_name_${idx}}}`;
-  const metaKey = `{{judge_specialty_${idx}}}`;
+  // 이전엔 specialty 를 노출했으나, 더 짧고 캐주얼한 'alias' 가 카드에 적합.
+  const metaKey = `{{judge_alias_${idx}}}`;
   const clipId = `judgeClip-${uid}-${idx}`;
 
   // 가용 텍스트 폭은 카드 폭 ≈ photoR * 2.4 — 글자수에 맞춰 축소.
@@ -136,12 +141,12 @@ function singleHeroCard(): string {
              preserveAspectRatio="xMidYMid slice" clip-path="url(#${clipId})"/>
       <circle cx="${cx}" cy="${photoCY}" r="${photoR}" fill="none" stroke="url(#goldg)" stroke-width="2.5"/>
       <circle cx="${cx}" cy="${photoCY}" r="${photoR - 6}" fill="none" stroke="#D4AF37" stroke-width="0.6" opacity="0.55"/>
-      <text x="${cx}" y="${(photoCY + photoR + 50).toFixed(1)}" text-anchor="middle"
+      <text x="${cx}" y="${(photoCY + photoR + 62).toFixed(1)}" text-anchor="middle"
             font-family="'Cinzel', 'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif"
             font-size="34" letter-spacing="6" fill="url(#goldg)" font-weight="700">{{judge_name_1}}</text>
-      <text x="${cx}" y="${(photoCY + photoR + 80).toFixed(1)}" text-anchor="middle"
+      <text x="${cx}" y="${(photoCY + photoR + 98).toFixed(1)}" text-anchor="middle"
             font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif"
-            font-style="italic" font-size="18" letter-spacing="3" fill="#D4AF37" opacity="0.9">{{judge_specialty_1}}</text>
+            font-style="italic" font-size="18" letter-spacing="3" fill="#D4AF37" opacity="0.9">{{judge_alias_1}}</text>
     </g>
   `;
 }
@@ -201,8 +206,9 @@ export function judgesIntroContent(opts: JudgesIntroLayoutOpts): string {
   const cellW = usableW / cols;
   const cellH = usableH / rows;
 
-  // 카드 photo 반경 = min(cellW * 0.36, cellH * 0.32) — 텍스트 공간 확보
-  const photoR = Math.min(cellW * 0.36, cellH * 0.32);
+  // 카드 photo 반경 — 사진/이름 간격을 넉넉히 두기 위해 cellH 비중을 줄여 사진을 살짝 작게.
+  // cellW * 0.32 = 가로 여유, cellH * 0.26 = 텍스트 2줄 + 상하 마진 확보용.
+  const photoR = Math.min(cellW * 0.32, cellH * 0.26);
   // 행 수가 많을수록 글자 크기 축소
   const baseNameFont = rows >= 4 ? 12 : rows === 3 ? 14 : rows === 2 ? 16 : 18;
   const baseMetaFont = rows >= 4 ? 9 : rows === 3 ? 10 : rows === 2 ? 12 : 14;
