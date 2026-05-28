@@ -1027,4 +1027,6 @@ export async function getStepData(params: GetStepDataParams): Promise<StepDataPa
     case 'close':
       return staticClose(roundLabel, festivalHeader, tagline);
   }
+  // judgesIntro 는 DB 어댑터(lib/db/adapter.ts) 에서만 지원 — legacy sheets 경로엔 데이터 소스 없음.
+  throw new StepNotAvailableError(round, step);
 }

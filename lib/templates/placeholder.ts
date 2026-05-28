@@ -4,9 +4,14 @@ import type {
   PairingData,
   ResultData,
   CeremonyData,
+  JudgesIntroData,
+  JudgesIntroEntry,
   Pair,
   ResultEntry,
 } from '@/lib/sheets/types';
+
+/** judgesIntro 의 SVG 최대 슬롯 — 운영 UI 가 20명 cap. */
+const JUDGES_MAX_SLOTS = 20;
 
 export function xmlEscape(s: unknown): string {
   return String(s ?? '')
@@ -28,6 +33,21 @@ function fillPairs(out: Record<string, string>, pairs: readonly Pair[], maxIdx: 
     out[`leader_num_${i}`] = p?.leaderNum ?? '';
     out[`follower_${i}`] = p?.follower ?? '';
     out[`follower_num_${i}`] = p?.followerNum ?? '';
+  }
+}
+
+function fillJudges(
+  out: Record<string, string>,
+  judges: readonly JudgesIntroEntry[]
+): void {
+  // 인원수도 SVG layout 분기에 쓰일 수 있도록 평탄화 (현재는 직접 사용 안 함)
+  out['judges_count'] = String(judges.length);
+  for (let i = 1; i <= JUDGES_MAX_SLOTS; i++) {
+    const j = judges.find((x) => x.idx === i);
+    out[`judge_name_${i}`] = j?.name ?? '';
+    out[`judge_alias_${i}`] = j?.alias ?? '';
+    out[`judge_specialty_${i}`] = j?.specialty ?? '';
+    out[`judge_photo_${i}`] = j?.photo ?? '';
   }
 }
 
@@ -93,6 +113,11 @@ export function flattenStepData(payload: StepDataPayload): Record<string, string
       fillResultEntries(out, 'champ', leaders, followers, 3);
       // 결승 result 화면과 placeholder 키 공유 가능하도록 result_ prefix도 채움
       fillResultEntries(out, 'result', leaders, followers, 3);
+      break;
+    }
+    case 'judgesIntro': {
+      const ji = payload.data as JudgesIntroData;
+      fillJudges(out, ji.judges ?? []);
       break;
     }
     case 'prep': {

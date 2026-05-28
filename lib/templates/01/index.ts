@@ -5,6 +5,7 @@ import type { TemplateModule } from '../types';
 import type { RoundKey, StepDataPayload, StepKey } from '@/lib/sheets/types';
 import { applyPlaceholders, flattenStepData } from '../placeholder';
 import { prepSvg } from './svg/prep';
+import { judgesIntroSvg } from './svg/judgesIntro';
 import { pickPairingSvg } from './svg/pairing';
 import { openSvg } from './svg/open';
 import { liveSvg } from './svg/live';
@@ -35,6 +36,9 @@ function selectSvg(round: RoundKey, _step: StepKey, data: StepDataPayload): stri
         return liveSvg();
       case 'close':
         return closeSvg();
+      case 'judgesIntro':
+        // 결승에는 노출 안 함 — 라우트 차단이지만 안전한 폴백.
+        return judgesIntroSvg(data.data.judges?.length ?? 0);
     }
   }
 
@@ -42,6 +46,8 @@ function selectSvg(round: RoundKey, _step: StepKey, data: StepDataPayload): stri
   switch (data.kind) {
     case 'prep':
       return prepSvg();
+    case 'judgesIntro':
+      return judgesIntroSvg(data.data.judges?.length ?? 0);
     case 'pairing':
       return pickPairingSvg(data.data.pairs?.length ?? 0);
     case 'open':

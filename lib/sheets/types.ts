@@ -4,6 +4,7 @@
 export type RoundKey = 'prelim' | 'semi' | 'final';
 export type StepKey =
   | 'prep'
+  | 'judgesIntro'
   | 'pairing'
   | 'pairingB'
   | 'pairingC'
@@ -17,6 +18,7 @@ export type StepKey =
 export const ROUND_KEYS = ['prelim', 'semi', 'final'] as const;
 export const STEP_KEYS = [
   'prep',
+  'judgesIntro',
   'pairing',
   'pairingB',
   'pairingC',
@@ -38,6 +40,7 @@ export const STEP_KEYS = [
 export const STEPS_BY_ROUND: Record<RoundKey, ReadonlyArray<StepKey>> = {
   prelim: [
     'prep',
+    'judgesIntro',
     'pairing',
     'pairingB',
     'pairingC',
@@ -214,6 +217,7 @@ export interface CeremonyData {
 
 export type StepDataPayload =
   | { kind: 'prep'; data: PrepData }
+  | { kind: 'judgesIntro'; data: JudgesIntroData }
   | { kind: 'pairing'; data: PairingData }
   | { kind: 'open'; data: OpenData }
   | { kind: 'live'; data: LiveData }
@@ -221,6 +225,30 @@ export type StepDataPayload =
   | { kind: 'close'; data: CloseData }
   | { kind: 'result'; data: ResultData }
   | { kind: 'ceremony'; data: CeremonyData };
+
+/**
+ * 심사위원 소개 화면 — 예선 PREP 다음 스텝. 1~20명 적응형 그리드 레이아웃.
+ * 데이터는 judges 테이블의 prelim 라운드 canonical row 에서 추출
+ * (한 명의 심사위원이 3 라운드에 mirror 되므로 prelim 만 보면 충분).
+ */
+export interface JudgesIntroEntry {
+  /** 1-indexed display order — 그리드 셀 배치 키. */
+  idx: number;
+  name: string;
+  alias: string;
+  specialty: string;
+  /** Supabase Storage public URL. 비어있으면 빈 문자열 (placeholder 표시). */
+  photo: string;
+}
+
+export interface JudgesIntroData {
+  festival_header: string;
+  stage_label: string;
+  intro_title: string;
+  intro_subtitle: string;
+  judges: JudgesIntroEntry[];
+  tagline: string;
+}
 
 /**
  * 대회 참가자 통계 — 대시보드 예선/본선 라운드 상단의 요약 패널에 표시.

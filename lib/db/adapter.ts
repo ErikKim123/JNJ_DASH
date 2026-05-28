@@ -22,6 +22,8 @@ import type {
   FinalPodiumEntry,
   FinalTieEntry,
   FinalTieInfo,
+  JudgesIntroData,
+  JudgesIntroEntry,
   OverflowEntry,
   Pair,
   PairingData,
@@ -461,6 +463,54 @@ function staticClose(roundLabel: string, festivalHeader: string, tagline: string
   };
 }
 
+/**
+ * 심사위원 소개 화면 데이터 — judges 테이블의 prelim 라운드 행만 추출.
+ * (한 명의 심사위원이 prelim/semi/final 3 row 로 mirror 되므로 한 라운드만 보면 충분)
+ * display_order 오름차순. 최대 20명까지 노출 — 그 이상은 단순 슬라이스.
+ */
+async function buildJudgesIntro(
+  contestId: string,
+  roundLabel: string,
+  festivalHeader: string,
+  tagline: string,
+): Promise<StepDataPayload> {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from('judges')
+    .select('display_order,name,alias,specialty,photo_url')
+    .eq('contest_id', contestId)
+    .eq('round', 'prelim')
+    .order('display_order', { ascending: true })
+    .limit(20);
+  if (error) throw new Error(`buildJudgesIntro: ${error.message}`);
+
+  const rows = (data ?? []) as Array<{
+    display_order: number;
+    name: string;
+    alias: string | null;
+    specialty: string | null;
+    photo_url: string | null;
+  }>;
+
+  const judges: JudgesIntroEntry[] = rows.map((r, i) => ({
+    idx: i + 1, // 1-based slot index — 빈 자리는 없도록 압축 후 재할당
+    name: r.name ?? '',
+    alias: r.alias ?? '',
+    specialty: r.specialty ?? '',
+    photo: r.photo_url ?? '',
+  }));
+
+  const out: JudgesIntroData = {
+    festival_header: festivalHeader,
+    stage_label: `${roundLabel.toUpperCase()} ROUND`,
+    intro_title: 'OUR JUDGES',
+    intro_subtitle: 'Honoring the experts who guide us',
+    judges,
+    tagline,
+  };
+  return { kind: 'judgesIntro', data: out };
+}
+
 function staticWrapup(roundLabel: string, festivalHeader: string, tagline: string): StepDataPayload {
   return {
     kind: 'wrapup',
@@ -608,6 +658,11 @@ export async function getStepData(params: GetStepDataParams): Promise<StepDataPa
       tagline: '',
     };
     return { kind: 'ceremony', data: out };
+  }
+
+  // ── Judges Intro (prelim 만) ──
+  if (step === 'judgesIntro') {
+    return buildJudgesIntro(contestId, roundLabel, festivalHeader, tagline);
   }
 
   // ── Static ──

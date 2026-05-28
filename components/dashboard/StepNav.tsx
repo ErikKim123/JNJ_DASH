@@ -5,6 +5,7 @@ import type { ContestMeta, RoundKey, StepKey } from '@/lib/sheets/types';
 
 const STEP_LABEL: Record<StepKey, string> = {
   prep: 'PREP',
+  judgesIntro: 'JUDGES',
   pairing: 'PAIRING',
   pairingB: 'PAIRING B',
   pairingC: 'PAIRING C',
