@@ -187,9 +187,9 @@ function titleBlock(): string {
  */
 export function judgesIntroContent(opts: JudgesIntroLayoutOpts): string {
   const count = Math.max(0, Math.min(20, Math.floor(opts.count)));
-  const contentTop = opts.contentTop ?? 400;     // 타이틀(약 380) 아래
-  // citiesFooter 가 y=700 에 있으므로 그 위까지 활용. 240px → 280px (+40) 로 행간 시원하게.
-  const contentBottom = opts.contentBottom ?? 680;
+  const contentTop = opts.contentTop ?? 380;     // 타이틀(약 368) 아래 — 1행을 위로 끌어올림
+  // citiesFooter 가 y=700 에 있으므로 그 위까지 활용. usableH = 280 (380~660) 유지로 행간 보전.
+  const contentBottom = opts.contentBottom ?? 660;
   const paddingX = opts.paddingX ?? 60;
 
   // 타이틀은 항상 표출. 카드는 count 에 따라 분기.
