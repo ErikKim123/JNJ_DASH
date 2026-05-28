@@ -175,6 +175,7 @@ export function finalResultSvg(): string {
             </g>
           </g>
           ${hexagonFrame(0, 502, `{{${prefix}_1}}`, 52, dly + 0.2, 20, `{{${prefix}_num_1}}`, `{{${prefix}_photo_1}}`)}
+          <text x="0" y="624" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" letter-spacing="6" fill="#FFD56B">1ST</text>
         </g>
 
         <g class="jnj-reveal" data-reveal-id="${side}-3">
