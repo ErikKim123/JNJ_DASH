@@ -1,11 +1,16 @@
 // /join — JNJ JOIN. 참가자 등록 모바일 앱 진입점.
 import Link from 'next/link';
+import { joinRootProps, DEFAULT_JOIN_THEME } from '@/lib/join/theme';
 
 export const dynamic = 'force-dynamic';
 
 export default function JoinLandingPage() {
+  // 그룹 밖 진입 화면 — 기본 테마 고정 (특정 그룹 테마가 새지 않게).
+  const root = joinRootProps(DEFAULT_JOIN_THEME);
+
   return (
     <main
+      className={root.className}
       style={{
         minHeight: '100dvh',
         display: 'flex',
@@ -13,9 +18,10 @@ export default function JoinLandingPage() {
         padding: '24px 20px 32px',
         maxWidth: 480,
         margin: '0 auto',
+        ...root.style,
       }}
     >
-      <div className="jnj-mono jnj-small" style={{ color: 'var(--jnj-grey-500)' }}>
+      <div className="jnj-mono jnj-small" style={{ color: 'var(--jnj-text-muted)' }}>
         JNJ / 2026
       </div>
 
@@ -26,7 +32,7 @@ export default function JoinLandingPage() {
           className="jnj-display"
           style={{
             fontSize: 'clamp(64px, 22vw, 96px)',
-            color: 'var(--jnj-black)',
+            color: 'var(--jnj-text)',
             margin: 0,
           }}
         >
@@ -40,7 +46,7 @@ export default function JoinLandingPage() {
             fontSize: 'clamp(15px, 4.2vw, 18px)',
             fontWeight: 700,
             marginTop: 20,
-            color: 'var(--jnj-black)',
+            color: 'var(--jnj-text)',
             letterSpacing: '0.04em',
             lineHeight: 1.3,
           }}
@@ -59,7 +65,7 @@ export default function JoinLandingPage() {
       </Link>
       <p
         className="jnj-caption jnj-text-center"
-        style={{ marginTop: 12, color: 'var(--jnj-grey-500)' }}
+        style={{ marginTop: 12, color: 'var(--jnj-text-muted)' }}
       >
         Select an active competition
       </p>

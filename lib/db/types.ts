@@ -10,6 +10,8 @@ export type ParticipantRole =
   | 'helper_follower';
 
 export type ContestStatus = 'ready' | 'live' | 'done' | 'archived';
+/** JOIN APP 톤앤매너 — 기본 배경/텍스트 톤(프리셋의 base mode). */
+export type JoinThemeMode = 'light' | 'dark';
 export type RoundStatus = 'prep' | 'pairing' | 'open' | 'live' | 'calculate' | 'close' | 'result';
 export type PairingRoundDb = 'prelim' | 'semi';
 export type PairingStatus = 'draft' | 'confirmed';
@@ -50,6 +52,10 @@ export interface ContestRow {
   background_image: string;
   /** 커스텀 배경 투명도 (0-100). 100 불투명 기본. */
   background_opacity: number;
+  /** JOIN APP 톤앤매너 프리셋 키 (lib/join/theme.ts JOIN_PRESETS). 예 'dark','midnight','cream'. */
+  join_theme: string;
+  /** JOIN APP 포인트 색상 hex (예 '#007D48'). 빈 문자열이면 톤 기본 잉크색. */
+  join_accent: string;
   created_at: string;
   updated_at: string;
 }

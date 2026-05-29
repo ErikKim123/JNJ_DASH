@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getSupabaseAdmin } from '@/lib/db/client';
 import { listContests } from '@/lib/db/queries';
+import { JOIN_PRESET_KEYS } from '@/lib/join/theme';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -47,6 +48,12 @@ const CreateContestSchema = z.object({
     .optional()
     .default(''),
   background_opacity: z.number().int().min(0).max(100).optional().default(100),
+  // JOIN APP 톤앤매너 — 기본 톤(light/dark) + 포인트 색상(hex 또는 빈 문자열).
+  join_theme: z.string().refine((k) => JOIN_PRESET_KEYS.includes(k), 'unknown theme preset').optional().default('dark'),
+  join_accent: z
+    .union([z.literal(''), z.string().regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, 'accent 는 #RGB 또는 #RRGGBB hex')])
+    .optional()
+    .default(''),
 });
 
 export async function GET() {

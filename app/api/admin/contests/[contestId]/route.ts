@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getSupabaseAdmin } from '@/lib/db/client';
 import { getContest } from '@/lib/db/queries';
+import { JOIN_PRESET_KEYS } from '@/lib/join/theme';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -41,6 +42,10 @@ const PatchSchema = z.object({
     .optional(),
   background_image: z.union([z.literal(''), z.string().url().max(2000)]).optional(),
   background_opacity: z.number().int().min(0).max(100).optional(),
+  join_theme: z.string().refine((k) => JOIN_PRESET_KEYS.includes(k), 'unknown theme preset').optional(),
+  join_accent: z
+    .union([z.literal(''), z.string().regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, 'accent 는 #RGB 또는 #RRGGBB hex')])
+    .optional(),
   prelim_status: RoundStatusEnum.optional(),
   semi_status: RoundStatusEnum.optional(),
   final_status: RoundStatusEnum.optional(),

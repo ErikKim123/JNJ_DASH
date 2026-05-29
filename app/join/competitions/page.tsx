@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { headers } from 'next/headers';
 import { listContests } from '@/lib/db/queries';
 import type { ContestRow } from '@/lib/db/types';
+import { pickJoinTheme, joinRootProps, DEFAULT_JOIN_THEME } from '@/lib/join/theme';
 import { TopNav } from '../_components/TopNav';
 
 export const dynamic = 'force-dynamic';
@@ -30,9 +31,9 @@ function CardShell({
     display: 'flex',
     alignItems: 'stretch',
     gap: 16,
-    background: 'var(--jnj-grey-900)',
-    borderColor: 'var(--jnj-grey-700)',
-    color: 'var(--jnj-white)',
+    background: 'var(--jnj-surface)',
+    borderColor: 'var(--jnj-border)',
+    color: 'var(--jnj-text)',
     padding: 20,
   };
   if (!isOpen) {
@@ -78,9 +79,9 @@ function GroupFolderCard({
         display: 'flex',
         alignItems: 'center',
         gap: 16,
-        background: 'var(--jnj-grey-900)',
-        borderColor: 'var(--jnj-grey-700)',
-        color: 'var(--jnj-white)',
+        background: 'var(--jnj-surface)',
+        borderColor: 'var(--jnj-border)',
+        color: 'var(--jnj-text)',
         padding: '24px 20px',
         textDecoration: 'none',
       }}
@@ -116,7 +117,7 @@ function GroupFolderCard({
         <div className="jnj-h2" style={{ marginBottom: 4, lineHeight: 1.2 }}>
           {groupLabel}
         </div>
-        <div className="jnj-caption" style={{ color: 'var(--jnj-grey-400)' }}>
+        <div className="jnj-caption" style={{ color: 'var(--jnj-text-muted)' }}>
           {count} {count === 1 ? 'competition' : 'competitions'}
         </div>
       </div>
@@ -150,7 +151,7 @@ function GroupFolderCard({
         style={{
           flexShrink: 0,
           fontSize: 24,
-          color: 'var(--jnj-grey-500)',
+          color: 'var(--jnj-text-muted)',
           paddingRight: 4,
         }}
       >
@@ -180,18 +181,24 @@ export default async function CompetitionsPage({ searchParams }: PageProps) {
   const keyOf = (c: ContestRow) => (c.group_name && c.group_name.trim()) || OTHER_GROUP_KEY;
   const labelOf = (k: string) => (k === OTHER_GROUP_KEY ? OTHER_GROUP_LABEL : k);
 
+  // 톤앤매너 — 그룹 선택 시에만 그 그룹의 테마를 따른다.
+  // 그룹 밖(전체 그룹 목록)은 기본 테마 고정 — 특정 그룹 색이 전체로 새지 않게.
+  const theme = selectedGroup
+    ? pickJoinTheme(contests.filter((c) => keyOf(c) === selectedGroup))
+    : DEFAULT_JOIN_THEME;
+  const root = joinRootProps(theme);
+
   return (
     <main
       style={{
         minHeight: '100dvh',
-        background: 'var(--jnj-black)',
-        color: 'var(--jnj-white)',
         padding: '20px 20px 48px',
+        ...root.style,
       }}
-      className="dark"
+      className={root.className}
     >
       <div style={{ maxWidth: 480, margin: '0 auto' }}>
-        <TopNav variant="dark" homeHref="/join" />
+        <TopNav variant={root.mode === 'dark' ? 'dark' : 'light'} homeHref="/join" />
 
         {selectedGroup === null
           ? renderGroupList(contests, keyOf, labelOf, origin)
@@ -233,7 +240,7 @@ function renderGroupList(
       >
         Competitions
       </h1>
-      <p className="jnj-caption" style={{ color: 'var(--jnj-grey-300)', marginBottom: 24 }}>
+      <p className="jnj-caption" style={{ color: 'var(--jnj-text-muted)', marginBottom: 24 }}>
         Select a group folder.
       </p>
 
@@ -241,14 +248,14 @@ function renderGroupList(
         <div
           className="jnj-card"
           style={{
-            background: 'var(--jnj-grey-900)',
-            borderColor: 'var(--jnj-grey-700)',
+            background: 'var(--jnj-surface)',
+            borderColor: 'var(--jnj-border)',
             padding: 28,
             textAlign: 'center',
           }}
         >
           <p className="jnj-h3" style={{ marginBottom: 8 }}>No competitions open.</p>
-          <p className="jnj-caption" style={{ color: 'var(--jnj-grey-400)' }}>
+          <p className="jnj-caption" style={{ color: 'var(--jnj-text-muted)' }}>
             Check back soon.
           </p>
         </div>
@@ -288,7 +295,7 @@ function renderContestList(
             <Link
               href="/join/competitions"
               className="jnj-caption"
-              style={{ color: 'var(--jnj-grey-400)', textDecoration: 'none' }}
+              style={{ color: 'var(--jnj-text-muted)', textDecoration: 'none' }}
             >
               ← All groups
             </Link>
@@ -299,7 +306,7 @@ function renderContestList(
           >
             {groupLabel}
           </h1>
-          <p className="jnj-caption" style={{ color: 'var(--jnj-grey-300)', margin: 0 }}>
+          <p className="jnj-caption" style={{ color: 'var(--jnj-text-muted)', margin: 0 }}>
             Select a competition to join.
           </p>
         </div>
@@ -335,8 +342,8 @@ function renderContestList(
         <div
           className="jnj-card"
           style={{
-            background: 'var(--jnj-grey-900)',
-            borderColor: 'var(--jnj-grey-700)',
+            background: 'var(--jnj-surface)',
+            borderColor: 'var(--jnj-border)',
             padding: 28,
             textAlign: 'center',
           }}
@@ -361,7 +368,7 @@ function renderContestList(
                       className="jnj-mono"
                       style={{
                         fontSize: 12,
-                        color: isOpen ? 'var(--jnj-grey-400)' : 'var(--jnj-grey-600)',
+                        color: 'var(--jnj-text-muted)',
                         marginBottom: 8,
                         display: 'flex',
                         alignItems: 'center',
@@ -369,14 +376,13 @@ function renderContestList(
                         flexWrap: 'wrap',
                       }}
                     >
-                      <span>{c.id}</span>
                       <span
                         style={{
                           fontSize: 10,
                           padding: '2px 8px',
                           borderRadius: 9999,
-                          border: `1px solid ${isOpen ? 'var(--jnj-green)' : 'var(--jnj-grey-700)'}`,
-                          color: isOpen ? 'var(--jnj-green)' : 'var(--jnj-grey-500)',
+                          border: `1px solid ${isOpen ? 'var(--jnj-green)' : 'var(--jnj-border)'}`,
+                          color: isOpen ? 'var(--jnj-green)' : 'var(--jnj-text-muted)',
                           background: isOpen ? 'rgba(0, 125, 72, 0.12)' : 'transparent',
                           letterSpacing: '0.05em',
                         }}
@@ -389,14 +395,14 @@ function renderContestList(
                       style={{
                         marginBottom: 10,
                         lineHeight: 1.2,
-                        color: isOpen ? 'var(--jnj-white)' : 'var(--jnj-grey-500)',
+                        color: isOpen ? 'var(--jnj-text)' : 'var(--jnj-text-muted)',
                       }}
                     >
                       {c.name}
                     </div>
                     <div
                       className="jnj-caption"
-                      style={{ color: isOpen ? 'var(--jnj-grey-400)' : 'var(--jnj-grey-600)' }}
+                      style={{ color: 'var(--jnj-text-muted)' }}
                     >
                       {c.period_start ? `${c.period_start} ~ ${c.period_end ?? ''}` : 'Date TBD'}
                     </div>

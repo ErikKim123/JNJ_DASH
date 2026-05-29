@@ -32,16 +32,43 @@
 
   --jnj-shadow-focus: 0 0 0 2px rgba(39, 93, 197, 1);
 
+  /* ---- 톤앤매너 시맨틱 토큰 (lib/join/theme.ts 와 한 쌍) ----
+     라이트가 기본값. .dark 가 붙은 조상 아래에서 다크로 오버라이드된다.
+     --jnj-accent 는 대회별 포인트 색상이 인라인으로 덮어쓸 수 있다(미설정 시 잉크색). */
+  --jnj-bg: var(--jnj-white);
+  --jnj-surface: var(--jnj-white);
+  --jnj-surface-2: var(--jnj-grey-50);
+  --jnj-track: var(--jnj-grey-100);
+  --jnj-text: var(--jnj-black);
+  --jnj-text-muted: var(--jnj-grey-500);
+  --jnj-border: var(--jnj-grey-200);
+  --jnj-accent: var(--jnj-black);
+  --jnj-on-accent: var(--jnj-white);
+
   min-height: 100dvh;
-  background: var(--jnj-white);
-  color: var(--jnj-black);
+  background: var(--jnj-bg);
+  color: var(--jnj-text);
   font-family: var(--jnj-font-text);
   -webkit-font-smoothing: antialiased;
 }
 
+/* 다크 톤 — 셸 자체 또는 셸 안쪽 .dark 래퍼(<main>)에 적용 */
+.jnj-shell.dark,
+.jnj-shell .dark {
+  --jnj-bg: var(--jnj-black);
+  --jnj-surface: var(--jnj-grey-900);
+  --jnj-surface-2: var(--jnj-grey-900);
+  --jnj-track: var(--jnj-grey-800);
+  --jnj-text: var(--jnj-white);
+  --jnj-text-muted: var(--jnj-grey-400);
+  --jnj-border: var(--jnj-grey-700);
+  --jnj-accent: var(--jnj-white);
+  --jnj-on-accent: var(--jnj-black);
+}
+
 .jnj-shell.dark {
-  background: var(--jnj-black);
-  color: var(--jnj-white);
+  background: var(--jnj-bg);
+  color: var(--jnj-text);
 }
 
 /* ---------- TYPE ---------- */
@@ -56,8 +83,8 @@
 .jnj-h2 { font-weight: 500; font-size: 24px; line-height: 1.2; }
 .jnj-h3 { font-weight: 500; font-size: 16px; line-height: 1.5; }
 .jnj-body { font-size: 16px; line-height: 1.75; }
-.jnj-caption { font-size: 14px; line-height: 1.5; color: var(--jnj-grey-500); font-weight: 500; }
-.jnj-small { font-size: 12px; line-height: 1.5; color: var(--jnj-grey-500); font-weight: 500; }
+.jnj-caption { font-size: 14px; line-height: 1.5; color: var(--jnj-text-muted); font-weight: 500; }
+.jnj-small { font-size: 12px; line-height: 1.5; color: var(--jnj-text-muted); font-weight: 500; }
 .jnj-mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: 0.05em; text-transform: uppercase; }
 
 /* ---------- BUTTON ---------- */
@@ -79,19 +106,17 @@
   white-space: nowrap;
 }
 .jnj-btn:focus-visible { outline: none; box-shadow: var(--jnj-shadow-focus); }
-.jnj-btn-primary { background: var(--jnj-black); color: var(--jnj-white); }
-.jnj-btn-primary:hover:not(:disabled) { background: var(--jnj-grey-700); }
-.jnj-btn-primary:disabled { background: var(--jnj-grey-200); color: var(--jnj-grey-400); cursor: not-allowed; }
+.jnj-btn-primary { background: var(--jnj-accent); color: var(--jnj-on-accent); }
+.jnj-btn-primary:hover:not(:disabled) { filter: brightness(0.9); }
+.jnj-btn-primary:disabled { background: var(--jnj-track); color: var(--jnj-text-muted); cursor: not-allowed; filter: none; }
 .jnj-btn-inverse { background: var(--jnj-white); color: var(--jnj-black); }
 .jnj-btn-inverse:hover:not(:disabled) { background: var(--jnj-grey-200); }
 .jnj-btn-secondary {
   background: transparent;
-  color: var(--jnj-black);
-  border: 1.5px solid var(--jnj-grey-300);
+  color: var(--jnj-text);
+  border: 1.5px solid var(--jnj-border);
 }
-.jnj-btn-secondary:hover:not(:disabled) { border-color: var(--jnj-black); background: var(--jnj-grey-100); }
-.dark .jnj-btn-secondary { color: var(--jnj-white); border-color: var(--jnj-grey-500); }
-.dark .jnj-btn-secondary:hover:not(:disabled) { border-color: var(--jnj-white); background: var(--jnj-grey-800); }
+.jnj-btn-secondary:hover:not(:disabled) { border-color: var(--jnj-text); background: var(--jnj-track); }
 .jnj-btn-full { width: 100%; }
 .jnj-btn-lg { padding: 18px 32px; font-size: 17px; }
 .jnj-btn-icon {
@@ -100,12 +125,10 @@
   height: 40px;
   border-radius: 9999px;
   background: transparent;
-  border: 1.5px solid var(--jnj-grey-300);
-  color: var(--jnj-black);
+  border: 1.5px solid var(--jnj-border);
+  color: var(--jnj-text);
 }
-.dark .jnj-btn-icon { border-color: var(--jnj-grey-500); color: var(--jnj-white); }
-.jnj-btn-icon:hover { background: var(--jnj-grey-100); }
-.dark .jnj-btn-icon:hover { background: var(--jnj-grey-800); }
+.jnj-btn-icon:hover { background: var(--jnj-track); }
 
 /* ---------- INPUT / LABEL ---------- */
 .jnj-field { display: flex; flex-direction: column; gap: 6px; }
@@ -114,24 +137,24 @@
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--jnj-grey-500);
+  color: var(--jnj-text-muted);
 }
 .jnj-input {
   font-family: var(--jnj-font-text);
   font-size: 16px;
-  background: var(--jnj-grey-100);
-  border: 1px solid var(--jnj-grey-300);
+  background: var(--jnj-track);
+  border: 1px solid var(--jnj-border);
   border-radius: var(--jnj-radius-sm);
   padding: 14px 16px;
-  color: var(--jnj-black);
+  color: var(--jnj-text);
   width: 100%;
   transition: border-color 200ms;
 }
-.jnj-input::placeholder { color: var(--jnj-grey-500); }
-.jnj-input:focus { outline: none; border-color: var(--jnj-black); box-shadow: var(--jnj-shadow-focus); }
+.jnj-input::placeholder { color: var(--jnj-text-muted); }
+.jnj-input:focus { outline: none; border-color: var(--jnj-text); box-shadow: var(--jnj-shadow-focus); }
 .jnj-input:disabled, .jnj-input[readonly] {
-  background: var(--jnj-grey-200);
-  color: var(--jnj-grey-500);
+  background: var(--jnj-surface-2);
+  color: var(--jnj-text-muted);
   cursor: not-allowed;
 }
 .jnj-input-error { border-color: var(--jnj-red); }
@@ -145,18 +168,13 @@
   padding: 0 20px;
 }
 .jnj-card {
-  background: var(--jnj-white);
-  border: 1px solid var(--jnj-grey-200);
+  background: var(--jnj-surface);
+  border: 1px solid var(--jnj-border);
   border-radius: var(--jnj-radius-lg);
   padding: 20px;
 }
-.dark .jnj-card {
-  background: var(--jnj-grey-900);
-  border-color: var(--jnj-grey-700);
-}
 .jnj-card-clickable { cursor: pointer; transition: border-color 200ms, transform 200ms; }
-.jnj-card-clickable:hover { border-color: var(--jnj-black); }
-.dark .jnj-card-clickable:hover { border-color: var(--jnj-white); }
+.jnj-card-clickable:hover { border-color: var(--jnj-text); }
 .jnj-card-clickable:active { transform: scale(0.99); }
 
 /* ---------- SECTION ---------- */
@@ -166,11 +184,10 @@
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--jnj-grey-500);
+  color: var(--jnj-text-muted);
   margin-bottom: 12px;
 }
-.jnj-divider { height: 1px; background: var(--jnj-grey-200); margin: 24px 0; }
-.dark .jnj-divider { background: var(--jnj-grey-800); }
+.jnj-divider { height: 1px; background: var(--jnj-border); margin: 24px 0; }
 
 /* ---------- HELPERS ---------- */
 .jnj-flex { display: flex; }

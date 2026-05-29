@@ -1,6 +1,7 @@
 // /join/[contestId]/done?num=XXX&mail=1|0&to=&reason= — 신청 완료 확인 화면.
 import Link from 'next/link';
 import { getContest } from '@/lib/db/queries';
+import { contestTheme, joinRootProps } from '@/lib/join/theme';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +15,8 @@ export default async function DonePage({
   const { contestId } = await params;
   const { num, mail, to, reason } = await searchParams;
   const contest = await getContest(contestId);
+  const theme = contestTheme(contest);
+  const root = joinRootProps(theme);
 
   // 메일 상태 해석
   const mailSent = mail === '1';
@@ -29,13 +32,13 @@ export default async function DonePage({
 
   return (
     <main
+      className={root.className}
       style={{
         minHeight: '100dvh',
-        background: 'var(--jnj-white)',
-        color: 'var(--jnj-black)',
         display: 'flex',
         flexDirection: 'column',
         padding: '32px 20px 32px',
+        ...root.style,
       }}
     >
       <div
@@ -48,7 +51,7 @@ export default async function DonePage({
           flex: 1,
         }}
       >
-        <div className="jnj-mono jnj-small" style={{ color: 'var(--jnj-grey-500)' }}>
+        <div className="jnj-mono jnj-small" style={{ color: 'var(--jnj-text-muted)' }}>
           JNJ / {contest?.id ?? contestId}
         </div>
 
@@ -96,7 +99,7 @@ export default async function DonePage({
             style={{
               marginTop: 12,
               fontSize: 13,
-              color: 'var(--jnj-grey-500)',
+              color: 'var(--jnj-text-muted)',
               letterSpacing: '0.08em',
             }}
           >
@@ -109,16 +112,16 @@ export default async function DonePage({
           style={{
             marginTop: 28,
             padding: '20px 24px',
-            border: '1px solid var(--jnj-grey-300)',
+            border: '1px solid var(--jnj-border)',
             borderRadius: 16,
-            background: 'var(--jnj-grey-50)',
+            background: 'var(--jnj-surface-2)',
           }}
         >
           <p
             className="jnj-mono"
             style={{
               fontSize: 11,
-              color: 'var(--jnj-grey-500)',
+              color: 'var(--jnj-text-muted)',
               letterSpacing: '0.1em',
               fontWeight: 600,
               margin: 0,
@@ -133,7 +136,7 @@ export default async function DonePage({
               lineHeight: 1.0,
               marginTop: 8,
               marginBottom: 0,
-              color: 'var(--jnj-black)',
+              color: 'var(--jnj-text)',
             }}
           >
             No. {num ?? '—'}
@@ -141,7 +144,7 @@ export default async function DonePage({
           {contest && (
             <p
               className="jnj-caption"
-              style={{ marginTop: 12, color: 'var(--jnj-grey-500)' }}
+              style={{ marginTop: 12, color: 'var(--jnj-text-muted)' }}
             >
               {contest.name}
               {contest.period_start ? ` · ${contest.period_start} ~ ${contest.period_end ?? ''}` : ''}
@@ -155,7 +158,7 @@ export default async function DonePage({
             style={{
               fontSize: 16,
               lineHeight: 1.7,
-              color: 'var(--jnj-black)',
+              color: 'var(--jnj-text)',
               margin: 0,
             }}
           >
@@ -174,16 +177,16 @@ export default async function DonePage({
               borderRadius: 12,
               fontSize: 14,
               lineHeight: 1.5,
-              border: `1px solid ${mailSent ? 'var(--jnj-grey-300)' : 'rgba(255, 80, 0, 0.30)'}`,
-              background: mailSent ? 'var(--jnj-grey-100)' : 'rgba(255, 80, 0, 0.06)',
-              color: mailSent ? 'var(--jnj-grey-600)' : 'var(--jnj-orange-flash, #FF5000)',
+              border: `1px solid ${mailSent ? 'var(--jnj-border)' : 'rgba(255, 80, 0, 0.30)'}`,
+              background: mailSent ? 'var(--jnj-track)' : 'rgba(255, 80, 0, 0.06)',
+              color: mailSent ? 'var(--jnj-text-muted)' : 'var(--jnj-orange-flash, #FF5000)',
             }}
           >
             {mailSent ? (
               <>
                 ✉ 확인 메일을 <strong>{to ?? '입력하신 주소'}</strong> 로 보냈습니다.
                 <br />
-                <span style={{ fontSize: 12, color: 'var(--jnj-grey-500)' }}>
+                <span style={{ fontSize: 12, color: 'var(--jnj-text-muted)' }}>
                   메일이 보이지 않으면 스팸함도 확인해 주세요.
                 </span>
               </>

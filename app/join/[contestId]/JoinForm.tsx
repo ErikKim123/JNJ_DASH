@@ -364,7 +364,7 @@ export function JoinForm({
             fontSize: 14,
             margin: 0,
             padding: '12px 16px',
-            background: '#FFE5E5',
+            background: 'rgba(211, 0, 5, 0.10)',
             borderRadius: 8,
           }}
         >
@@ -378,7 +378,7 @@ export function JoinForm({
           position: 'sticky',
           bottom: 16,
           paddingTop: 16,
-          background: 'linear-gradient(to top, var(--jnj-white) 70%, transparent)',
+          background: 'linear-gradient(to top, var(--jnj-bg) 70%, transparent)',
         }}
       >
         <button
@@ -422,10 +422,10 @@ function WhatsAppInput({
         display: 'flex',
         gap: 0,
         alignItems: 'stretch',
-        border: '1px solid var(--jnj-grey-300)',
+        border: '1px solid var(--jnj-border)',
         borderRadius: 8,
         overflow: 'hidden',
-        background: 'var(--jnj-white)',
+        background: 'var(--jnj-surface)',
       }}
     >
       <select
@@ -434,14 +434,14 @@ function WhatsAppInput({
         onChange={(e) => update(e.target.value, number)}
         style={{
           border: 'none',
-          background: 'var(--jnj-grey-100)',
+          background: 'var(--jnj-track)',
           padding: '0 10px',
           fontSize: 14,
           fontWeight: 500,
-          color: 'var(--jnj-black)',
+          color: 'var(--jnj-text)',
           cursor: 'pointer',
           outline: 'none',
-          borderRight: '1px solid var(--jnj-grey-300)',
+          borderRight: '1px solid var(--jnj-border)',
           minWidth: 96,
           maxWidth: 120,
         }}
@@ -466,7 +466,7 @@ function WhatsAppInput({
           padding: '12px 14px',
           fontSize: 16,
           background: 'transparent',
-          color: 'var(--jnj-black)',
+          color: 'var(--jnj-text)',
           minWidth: 0,
         }}
       />
@@ -500,13 +500,13 @@ function LangToggle({ lang, onChange }: { lang: Lang; onChange: (l: Lang) => voi
     border: 'none',
     background: 'transparent',
     cursor: 'pointer',
-    color: 'var(--jnj-grey-500)',
+    color: 'var(--jnj-text-muted)',
     transition: 'all 200ms',
   };
   const activeBtn: React.CSSProperties = {
     ...baseBtn,
-    color: 'var(--jnj-black)',
-    background: 'var(--jnj-white)',
+    color: 'var(--jnj-text)',
+    background: 'var(--jnj-surface)',
     borderRadius: 9999,
     boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
   };
@@ -519,8 +519,8 @@ function LangToggle({ lang, onChange }: { lang: Lang; onChange: (l: Lang) => voi
         alignItems: 'center',
         gap: 4,
         padding: 4,
-        background: 'var(--jnj-grey-100)',
-        border: '1px solid var(--jnj-grey-200)',
+        background: 'var(--jnj-track)',
+        border: '1px solid var(--jnj-border)',
         borderRadius: 9999,
         alignSelf: 'flex-end',
         marginLeft: 'auto',
@@ -554,9 +554,9 @@ function PhotoPreview({ url, emptyLabel = 'No photo' }: { url: string; emptyLabe
           width: 96,
           height: 96,
           borderRadius: 12,
-          background: 'var(--jnj-grey-100)',
-          border: '1px dashed var(--jnj-grey-300)',
-          color: 'var(--jnj-grey-500)',
+          background: 'var(--jnj-track)',
+          border: '1px dashed var(--jnj-border)',
+          color: 'var(--jnj-text-muted)',
           fontSize: 12,
           display: 'inline-flex',
           alignItems: 'center',
@@ -579,7 +579,7 @@ function PhotoPreview({ url, emptyLabel = 'No photo' }: { url: string; emptyLabe
         height: 96,
         borderRadius: 12,
         objectFit: 'cover',
-        background: 'var(--jnj-grey-100)',
+        background: 'var(--jnj-track)',
         flexShrink: 0,
       }}
     />

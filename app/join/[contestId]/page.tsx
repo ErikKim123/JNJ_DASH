@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 import { getContest, listParticipants } from '@/lib/db/queries';
 import { nextParticipantNum } from '@/lib/participants/next-num';
+import { contestTheme, joinRootProps } from '@/lib/join/theme';
 import { JoinForm } from './JoinForm';
 import { TopNav } from '../_components/TopNav';
 
@@ -23,6 +24,8 @@ export default async function JoinFormPage({
   const { contestId } = await params;
   const contest = await getContest(contestId);
   if (!contest) notFound();
+  const theme = contestTheme(contest);
+  const root = joinRootProps(theme);
   // ready 상태에서만 등록 가능. archived 는 목록에서 이미 숨김.
   if (contest.status !== 'ready') {
     const reason =
@@ -30,26 +33,29 @@ export default async function JoinFormPage({
       : contest.status === 'done' ? '대회가 종료되었습니다.'
       : '현재 등록을 받지 않습니다.';
     return (
-      <main style={{ padding: '24px 20px', maxWidth: 480, margin: '0 auto', minHeight: '100dvh' }}>
-        <TopNav homeHref="/join" />
+      <main
+        className={root.className}
+        style={{ padding: '24px 20px', maxWidth: 480, margin: '0 auto', minHeight: '100dvh', ...root.style }}
+      >
+        <TopNav variant={root.mode === 'dark' ? 'dark' : 'light'} homeHref="/join" />
         <div
           className="jnj-card"
           style={{
             marginTop: 24,
             textAlign: 'center',
             padding: 32,
-            background: 'var(--jnj-grey-100)',
-            border: '1px solid var(--jnj-grey-300)',
+            background: 'var(--jnj-surface-2)',
+            border: '1px solid var(--jnj-border)',
           }}
         >
           <p
             className="jnj-mono"
-            style={{ fontSize: 12, color: 'var(--jnj-grey-500)', marginBottom: 8, letterSpacing: '0.08em' }}
+            style={{ fontSize: 12, color: 'var(--jnj-text-muted)', marginBottom: 8, letterSpacing: '0.08em' }}
           >
             REGISTRATION CLOSED
           </p>
           <p className="jnj-h2" style={{ marginBottom: 8 }}>{contest.name}</p>
-          <p className="jnj-caption" style={{ color: 'var(--jnj-grey-500)' }}>{reason}</p>
+          <p className="jnj-caption" style={{ color: 'var(--jnj-text-muted)' }}>{reason}</p>
         </div>
       </main>
     );
@@ -66,15 +72,15 @@ export default async function JoinFormPage({
 
   return (
     <main
+      className={root.className}
       style={{
         minHeight: '100dvh',
-        background: 'var(--jnj-white)',
-        color: 'var(--jnj-black)',
         padding: '20px 20px 96px',
+        ...root.style,
       }}
     >
       <div style={{ maxWidth: 480, margin: '0 auto' }}>
-        <TopNav homeHref="/join" />
+        <TopNav variant={root.mode === 'dark' ? 'dark' : 'light'} homeHref="/join" />
 
         <div
           style={{
@@ -86,12 +92,6 @@ export default async function JoinFormPage({
           }}
         >
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div
-              className="jnj-mono"
-              style={{ fontSize: 12, color: 'var(--jnj-grey-500)', marginBottom: 4 }}
-            >
-              {contest.id}
-            </div>
             <h1
               className="jnj-display"
               style={{ fontSize: 'clamp(28px, 9vw, 44px)', lineHeight: 1.0 }}
@@ -101,7 +101,7 @@ export default async function JoinFormPage({
             {(contest.period_start || contest.period_end) && (
               <p
                 className="jnj-caption"
-                style={{ marginTop: 8, color: 'var(--jnj-grey-500)' }}
+                style={{ marginTop: 8, color: 'var(--jnj-text-muted)' }}
               >
                 {contest.period_start} ~ {contest.period_end ?? ''}
               </p>
@@ -116,7 +116,7 @@ export default async function JoinFormPage({
               width: 112,
               height: 112,
               background: 'var(--jnj-white)',
-              border: '1px solid var(--jnj-grey-200)',
+              border: '1px solid var(--jnj-border)',
               borderRadius: 12,
               padding: 6,
               display: 'flex',

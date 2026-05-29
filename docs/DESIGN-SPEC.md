@@ -171,6 +171,36 @@ viewBox: **1280 × 720**.
 - 비어있으면 마커가 빈 문자열로 치환 → 템플릿 기본 배경 유지
 - 적용 범위: PREP / PAIRING / OPEN / LIVE / WRAPUP / RESULT / CLOSE / CEREMONY 모든 화면
 
+## 4-2. JOIN APP 톤앤매너 (프리셋 테마)
+
+JOIN 참가자 앱(`/join/*`)의 화면 간 색감 통일을 위한 대회별 **프리셋 테마** 시스템.
+(기존: 목록=다크 / 등록폼=화이트 로 급변하던 문제 해결)
+
+- DB: `contests.join_theme text`(프리셋 키), `contests.join_accent text`(hex 또는 '') ([0013](../db/migrations/0013_join_theme.sql))
+  - 0013: 컬럼 추가(default 'dark') / 0014: light·dark CHECK 제약 제거 → 프리셋 키 자유화 ([0014](../db/migrations/0014_join_theme_presets.sql))
+- **프리셋 10종** ([lib/join/theme.ts](../lib/join/theme.ts) `JOIN_PRESETS`):
+  - 라이트 2: `light`, `cream`(웜), `slate`(쿨) … / 다크 8: `dark`, `graphite`, `midnight`, `forest`, `ocean`, `wine`, `sunset`
+  - 각 프리셋 = `{ mode, bg, surface, surface2, track, text, textMuted, border, accent }`
+  - `join_accent` 는 프리셋 기본 accent 를 덮어쓰는 오버라이드('' = 프리셋 기본색)
+- 어드민 입력: ContestForm "JOIN 앱 톤앤매너" 섹션 (그룹 필드 바로 아래)
+  - 프리셋 그리드 + 포인트색 오버라이드 + 라이브 프리뷰 + **그룹 일괄 적용 버튼**
+- 헬퍼: [lib/join/theme.ts](../lib/join/theme.ts)
+  - `contestTheme(c)` — 단일 대회 테마 `{key, accent}`
+  - `pickJoinTheme(contests)` — 최빈 프리셋 키 + 최빈 accent (그룹/랜딩 집계)
+  - `resolveJoinPalette(key, accent)` — 구체 hex 팔레트 (프리뷰/렌더 공용)
+  - `joinRootProps(theme)` — `<main>` 에 펼칠 `{className('dark'|''), style(전체 팔레트 CSS변수), mode}`
+  - `onAccentColor(hex)` — accent 위 글자색 흑/백 자동 (상대 휘도)
+- 그룹 일괄 적용 API: [POST /api/admin/contests/[id]/apply-theme-to-group](../app/api/admin/contests/[contestId]/apply-theme-to-group/route.ts)
+  - 대상 대회의 `group_name` 기준으로 같은 그룹 전체 대회의 join_theme/join_accent 갱신 (group 없으면 400)
+- CSS 시맨틱 토큰: [app/join/join.css](../app/join/join.css)
+  - `--jnj-bg / --jnj-surface / --jnj-surface-2 / --jnj-track / --jnj-text / --jnj-text-muted / --jnj-border / --jnj-accent / --jnj-on-accent`
+  - 컴포넌트(.jnj-card/.jnj-input/.jnj-btn-* …)가 전부 토큰 참조 → 프리셋 팔레트가 인라인으로 전체 화면을 구동
+  - `joinRootProps` 가 항상 전체 팔레트를 인라인하므로 컬러 프리셋(navy/teal 등)도 정확히 렌더
+- 톤 기본값: **DARK** (`join_theme` 컬럼 default 'dark'). 알 수 없는 키는 dark 로 폴백.
+- OPEN 등 상태 배지는 의미 보존 위해 녹색 유지. QR 박스는 항상 흰 배경.
+- 적용 범위: `/join` 랜딩, `/join/competitions`(전체/그룹), `/join/[contestId]` 등록폼, `/join/[contestId]/done`
+  - 그룹 목록 화면은 해당 그룹 대회들의 테마를 집계, 전체 보기·랜딩은 전체 대회 집계.
+
 ## 5. 광고/스폰서 로고 시스템
 
 ### DB

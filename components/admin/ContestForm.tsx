@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Button, Field, Input, Select } from './ui';
 import type { ContestRow } from '@/lib/db/types';
 import { SCORING_ITEMS, DEFAULT_SCORING_ITEMS, type ScoringItemKey } from '@/lib/db/scoring';
+import { JOIN_PRESETS, JOIN_PRESET_MAP, resolveJoinPalette } from '@/lib/join/theme';
 import { useT } from '@/lib/i18n/LocaleContext';
 import type { MessageKey } from '@/lib/i18n/messages';
 
@@ -68,6 +69,14 @@ export function ContestForm({
       const v = initial?.background_opacity;
       if (typeof v !== 'number' || !Number.isFinite(v)) return 100;
       return Math.max(0, Math.min(100, Math.round(v)));
+    })(),
+    join_theme: ((): string => {
+      const k = initial?.join_theme ?? '';
+      return JOIN_PRESET_MAP[k] ? k : 'dark';
+    })(),
+    join_accent: ((): string => {
+      const v = initial?.join_accent ?? '';
+      return /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(v) ? v : '';
     })(),
   });
 
@@ -327,6 +336,17 @@ export function ContestForm({
         </Field>
       </div>
 
+      <JoinThemeSection
+        presetKey={form.join_theme}
+        accent={form.join_accent}
+        onPresetChange={(k) => update('join_theme', k)}
+        onAccentChange={(a) => update('join_accent', a)}
+        contestId={initial?.id ?? form.id}
+        groupName={form.group_name}
+        canApplyGroup={mode === 'edit'}
+        t={t}
+      />
+
       <section className="rounded border border-border bg-panel/40 p-4">
         <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
           <h3 className="text-sm font-semibold">{t('cf.bgTitle')}</h3>
@@ -556,5 +576,235 @@ export function ContestForm({
         )}
       </div>
     </form>
+  );
+}
+
+// ── Tone & Manner (JOIN APP 테마) ──────────────────────────────────────
+// 프리셋 테마(라이트/다크/미드나잇 등) + 포인트 색상 오버라이드.
+// JOIN 앱 전체(랜딩/목록/등록폼/완료)가 이 값을 따른다.
+const ACCENT_PRESETS = ['', '#007D48', '#D30005', '#1151FF', '#F25C05', '#7A3FF2'];
+const ACCENT_HEX_RE = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+
+function JoinThemeSection({
+  presetKey,
+  accent,
+  onPresetChange,
+  onAccentChange,
+  contestId,
+  groupName,
+  canApplyGroup,
+  t,
+}: {
+  presetKey: string;
+  accent: string;
+  onPresetChange: (k: string) => void;
+  onAccentChange: (a: string) => void;
+  contestId: string;
+  groupName: string;
+  canApplyGroup: boolean;
+  t: (key: MessageKey) => string;
+}) {
+  const p = resolveJoinPalette(presetKey, accent);
+  const accentValid = ACCENT_HEX_RE.test(accent);
+
+  const [applyBusy, setApplyBusy] = useState(false);
+  const [applyMsg, setApplyMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const group = groupName.trim();
+
+  async function applyToGroup() {
+    setApplyMsg(null);
+    if (!group) {
+      setApplyMsg({ ok: false, text: t('cf.themeApplyNoGroup') });
+      return;
+    }
+    if (!confirm(fmt(t('cf.themeApplyConfirm'), { GROUP: group }))) return;
+    setApplyBusy(true);
+    try {
+      const res = await fetch(
+        `/api/admin/contests/${encodeURIComponent(contestId)}/apply-theme-to-group`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ join_theme: presetKey, join_accent: accentValid ? accent : '' }),
+        },
+      );
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const reason = j.error === 'NO_GROUP' ? t('cf.themeApplyNoGroup') : (j.error ?? `(${res.status})`);
+        setApplyMsg({ ok: false, text: reason });
+        return;
+      }
+      setApplyMsg({ ok: true, text: fmt(t('cf.themeApplyDone'), { N: j.data?.applied ?? 0, GROUP: group }) });
+    } catch (e) {
+      setApplyMsg({ ok: false, text: e instanceof Error ? e.message : 'error' });
+    } finally {
+      setApplyBusy(false);
+    }
+  }
+
+  return (
+    <section className="rounded border border-border bg-panel/40 p-4">
+      <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+        <h3 className="text-sm font-semibold">{t('cf.themeTitle')}</h3>
+        <span className="text-xs text-ink2">{t('cf.themeMeta')}</span>
+      </div>
+
+      <div className="flex flex-col md:flex-row gap-4 items-start">
+        {/* 컨트롤 */}
+        <div className="flex flex-col gap-4 flex-1 w-full">
+          {/* 프리셋 테마 그리드 */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs text-ink2 uppercase tracking-wide">{t('cf.themePreset')}</label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {JOIN_PRESETS.map((preset) => {
+                const active = preset.key === presetKey;
+                return (
+                  <button
+                    key={preset.key}
+                    type="button"
+                    onClick={() => onPresetChange(preset.key)}
+                    className={`flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition ${
+                      active ? 'border-accent ring-1 ring-accent' : 'border-border hover:border-accent/60'
+                    }`}
+                    style={{ background: preset.bg }}
+                    title={preset.label}
+                  >
+                    <span
+                      className="w-5 h-5 rounded-full shrink-0"
+                      style={{ background: preset.accent, border: `1px solid ${preset.border}` }}
+                    />
+                    <span style={{ color: preset.text, fontSize: 12, fontWeight: 600 }}>
+                      {preset.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 포인트 색상 (오버라이드) */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs text-ink2 uppercase tracking-wide">{t('cf.themeAccent')}</label>
+            <div className="flex items-center gap-2 flex-wrap">
+              {ACCENT_PRESETS.map((preset) => {
+                const isActive = (accentValid ? accent.toLowerCase() : '') === preset.toLowerCase();
+                const isDefault = preset === '';
+                return (
+                  <button
+                    key={preset || 'default'}
+                    type="button"
+                    onClick={() => onAccentChange(preset)}
+                    title={isDefault ? t('cf.themeAccentDefault') : preset}
+                    aria-label={isDefault ? t('cf.themeAccentDefault') : preset}
+                    className={`w-7 h-7 rounded-full border-2 transition ${
+                      isActive ? 'border-accent scale-110' : 'border-border'
+                    }`}
+                    style={{
+                      background: isDefault
+                        ? 'repeating-conic-gradient(#bbb 0% 25%, #fff 0% 50%) 50% / 8px 8px'
+                        : preset,
+                    }}
+                  />
+                );
+              })}
+              <input
+                type="color"
+                value={accentValid ? accent : '#007D48'}
+                onChange={(e) => onAccentChange(e.target.value)}
+                className="w-7 h-7 rounded cursor-pointer bg-transparent border border-border p-0"
+                aria-label={t('cf.themeAccentPick')}
+              />
+              <input
+                type="text"
+                value={accent}
+                onChange={(e) => onAccentChange(e.target.value)}
+                placeholder="#007D48"
+                maxLength={7}
+                className="w-24 h-7 px-2 text-xs rounded border border-border bg-panel text-ink font-mono"
+              />
+              {accent && (
+                <button
+                  type="button"
+                  onClick={() => onAccentChange('')}
+                  className="text-xs text-ink2 hover:text-danger"
+                >
+                  {t('cf.themeAccentClear')}
+                </button>
+              )}
+            </div>
+            <p className="text-xs text-ink2">{t('cf.themeHint')}</p>
+          </div>
+
+          {/* 그룹 일괄 적용 */}
+          <div className="flex flex-col gap-1.5">
+            <Button
+              type="button"
+              variant="primary"
+              onClick={applyToGroup}
+              disabled={!canApplyGroup || applyBusy || !group}
+            >
+              {applyBusy
+                ? t('cf.themeApplying')
+                : group
+                  ? fmt(t('cf.themeApplyGroup'), { GROUP: group })
+                  : t('cf.themeApplyGroupEmpty')}
+            </Button>
+            <p className="text-xs text-ink2">
+              {canApplyGroup ? t('cf.themeApplyHint') : t('cf.themeApplyNeedsSave')}
+            </p>
+            {applyMsg && (
+              <p className={`text-xs ${applyMsg.ok ? 'text-accent' : 'text-danger'}`} role="status">
+                {applyMsg.text}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* 라이브 프리뷰 */}
+        <div className="shrink-0 w-full md:w-56">
+          <div className="text-[10px] text-ink2 uppercase tracking-wide mb-1.5">{t('cf.themePreview')}</div>
+          <div
+            className="rounded-xl p-3 flex flex-col gap-2.5"
+            style={{ background: p.bg, border: `1px solid ${p.border}` }}
+          >
+            <div style={{ color: p.text, fontWeight: 700, fontSize: 18, letterSpacing: '-0.01em' }}>
+              PSLF
+            </div>
+            {/* 대회 카드 */}
+            <div
+              className="rounded-lg p-2.5 flex items-center justify-between gap-2"
+              style={{ background: p.surface, border: `1px solid ${p.border}` }}
+            >
+              <div className="min-w-0">
+                <div
+                  className="inline-block px-1.5 py-0.5 rounded-full text-[8px] font-semibold mb-1"
+                  style={{ color: '#007D48', border: '1px solid #007D48', background: 'rgba(0,125,72,0.12)' }}
+                >
+                  OPEN
+                </div>
+                <div style={{ color: p.text, fontSize: 12, fontWeight: 600, lineHeight: 1.2 }}>
+                  Salsa J&amp;J
+                </div>
+                <div style={{ color: p.textMuted, fontSize: 9, marginTop: 2 }}>2026-06-01</div>
+              </div>
+              <div className="w-8 h-8 rounded bg-white shrink-0" style={{ border: `1px solid ${p.border}` }} />
+            </div>
+            {/* 입력 + 버튼 */}
+            <div
+              className="rounded-md px-2.5 py-2 text-[10px]"
+              style={{ background: p.track, color: p.textMuted, border: `1px solid ${p.border}` }}
+            >
+              Name
+            </div>
+            <div
+              className="rounded-full py-2 text-center text-[11px] font-semibold"
+              style={{ background: p.accent, color: p.onAccent }}
+            >
+              Submit Entry
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
