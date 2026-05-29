@@ -156,7 +156,7 @@ export function DonePanel({
             className="jnj-btn jnj-btn-primary jnj-btn-full jnj-btn-lg"
           >
             <SnsIcon />
-            {lang === 'en' ? 'Join the SNS room' : 'SNS 방 참여하기'}
+            {lang === 'en' ? 'Join the Group Chat for more info' : '자세한 안내는 그룹 채팅 참여'}
           </a>
         </div>
       )}
