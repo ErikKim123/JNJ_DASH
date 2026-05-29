@@ -55,6 +55,7 @@ const CreateContestSchema = z.object({
     .optional()
     .default(''),
   sns_url: z.union([z.literal(''), z.string().url().max(2000)]).optional().default(''),
+  sns_enabled: z.boolean().optional().default(false),
 });
 
 export async function GET() {

@@ -14,6 +14,7 @@ export function DonePanel({
   period,
   backHref,
   snsUrl,
+  snsEnabled,
 }: {
   contestId: string;
   num: string;
@@ -21,9 +22,11 @@ export function DonePanel({
   period: string;
   backHref: string;
   snsUrl: string;
+  snsEnabled: boolean;
 }) {
   const [lang, setLang] = useState<Lang>('en');
-  const snsActive = /^https?:\/\//i.test(snsUrl);
+  // 활성(토글 ON) + 유효 URL 일 때만 버튼 노출. 비활성이면 섹션 자체를 숨김.
+  const showSns = snsEnabled && /^https?:\/\//i.test(snsUrl);
 
   return (
     <div
@@ -137,15 +140,15 @@ export function DonePanel({
         </p>
       </div>
 
-      {/* SNS 방 참여 */}
-      <div style={{ marginTop: 24 }}>
-        <p
-          className="jnj-mono"
-          style={{ fontSize: 11, color: 'var(--jnj-text-muted)', letterSpacing: '0.1em', fontWeight: 600, marginBottom: 8 }}
-        >
-          {lang === 'en' ? 'COMMUNITY' : 'SNS 방'}
-        </p>
-        {snsActive ? (
+      {/* SNS 방 참여 — 활성(토글 ON + URL) 일 때만 노출, 비활성이면 완전 숨김 */}
+      {showSns && (
+        <div style={{ marginTop: 24 }}>
+          <p
+            className="jnj-mono"
+            style={{ fontSize: 11, color: 'var(--jnj-text-muted)', letterSpacing: '0.1em', fontWeight: 600, marginBottom: 8 }}
+          >
+            {lang === 'en' ? 'COMMUNITY' : 'SNS 방'}
+          </p>
           <a
             href={snsUrl}
             target="_blank"
@@ -155,18 +158,8 @@ export function DonePanel({
             <SnsIcon />
             {lang === 'en' ? 'Join the SNS room' : 'SNS 방 참여하기'}
           </a>
-        ) : (
-          <button
-            type="button"
-            disabled
-            className="jnj-btn jnj-btn-primary jnj-btn-full jnj-btn-lg"
-            aria-disabled="true"
-          >
-            <SnsIcon />
-            {lang === 'en' ? 'Coming soon' : '준비중'}
-          </button>
-        )}
-      </div>
+        </div>
+      )}
 
       <div style={{ flex: 1, minHeight: 24 }} />
 

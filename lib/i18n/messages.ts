@@ -144,8 +144,10 @@ export const MESSAGES_EN = {
   // SNS room
   'cf.snsTitle': 'SNS Room (Community Chat)',
   'cf.snsMeta': 'Shown as a join button on the registration-complete screen',
+  'cf.snsEnabledOn': 'Enabled',
+  'cf.snsEnabledOff': 'Disabled',
   'cf.snsLabel': 'SNS Room Link',
-  'cf.snsHint': 'e.g. KakaoTalk open chat, WhatsApp/Telegram invite. Leave empty to show "Coming soon".',
+  'cf.snsHint': 'e.g. KakaoTalk open chat, WhatsApp/Telegram invite. When disabled, the button is hidden on the registration-complete screen.',
   // Tone & Manner (JOIN app theme)
   'cf.themeTitle': 'JOIN App Tone & Manner',
   'cf.themeMeta': 'Applies across the whole JOIN flow (landing / list / form / done)',
@@ -370,8 +372,10 @@ export const MESSAGES_KO: Record<MessageKey, string> = {
   // SNS room
   'cf.snsTitle': 'SNS 방 (커뮤니티 채팅)',
   'cf.snsMeta': '등록 완료 화면에 참여 버튼으로 노출됩니다',
+  'cf.snsEnabledOn': '활성',
+  'cf.snsEnabledOff': '비활성',
   'cf.snsLabel': 'SNS 방 링크',
-  'cf.snsHint': '예: 카카오톡 오픈채팅, WhatsApp/Telegram 초대 링크. 비워두면 "준비중"으로 표시됩니다.',
+  'cf.snsHint': '예: 카카오톡 오픈채팅, WhatsApp/Telegram 초대 링크. 비활성이면 등록 완료 화면에서 버튼이 숨겨집니다.',
   // Tone & Manner (JOIN app theme)
   'cf.themeTitle': 'JOIN 앱 톤앤매너',
   'cf.themeMeta': 'JOIN 전체(랜딩/목록/등록폼/완료)에 적용됩니다',

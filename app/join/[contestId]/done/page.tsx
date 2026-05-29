@@ -46,6 +46,7 @@ export default async function DonePage({
         period={period}
         backHref={backHref}
         snsUrl={contest?.sns_url ?? ''}
+        snsEnabled={contest?.sns_enabled ?? false}
       />
     </main>
   );

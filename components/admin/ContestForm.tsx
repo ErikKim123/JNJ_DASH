@@ -79,6 +79,7 @@ export function ContestForm({
       return /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(v) ? v : '';
     })(),
     sns_url: initial?.sns_url ?? '',
+    sns_enabled: initial?.sns_enabled ?? false,
   });
 
   function updateBackgroundOpacity(value: number) {
@@ -340,7 +341,26 @@ export function ContestForm({
       <section className="rounded border border-border bg-panel/40 p-4">
         <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
           <h3 className="text-sm font-semibold">{t('cf.snsTitle')}</h3>
-          <span className="text-xs text-ink2">{t('cf.snsMeta')}</span>
+          {/* 활성/비활성 토글 — 비활성이면 done 화면 버튼 자체가 숨겨짐 */}
+          <button
+            type="button"
+            role="switch"
+            aria-checked={form.sns_enabled}
+            onClick={() => update('sns_enabled', !form.sns_enabled)}
+            className="inline-flex items-center gap-2 text-xs"
+          >
+            <span className="text-ink2">
+              {form.sns_enabled ? t('cf.snsEnabledOn') : t('cf.snsEnabledOff')}
+            </span>
+            <span
+              className={`relative w-9 h-5 rounded-full transition ${form.sns_enabled ? 'bg-accent' : 'bg-border'}`}
+            >
+              <span
+                className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition"
+                style={{ transform: form.sns_enabled ? 'translateX(16px)' : 'translateX(0)' }}
+              />
+            </span>
+          </button>
         </div>
         <Field label={t('cf.snsLabel')} hint={t('cf.snsHint')}>
           <Input
@@ -349,6 +369,7 @@ export function ContestForm({
             onChange={(e) => update('sns_url', e.target.value)}
             placeholder="https://open.kakao.com/o/..."
             maxLength={2000}
+            disabled={!form.sns_enabled}
           />
         </Field>
       </section>
