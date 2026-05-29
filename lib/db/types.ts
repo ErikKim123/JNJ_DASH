@@ -56,6 +56,8 @@ export interface ContestRow {
   join_theme: string;
   /** JOIN APP 포인트 색상 hex (예 '#007D48'). 빈 문자열이면 톤 기본 잉크색. */
   join_accent: string;
+  /** SNS 방(오픈채팅/커뮤니티) 링크. 비어있으면 done 화면 버튼 비활성(준비중). */
+  sns_url: string;
   created_at: string;
   updated_at: string;
 }

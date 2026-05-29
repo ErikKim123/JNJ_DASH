@@ -1,15 +1,15 @@
-// /join 상단 내비게이션 — 뒤로 / 홈 / 새로고침 / 트로피.
-// 스크린샷의 4개 원형 아이콘 버튼을 재현. variant 로 dark / light 전환.
+// /join 상단 내비게이션 — 뒤로 / 새로고침 / 트로피.
+// 원형 아이콘 버튼. variant 로 dark / light 전환. (홈 버튼은 제거됨)
 'use client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 export function TopNav({
   variant = 'light',
-  homeHref = '/join',
   trophyHref,
 }: {
   variant?: 'light' | 'dark';
+  /** @deprecated 홈 버튼 제거로 미사용. 호출부 호환을 위해 타입만 유지. */
   homeHref?: string;
   trophyHref?: string;
 }) {
@@ -44,9 +44,6 @@ export function TopNav({
       >
         <Icon name="arrow-left" stroke={stroke} />
       </button>
-      <Link href={homeHref} aria-label="Home" style={{ ...btnStyle, textDecoration: 'none' }}>
-        <Icon name="home" stroke={stroke} />
-      </Link>
       <button
         type="button"
         aria-label="Refresh"

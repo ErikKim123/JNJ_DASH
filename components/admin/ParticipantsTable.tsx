@@ -248,7 +248,7 @@ export function ParticipantsTable({
               <th className="text-left px-3 py-2 w-20">Photo</th>
               <th className="text-left px-3 py-2 w-20">#</th>
               <th className="text-left px-3 py-2">Team</th>
-              <th className="text-left px-3 py-2 w-32">Rep.</th>
+              <th className="text-left px-3 py-2 w-32">Country</th>
               <th className="text-left px-3 py-2 w-32">Role</th>
               <th className="text-right px-3 py-2 w-32">Actions</th>
             </tr>
@@ -463,7 +463,7 @@ function ExpandedDetail({
             <Field label="Team Name">
               <Input value={team} onChange={(e) => setTeam(e.target.value)} onBlur={commitBasic} />
             </Field>
-            <Field label="Representative">
+            <Field label="Country">
               <Input value={rep} onChange={(e) => setRep(e.target.value)} onBlur={commitBasic} />
             </Field>
           </div>
@@ -1002,7 +1002,7 @@ function NewParticipantCard({
                 placeholder="팀명"
               />
             </Field>
-            <Field label="Representative">
+            <Field label="Country">
               <Input
                 value={draft.representative}
                 onChange={(e) => setField('representative', e.target.value)}

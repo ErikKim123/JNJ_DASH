@@ -78,6 +78,7 @@ export function ContestForm({
       const v = initial?.join_accent ?? '';
       return /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(v) ? v : '';
     })(),
+    sns_url: initial?.sns_url ?? '',
   });
 
   function updateBackgroundOpacity(value: number) {
@@ -335,6 +336,22 @@ export function ContestForm({
           <Input value={form.tagline} onChange={(e) => update('tagline', e.target.value)} />
         </Field>
       </div>
+
+      <section className="rounded border border-border bg-panel/40 p-4">
+        <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+          <h3 className="text-sm font-semibold">{t('cf.snsTitle')}</h3>
+          <span className="text-xs text-ink2">{t('cf.snsMeta')}</span>
+        </div>
+        <Field label={t('cf.snsLabel')} hint={t('cf.snsHint')}>
+          <Input
+            type="url"
+            value={form.sns_url}
+            onChange={(e) => update('sns_url', e.target.value)}
+            placeholder="https://open.kakao.com/o/..."
+            maxLength={2000}
+          />
+        </Field>
+      </section>
 
       <JoinThemeSection
         presetKey={form.join_theme}

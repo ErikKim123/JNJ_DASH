@@ -141,6 +141,11 @@ export const MESSAGES_EN = {
   'cf.festivalHeader': 'Festival Header (display)',
   'cf.festivalHeaderHint': 'Defaults to contest name if blank',
   'cf.tagline': 'Tagline (display)',
+  // SNS room
+  'cf.snsTitle': 'SNS Room (Community Chat)',
+  'cf.snsMeta': 'Shown as a join button on the registration-complete screen',
+  'cf.snsLabel': 'SNS Room Link',
+  'cf.snsHint': 'e.g. KakaoTalk open chat, WhatsApp/Telegram invite. Leave empty to show "Coming soon".',
   // Tone & Manner (JOIN app theme)
   'cf.themeTitle': 'JOIN App Tone & Manner',
   'cf.themeMeta': 'Applies across the whole JOIN flow (landing / list / form / done)',
@@ -362,6 +367,11 @@ export const MESSAGES_KO: Record<MessageKey, string> = {
   'cf.festivalHeader': '페스티벌 헤더 (표출)',
   'cf.festivalHeaderHint': '비워두면 대회명이 사용됩니다',
   'cf.tagline': '태그라인 (표출)',
+  // SNS room
+  'cf.snsTitle': 'SNS 방 (커뮤니티 채팅)',
+  'cf.snsMeta': '등록 완료 화면에 참여 버튼으로 노출됩니다',
+  'cf.snsLabel': 'SNS 방 링크',
+  'cf.snsHint': '예: 카카오톡 오픈채팅, WhatsApp/Telegram 초대 링크. 비워두면 "준비중"으로 표시됩니다.',
   // Tone & Manner (JOIN app theme)
   'cf.themeTitle': 'JOIN 앱 톤앤매너',
   'cf.themeMeta': 'JOIN 전체(랜딩/목록/등록폼/완료)에 적용됩니다',

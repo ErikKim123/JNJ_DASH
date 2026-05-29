@@ -188,6 +188,11 @@ export default async function CompetitionsPage({ searchParams }: PageProps) {
     : DEFAULT_JOIN_THEME;
   const root = joinRootProps(theme);
 
+  // 트로피 → 그룹 안이면 그 그룹 목록(현재 화면), 그룹 밖이면 전체 그룹 목록.
+  const trophyHref = selectedGroup
+    ? `/join/competitions?group=${encodeURIComponent(selectedGroup)}`
+    : '/join/competitions';
+
   return (
     <main
       style={{
@@ -198,7 +203,7 @@ export default async function CompetitionsPage({ searchParams }: PageProps) {
       className={root.className}
     >
       <div style={{ maxWidth: 480, margin: '0 auto' }}>
-        <TopNav variant={root.mode === 'dark' ? 'dark' : 'light'} homeHref="/join" />
+        <TopNav variant={root.mode === 'dark' ? 'dark' : 'light'} trophyHref={trophyHref} />
 
         {selectedGroup === null
           ? renderGroupList(contests, keyOf, labelOf, origin)

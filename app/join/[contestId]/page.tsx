@@ -26,6 +26,10 @@ export default async function JoinFormPage({
   if (!contest) notFound();
   const theme = contestTheme(contest);
   const root = joinRootProps(theme);
+  // 트로피 → 이 대회가 속한 그룹의 목록 화면(그룹 없으면 전체 그룹 목록).
+  const trophyHref = contest.group_name?.trim()
+    ? `/join/competitions?group=${encodeURIComponent(contest.group_name.trim())}`
+    : '/join/competitions';
   // ready 상태에서만 등록 가능. archived 는 목록에서 이미 숨김.
   if (contest.status !== 'ready') {
     const reason =
@@ -37,7 +41,7 @@ export default async function JoinFormPage({
         className={root.className}
         style={{ padding: '24px 20px', maxWidth: 480, margin: '0 auto', minHeight: '100dvh', ...root.style }}
       >
-        <TopNav variant={root.mode === 'dark' ? 'dark' : 'light'} homeHref="/join" />
+        <TopNav variant={root.mode === 'dark' ? 'dark' : 'light'} trophyHref={trophyHref} />
         <div
           className="jnj-card"
           style={{
@@ -80,7 +84,7 @@ export default async function JoinFormPage({
       }}
     >
       <div style={{ maxWidth: 480, margin: '0 auto' }}>
-        <TopNav variant={root.mode === 'dark' ? 'dark' : 'light'} homeHref="/join" />
+        <TopNav variant={root.mode === 'dark' ? 'dark' : 'light'} trophyHref={trophyHref} />
 
         <div
           style={{

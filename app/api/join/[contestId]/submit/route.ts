@@ -18,6 +18,10 @@ import type { ContestRow } from '@/lib/db/types';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+// 확인 메일 발송 ON/OFF. 현재 운영 정책상 비활성 — 등록 완료 화면의 참가 번호로 안내.
+// 다시 켜려면 true 로 변경 (sendConfirmation 로직은 그대로 보존).
+const CONFIRMATION_EMAIL_ENABLED = false;
+
 const RoleEnum = z.enum(['leader', 'follower', 'helper_leader', 'helper_follower']);
 
 // PROFILE 화이트리스트 — admin ParticipantsTable.PROFILE_FIELDS 와 동일 키.
@@ -107,13 +111,17 @@ export async function POST(req: Request, ctx: RouteCtx) {
         .select('*')
         .single();
       if (err2) return NextResponse.json({ error: err2.message }, { status: 500 });
-      const emailResult2 = await dispatchConfirmation(contest, data2, cleanMeta);
-      return NextResponse.json({ data: data2, email: emailResult2 }, { status: 201 });
+      const emailResult2 = CONFIRMATION_EMAIL_ENABLED
+        ? await dispatchConfirmation(contest, data2, cleanMeta)
+        : undefined;
+      return NextResponse.json(emailResult2 ? { data: data2, email: emailResult2 } : { data: data2 }, { status: 201 });
     }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  const emailResult = await dispatchConfirmation(contest, data, cleanMeta);
-  return NextResponse.json({ data, email: emailResult }, { status: 201 });
+  const emailResult = CONFIRMATION_EMAIL_ENABLED
+    ? await dispatchConfirmation(contest, data, cleanMeta)
+    : undefined;
+  return NextResponse.json(emailResult ? { data, email: emailResult } : { data }, { status: 201 });
 }
 
 // 등록 성공 후 확인 메일 발송. PROFILE.이메일 우선, 미입력이면 skip.

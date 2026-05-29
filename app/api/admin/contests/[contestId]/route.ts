@@ -46,6 +46,7 @@ const PatchSchema = z.object({
   join_accent: z
     .union([z.literal(''), z.string().regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, 'accent 는 #RGB 또는 #RRGGBB hex')])
     .optional(),
+  sns_url: z.union([z.literal(''), z.string().url().max(2000)]).optional(),
   prelim_status: RoundStatusEnum.optional(),
   semi_status: RoundStatusEnum.optional(),
   final_status: RoundStatusEnum.optional(),

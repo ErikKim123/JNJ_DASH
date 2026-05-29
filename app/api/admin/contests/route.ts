@@ -54,6 +54,7 @@ const CreateContestSchema = z.object({
     .union([z.literal(''), z.string().regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, 'accent 는 #RGB 또는 #RRGGBB hex')])
     .optional()
     .default(''),
+  sns_url: z.union([z.literal(''), z.string().url().max(2000)]).optional().default(''),
 });
 
 export async function GET() {
