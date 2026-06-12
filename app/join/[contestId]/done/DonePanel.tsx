@@ -92,8 +92,9 @@ export function DonePanel({
         {/* 결제/그룹채팅 안내 — EN/KO 토글과 무관하게 영어로만 표시. */}
         <p style={{ marginTop: 12, fontSize: 14, lineHeight: 1.6, color: 'var(--jnj-text-muted)' }}>
           Your confirmation e-mail has been sent by <strong>bandnara123@gmail.com</strong>.
-          Please join the Whatsapp group chat and make your payments for J&amp;J
-          (if you haven&apos;t already) through the links in the e-mail.
+          Please join the Whatsapp group chat and make your payments
+          <br />
+          for J&amp;J (if you haven&apos;t already) through the links in the e-mail.
         </p>
       </div>
 
