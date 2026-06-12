@@ -328,7 +328,7 @@ export function JoinForm({
                   value={draft.meta[f.key] ?? ''}
                   onChange={(v) => setMeta(f.key, v)}
                   placeholder={f.placeholder ? f.placeholder[lang] : ''}
-                  defaultDial="82"
+                  defaultDial="84"
                 />
               ) : f.type === 'select' && f.options ? (
                 <select
