@@ -18,9 +18,9 @@ import type { ContestRow } from '@/lib/db/types';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-// 확인 메일 발송 ON/OFF. 현재 운영 정책상 비활성 — 등록 완료 화면의 참가 번호로 안내.
-// 다시 켜려면 true 로 변경 (sendConfirmation 로직은 그대로 보존).
-const CONFIRMATION_EMAIL_ENABLED = false;
+// 확인 메일 발송 ON/OFF. Brevo 무료 플랜(일 300통) 기준으로 운영.
+// 끄려면 false 로 변경 (sendConfirmation 로직은 그대로 보존).
+const CONFIRMATION_EMAIL_ENABLED = true;
 
 const RoleEnum = z.enum(['leader', 'follower', 'helper_leader', 'helper_follower']);
 
