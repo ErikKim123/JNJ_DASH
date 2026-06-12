@@ -17,6 +17,9 @@ export interface ConfirmationVars {
 // done 화면 안내와 동일한 발신자 주소.
 const SENDER_DISPLAY = 'bandnara123@gmail.com';
 
+// 참가비 결제 페이지 링크 (done 화면 버튼과 동일).
+const PAYMENT_URL = 'https://phuquocsummerlatinfest.com/jj-competition-battle-2026';
+
 export function buildSubject(v: ConfirmationVars): string {
   // 제목은 ASCII 문자만 사용 — '·'(U+00B7) 같은 비ASCII 문자는 일부 메일
   // 클라이언트에서 글자 깨짐(mojibake)을 유발하므로 '-' 로 표기.
@@ -35,6 +38,8 @@ export function buildTextBody(v: ConfirmationVars): string {
     meta ? meta : '',
     ``,
     `Please arrive 30 minutes before the contest starts. Tell the staff your participant number at check-in.`,
+    ``,
+    `Make your payment: ${PAYMENT_URL}`,
     ``,
     `JNJ JOIN`,
   ]
@@ -125,6 +130,15 @@ export function buildHtmlBody(v: ConfirmationVars): string {
                   <br/>
                   Tell the staff your <strong>participant number</strong> at check-in.
                 </p>
+              </td>
+            </tr>
+            <!-- 결제 버튼 -->
+            <tr>
+              <td style="padding:24px 28px 0 28px;">
+                <a href="${escapeHtml(PAYMENT_URL)}" target="_blank" rel="noopener noreferrer"
+                   style="display:block;background:#E11D2A;color:#FFFFFF;text-align:center;text-decoration:none;font-size:16px;font-weight:700;padding:16px 20px;border-radius:9999px;">
+                  Make Your Payment
+                </a>
               </td>
             </tr>
             <!-- 푸터 -->
