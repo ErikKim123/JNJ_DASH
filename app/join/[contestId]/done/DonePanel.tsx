@@ -7,6 +7,9 @@ import Link from 'next/link';
 
 type Lang = 'en' | 'ko';
 
+// 참가비 결제 페이지 링크.
+const PAYMENT_URL = 'https://phuquocsummerlatinfest.com/jj-competition-battle-2026';
+
 export function DonePanel({
   contestId,
   num,
@@ -147,6 +150,19 @@ export function DonePanel({
         </p>
       </div>
 
+      {/* 참가비 결제 버튼 */}
+      <div style={{ marginTop: 24 }}>
+        <a
+          href={PAYMENT_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="jnj-btn jnj-btn-primary jnj-btn-full jnj-btn-lg"
+        >
+          <PaymentIcon />
+          {lang === 'en' ? 'Make Your Payment' : '참가비 결제하기'}
+        </a>
+      </div>
+
       {/* SNS 방 참여 — 활성(토글 ON + URL) 일 때만 노출, 비활성이면 완전 숨김 */}
       {showSns && (
         <div style={{ marginTop: 24 }}>
@@ -174,6 +190,15 @@ export function DonePanel({
         {lang === 'en' ? 'Back to Competitions' : '대회 목록으로'}
       </Link>
     </div>
+  );
+}
+
+function PaymentIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="2" y="5" width="20" height="14" rx="2" />
+      <line x1="2" y1="10" x2="22" y2="10" />
+    </svg>
   );
 }
 
