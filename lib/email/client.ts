@@ -65,7 +65,8 @@ export async function sendViaBrevo(
       method: 'POST',
       headers: {
         'api-key': apiKey,
-        'content-type': 'application/json',
+        // charset 명시 — 대회명/참가자명에 한글이 섞여도 제목·본문이 깨지지 않게.
+        'content-type': 'application/json; charset=utf-8',
         accept: 'application/json',
       },
       body: JSON.stringify(payload),

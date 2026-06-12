@@ -1,4 +1,4 @@
-// 이메일 본문 템플릿 — 한국어 + 영어 병기.
+// 이메일 본문 템플릿 — 영어 전용.
 // 외부 의존성 없이 inline-style HTML 로 작성 (메일 클라이언트 호환성).
 
 export interface ConfirmationVars {
@@ -15,19 +15,13 @@ export interface ConfirmationVars {
 }
 
 export function buildSubject(v: ConfirmationVars): string {
-  return `[${v.contestName}] 참가 접수 완료 · Entry confirmed · No. ${v.num}`;
+  // 제목은 ASCII 문자만 사용 — '·'(U+00B7) 같은 비ASCII 문자는 일부 메일
+  // 클라이언트에서 글자 깨짐(mojibake)을 유발하므로 '-' 로 표기.
+  return `[${v.contestName}] Entry confirmed - No. ${v.num}`;
 }
 
 export function buildTextBody(v: ConfirmationVars): string {
   return [
-    `안녕하세요 ${v.displayName} 님,`,
-    ``,
-    `${v.contestName} 참가 신청이 정상적으로 접수되었습니다.`,
-    `대회 시작 10분 전에 도착해 주세요. 참가 번호는 ${v.num} 번입니다.`,
-    v.period ? `대회 일정: ${v.period}` : '',
-    ``,
-    `— English —`,
-    ``,
     `Hello ${v.displayName},`,
     ``,
     `Your entry to ${v.contestName} has been received.`,
@@ -43,7 +37,7 @@ export function buildTextBody(v: ConfirmationVars): string {
 export function buildHtmlBody(v: ConfirmationVars): string {
   // 메일 클라이언트는 <link>, <style> 차단이 흔해 inline style 만 사용.
   return /* html */ `<!doctype html>
-<html lang="ko">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -60,15 +54,14 @@ export function buildHtmlBody(v: ConfirmationVars): string {
                   JNJ JOIN · ${escapeHtml(v.contestId)}
                 </div>
                 <h1 style="margin:12px 0 0 0;font-family:Oswald,'Helvetica Neue',Arial,sans-serif;font-size:28px;line-height:1.1;letter-spacing:-0.01em;text-transform:uppercase;color:#111111;">
-                  Entry Confirmed.<br/>
-                  참가 접수 완료.
+                  Entry Confirmed.
                 </h1>
               </td>
             </tr>
             <tr>
               <td style="padding:24px 28px 0 28px;">
                 <div style="font-size:13px;color:#707072;letter-spacing:0.05em;text-transform:uppercase;font-weight:600;margin-bottom:6px;">
-                  PARTICIPANT NUMBER · 참가 번호
+                  PARTICIPANT NUMBER
                 </div>
                 <div style="font-family:Oswald,'Helvetica Neue',Arial,sans-serif;font-size:64px;line-height:1;color:#111111;letter-spacing:-0.02em;font-weight:600;">
                   No. ${escapeHtml(v.num)}
@@ -76,42 +69,18 @@ export function buildHtmlBody(v: ConfirmationVars): string {
               </td>
             </tr>
             <tr>
-              <td style="padding:24px 28px 0 28px;">
+              <td style="padding:24px 28px 28px 28px;">
                 <p style="margin:0 0 12px 0;font-size:16px;line-height:1.6;color:#111111;">
-                  ${escapeHtml(v.displayName)} 님, <strong>${escapeHtml(v.contestName)}</strong> 참가 신청이
-                  정상적으로 접수되었습니다.
+                  Hello ${escapeHtml(v.displayName)}, your entry to
+                  <strong>${escapeHtml(v.contestName)}</strong> has been received.
                 </p>
                 <p style="margin:0 0 4px 0;font-size:16px;line-height:1.6;color:#111111;">
-                  <strong>대회 시작 10분 전</strong>에 도착해 주세요. 참가 번호는
-                  <strong>${escapeHtml(v.num)}</strong> 번입니다.
-                </p>
-                ${
-                  v.period
-                    ? `<p style="margin:8px 0 0 0;font-size:14px;color:#707072;">일정 · ${escapeHtml(v.period)}</p>`
-                    : ''
-                }
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:20px 28px 0 28px;">
-                <hr style="border:none;border-top:1px solid #E5E5E5;margin:0;" />
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:16px 28px 28px 28px;">
-                <p style="margin:0 0 8px 0;font-size:14px;line-height:1.6;color:#4B4B4D;">
-                  Hello ${escapeHtml(v.displayName)},
-                </p>
-                <p style="margin:0 0 8px 0;font-size:14px;line-height:1.6;color:#4B4B4D;">
-                  Your entry to <strong>${escapeHtml(v.contestName)}</strong> has been received.
-                </p>
-                <p style="margin:0 0 4px 0;font-size:14px;line-height:1.6;color:#4B4B4D;">
                   Please arrive <strong>10 minutes</strong> before the competition starts.
                   Your participant number is <strong>${escapeHtml(v.num)}</strong>.
                 </p>
                 ${
                   v.period
-                    ? `<p style="margin:8px 0 0 0;font-size:13px;color:#707072;">Schedule · ${escapeHtml(v.period)}</p>`
+                    ? `<p style="margin:8px 0 0 0;font-size:14px;color:#707072;">Schedule · ${escapeHtml(v.period)}</p>`
                     : ''
                 }
               </td>
