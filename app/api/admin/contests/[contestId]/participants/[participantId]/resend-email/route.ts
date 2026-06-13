@@ -44,6 +44,7 @@ export async function POST(_req: Request, ctx: RouteCtx) {
     period,
     // SNS 방이 활성일 때만 링크 전달 (done 화면 노출 조건과 동일).
     snsUrl: contest.sns_enabled ? contest.sns_url : '',
+    paymentUrl: contest.payment_url,
   });
   if (!result.sent) {
     return NextResponse.json({ ...result, to }, { status: 502 });

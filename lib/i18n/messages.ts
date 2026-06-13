@@ -148,6 +148,10 @@ export const MESSAGES_EN = {
   'cf.snsEnabledOff': 'Disabled',
   'cf.snsLabel': 'SNS Room Link',
   'cf.snsHint': 'e.g. KakaoTalk open chat, WhatsApp/Telegram invite. When disabled, the button is hidden on the registration-complete screen.',
+  // Payment link
+  'cf.payTitle': 'Payment Link',
+  'cf.payLabel': 'Payment Page Link',
+  'cf.payHint': 'Participation-fee payment page. Shown as the "Make Your Payment" button on the registration-complete screen and in the confirmation e-mail. Leave empty to hide the button.',
   // Tone & Manner (JOIN app theme)
   'cf.themeTitle': 'JOIN App Tone & Manner',
   'cf.themeMeta': 'Applies across the whole JOIN flow (landing / list / form / done)',
@@ -376,6 +380,10 @@ export const MESSAGES_KO: Record<MessageKey, string> = {
   'cf.snsEnabledOff': '비활성',
   'cf.snsLabel': 'SNS 방 링크',
   'cf.snsHint': '예: 카카오톡 오픈채팅, WhatsApp/Telegram 초대 링크. 비활성이면 등록 완료 화면에서 버튼이 숨겨집니다.',
+  // Payment link
+  'cf.payTitle': '결제 링크',
+  'cf.payLabel': '결제 페이지 링크',
+  'cf.payHint': '참가비 결제 페이지. 등록 완료 화면과 확인 메일에서 "참가비 결제하기" 버튼으로 노출됩니다. 비워두면 버튼이 숨겨집니다.',
   // Tone & Manner (JOIN app theme)
   'cf.themeTitle': 'JOIN 앱 톤앤매너',
   'cf.themeMeta': 'JOIN 전체(랜딩/목록/등록폼/완료)에 적용됩니다',

@@ -14,10 +14,9 @@ export interface ConfirmationVars {
   period: string;
   /** SNS 방(커뮤니티 채팅) 링크. 빈 문자열이면 버튼 숨김. */
   snsUrl?: string;
+  /** 참가비 결제 페이지 링크. 빈 문자열이면 결제 버튼 숨김. */
+  paymentUrl?: string;
 }
-
-// 참가비 결제 페이지 링크 (done 화면 버튼과 동일).
-const PAYMENT_URL = 'https://phuquocsummerlatinfest.com/jj-competition-battle-2026';
 
 export function buildSubject(v: ConfirmationVars): string {
   // 제목은 ASCII 문자만 사용 — '·'(U+00B7) 같은 비ASCII 문자는 일부 메일
@@ -27,14 +26,15 @@ export function buildSubject(v: ConfirmationVars): string {
 
 export function buildTextBody(v: ConfirmationVars): string {
   const sns = isValidUrl(v.snsUrl);
+  const pay = isValidUrl(v.paymentUrl);
   return [
     `Hello ${v.displayName},`,
     ``,
     `Your entry to ${v.contestName} has been received.`,
     `Please arrive 30 minutes before the competition starts. Your participant number is ${v.num}.`,
-    ``,
-    `To complete your registration, please make your participation-fee payment here:`,
-    PAYMENT_URL,
+    ...(pay
+      ? ['', `To complete your registration, please make your participation-fee payment here:`, v.paymentUrl as string]
+      : []),
     ...(sns
       ? ['', `Join the group chat for more info:`, v.snsUrl as string]
       : []),
@@ -48,6 +48,7 @@ export function buildTextBody(v: ConfirmationVars): string {
 export function buildHtmlBody(v: ConfirmationVars): string {
   // 메일 클라이언트는 <link>, <style> 차단이 흔해 inline style 만 사용.
   const sns = isValidUrl(v.snsUrl);
+  const pay = isValidUrl(v.paymentUrl);
   return /* html */ `<!doctype html>
 <html lang="en">
   <head>
@@ -94,7 +95,9 @@ export function buildHtmlBody(v: ConfirmationVars): string {
                 </p>
               </td>
             </tr>
-            <!-- 결제 버튼 -->
+            ${
+              pay
+                ? /* html */ `<!-- 결제 버튼 -->
             <tr>
               <td style="padding:20px 28px 28px 28px;">
                 <p style="margin:0 0 12px 0;font-size:14px;line-height:1.6;color:#707072;">
@@ -103,7 +106,7 @@ export function buildHtmlBody(v: ConfirmationVars): string {
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                   <tr>
                     <td align="center" bgcolor="#E11D2A" style="border-radius:9999px;">
-                      <a href="${escapeHtml(PAYMENT_URL)}" target="_blank" rel="noopener noreferrer"
+                      <a href="${escapeHtml(v.paymentUrl as string)}" target="_blank" rel="noopener noreferrer"
                          style="display:block;color:#FFFFFF;text-align:center;text-decoration:none;font-size:16px;font-weight:700;padding:16px 20px;border-radius:9999px;">
                         Make Your Payment
                       </a>
@@ -111,7 +114,9 @@ export function buildHtmlBody(v: ConfirmationVars): string {
                   </tr>
                 </table>
               </td>
-            </tr>
+            </tr>`
+                : ''
+            }
             ${
               sns
                 ? /* html */ `<!-- SNS 방(커뮤니티 채팅) 버튼 -->

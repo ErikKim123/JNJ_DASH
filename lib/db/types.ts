@@ -60,6 +60,8 @@ export interface ContestRow {
   sns_url: string;
   /** SNS 방 참여 버튼 노출 여부. false 면 done 화면에서 버튼을 렌더하지 않음. */
   sns_enabled: boolean;
+  /** 참가비 결제 페이지 링크. 비어있으면 done 화면·메일에서 결제 버튼을 숨김. */
+  payment_url: string;
   created_at: string;
   updated_at: string;
 }

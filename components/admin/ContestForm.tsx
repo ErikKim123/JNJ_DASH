@@ -80,6 +80,7 @@ export function ContestForm({
     })(),
     sns_url: initial?.sns_url ?? '',
     sns_enabled: initial?.sns_enabled ?? false,
+    payment_url: initial?.payment_url ?? '',
   });
 
   function updateBackgroundOpacity(value: number) {
@@ -370,6 +371,21 @@ export function ContestForm({
             placeholder="https://open.kakao.com/o/..."
             maxLength={2000}
             disabled={!form.sns_enabled}
+          />
+        </Field>
+      </section>
+
+      <section className="rounded border border-border bg-panel/40 p-4">
+        <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+          <h3 className="text-sm font-semibold">{t('cf.payTitle')}</h3>
+        </div>
+        <Field label={t('cf.payLabel')} hint={t('cf.payHint')}>
+          <Input
+            type="url"
+            value={form.payment_url}
+            onChange={(e) => update('payment_url', e.target.value)}
+            placeholder="https://..."
+            maxLength={2000}
           />
         </Field>
       </section>

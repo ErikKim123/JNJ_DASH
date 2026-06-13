@@ -47,6 +47,7 @@ export default async function DonePage({
         backHref={backHref}
         snsUrl={contest?.sns_url ?? ''}
         snsEnabled={contest?.sns_enabled ?? false}
+        paymentUrl={contest?.payment_url ?? ''}
       />
     </main>
   );
