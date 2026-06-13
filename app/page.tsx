@@ -19,6 +19,14 @@ export default function HomePage() {
           <p className="text-xs text-ink2 font-mono tracking-widest uppercase">
             DANCE · COMPETITION · DASHBOARD
           </p>
+          <a
+            href="https://jnj-vote.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs font-mono tracking-widest uppercase px-3 py-1.5 rounded border border-border text-ink2 hover:text-ink hover:border-ink transition"
+          >
+            Vote App ↗
+          </a>
           <Link
             href="/join"
             target="_blank"
