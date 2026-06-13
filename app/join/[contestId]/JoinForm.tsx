@@ -49,7 +49,7 @@ const PROFILE_FIELDS: {
   { key: 'Division', label: { ko: '구분', en: 'Division' }, type: 'select', options: DIVISION_OPTIONS, placeholder: { ko: '구분 선택', en: 'Select division' } },
   { key: '연락처', label: { ko: '연락처', en: 'WhatsApp Number' }, placeholder: { ko: '010-0000-0000', en: '10-1234-5678' }, type: 'whatsapp' },
   { key: '이메일', label: { ko: '이메일', en: 'Email' }, placeholder: { ko: 'name@example.com', en: 'name@example.com' }, type: 'email' },
-  { key: '접수일', label: { ko: '접수일', en: 'Submitted Date' }, type: 'date' },
+  // '접수일'은 폼에 노출하지 않고 등록 시 자동으로 오늘 날짜로 저장된다(meta 초기값).
   { key: 'X', label: { ko: '인스타 (@)', en: 'Instagram (@)' }, placeholder: { ko: '@your_id', en: '@your_id' } },
 ];
 
