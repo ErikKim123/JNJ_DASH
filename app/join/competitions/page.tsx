@@ -296,18 +296,9 @@ function renderContestList(
         }}
       >
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ marginBottom: 8, marginTop: 12 }}>
-            <Link
-              href="/join/competitions"
-              className="jnj-caption"
-              style={{ color: 'var(--jnj-text-muted)', textDecoration: 'none' }}
-            >
-              ← All groups
-            </Link>
-          </div>
           <h1
             className="jnj-display"
-            style={{ fontSize: 'clamp(36px, 11vw, 52px)', marginBottom: 8 }}
+            style={{ fontSize: 'clamp(36px, 11vw, 52px)', marginTop: 12, marginBottom: 8 }}
           >
             {groupLabel}
           </h1>
@@ -398,18 +389,12 @@ function renderContestList(
                     <div
                       className="jnj-h2"
                       style={{
-                        marginBottom: 10,
+                        marginBottom: 0,
                         lineHeight: 1.2,
                         color: isOpen ? 'var(--jnj-text)' : 'var(--jnj-text-muted)',
                       }}
                     >
                       {c.name}
-                    </div>
-                    <div
-                      className="jnj-caption"
-                      style={{ color: 'var(--jnj-text-muted)' }}
-                    >
-                      {c.period_start ? `${c.period_start} ~ ${c.period_end ?? ''}` : 'Date TBD'}
                     </div>
                   </div>
                   <div
