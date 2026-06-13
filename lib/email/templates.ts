@@ -32,12 +32,11 @@ export function buildTextBody(v: ConfirmationVars): string {
     ``,
     `Your entry to ${v.contestName} has been received.`,
     `Please arrive 30 minutes before the competition starts. Your participant number is ${v.num}.`,
-    v.period ? `Schedule: ${v.period}` : '',
     ``,
     `To complete your registration, please make your participation-fee payment here:`,
     PAYMENT_URL,
     ...(sns
-      ? ['', `Join the community chat for more info:`, v.snsUrl as string]
+      ? ['', `Join the group chat for more info:`, v.snsUrl as string]
       : []),
     ``,
     `JNJ JOIN`,
@@ -93,11 +92,6 @@ export function buildHtmlBody(v: ConfirmationVars): string {
                   Please arrive <strong>30 minutes</strong> before the competition starts.
                   Your participant number is <strong>${escapeHtml(v.num)}</strong>.
                 </p>
-                ${
-                  v.period
-                    ? `<p style="margin:8px 0 0 0;font-size:14px;color:#707072;">Schedule · ${escapeHtml(v.period)}</p>`
-                    : ''
-                }
               </td>
             </tr>
             <!-- 결제 버튼 -->
@@ -124,14 +118,14 @@ export function buildHtmlBody(v: ConfirmationVars): string {
             <tr>
               <td style="padding:0 28px 28px 28px;">
                 <p style="margin:0 0 12px 0;font-size:14px;line-height:1.6;color:#707072;">
-                  Join the community chat for schedule updates and more info.
+                  Join the group chat for schedule updates and more info.
                 </p>
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                   <tr>
                     <td align="center" bgcolor="#111111" style="border-radius:9999px;">
                       <a href="${escapeHtml(v.snsUrl as string)}" target="_blank" rel="noopener noreferrer"
                          style="display:block;color:#FFFFFF;text-align:center;text-decoration:none;font-size:16px;font-weight:700;padding:16px 20px;border-radius:9999px;">
-                        Join the Community Chat
+                        Join the Group Chat
                       </a>
                     </td>
                   </tr>
