@@ -49,6 +49,7 @@ const PatchSchema = z.object({
   sns_url: z.union([z.literal(''), z.string().url().max(2000)]).optional(),
   sns_enabled: z.boolean().optional(),
   payment_url: z.union([z.literal(''), z.string().url().max(2000)]).optional(),
+  payment_enabled: z.boolean().optional(),
   prelim_status: RoundStatusEnum.optional(),
   semi_status: RoundStatusEnum.optional(),
   final_status: RoundStatusEnum.optional(),

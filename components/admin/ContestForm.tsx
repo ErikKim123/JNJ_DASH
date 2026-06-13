@@ -81,6 +81,7 @@ export function ContestForm({
     sns_url: initial?.sns_url ?? '',
     sns_enabled: initial?.sns_enabled ?? false,
     payment_url: initial?.payment_url ?? '',
+    payment_enabled: initial?.payment_enabled ?? true,
   });
 
   function updateBackgroundOpacity(value: number) {
@@ -378,6 +379,26 @@ export function ContestForm({
       <section className="rounded border border-border bg-panel/40 p-4">
         <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
           <h3 className="text-sm font-semibold">{t('cf.payTitle')}</h3>
+          {/* 활성/비활성 토글 — 비활성이면 done 화면·메일 결제 버튼이 숨겨짐 */}
+          <button
+            type="button"
+            role="switch"
+            aria-checked={form.payment_enabled}
+            onClick={() => update('payment_enabled', !form.payment_enabled)}
+            className="inline-flex items-center gap-2 text-xs"
+          >
+            <span className="text-ink2">
+              {form.payment_enabled ? t('cf.payEnabledOn') : t('cf.payEnabledOff')}
+            </span>
+            <span
+              className={`relative w-9 h-5 rounded-full transition ${form.payment_enabled ? 'bg-accent' : 'bg-border'}`}
+            >
+              <span
+                className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition"
+                style={{ transform: form.payment_enabled ? 'translateX(16px)' : 'translateX(0)' }}
+              />
+            </span>
+          </button>
         </div>
         <Field label={t('cf.payLabel')} hint={t('cf.payHint')}>
           <Input
@@ -386,6 +407,7 @@ export function ContestForm({
             onChange={(e) => update('payment_url', e.target.value)}
             placeholder="https://..."
             maxLength={2000}
+            disabled={!form.payment_enabled}
           />
         </Field>
       </section>

@@ -16,6 +16,7 @@ export function DonePanel({
   snsUrl,
   snsEnabled,
   paymentUrl,
+  paymentEnabled,
 }: {
   contestId: string;
   num: string;
@@ -25,12 +26,13 @@ export function DonePanel({
   snsUrl: string;
   snsEnabled: boolean;
   paymentUrl: string;
+  paymentEnabled: boolean;
 }) {
   const [lang, setLang] = useState<Lang>('en');
   // 활성(토글 ON) + 유효 URL 일 때만 버튼 노출. 비활성이면 섹션 자체를 숨김.
   const showSns = snsEnabled && /^https?:\/\//i.test(snsUrl);
-  // 결제 링크가 유효 URL 일 때만 결제 버튼 노출.
-  const showPay = /^https?:\/\//i.test(paymentUrl);
+  // 활성(토글 ON) + 유효 URL 일 때만 결제 버튼 노출.
+  const showPay = paymentEnabled && /^https?:\/\//i.test(paymentUrl);
 
   return (
     <div
