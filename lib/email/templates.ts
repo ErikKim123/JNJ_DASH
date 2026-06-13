@@ -12,6 +12,8 @@ export interface ConfirmationVars {
   contestId: string;
   /** 대회 기간 — 'YYYY-MM-DD ~ YYYY-MM-DD' 등. 빈 문자열 허용. */
   period: string;
+  /** SNS 방(커뮤니티 채팅) 링크. 빈 문자열이면 버튼 숨김. */
+  snsUrl?: string;
 }
 
 // 참가비 결제 페이지 링크 (done 화면 버튼과 동일).
@@ -24,6 +26,7 @@ export function buildSubject(v: ConfirmationVars): string {
 }
 
 export function buildTextBody(v: ConfirmationVars): string {
+  const sns = isValidUrl(v.snsUrl);
   return [
     `Hello ${v.displayName},`,
     ``,
@@ -33,6 +36,9 @@ export function buildTextBody(v: ConfirmationVars): string {
     ``,
     `To complete your registration, please make your participation-fee payment here:`,
     PAYMENT_URL,
+    ...(sns
+      ? ['', `Join the community chat for more info:`, v.snsUrl as string]
+      : []),
     ``,
     `JNJ JOIN`,
   ]
@@ -42,6 +48,7 @@ export function buildTextBody(v: ConfirmationVars): string {
 
 export function buildHtmlBody(v: ConfirmationVars): string {
   // 메일 클라이언트는 <link>, <style> 차단이 흔해 inline style 만 사용.
+  const sns = isValidUrl(v.snsUrl);
   return /* html */ `<!doctype html>
 <html lang="en">
   <head>
@@ -111,6 +118,28 @@ export function buildHtmlBody(v: ConfirmationVars): string {
                 </table>
               </td>
             </tr>
+            ${
+              sns
+                ? /* html */ `<!-- SNS 방(커뮤니티 채팅) 버튼 -->
+            <tr>
+              <td style="padding:0 28px 28px 28px;">
+                <p style="margin:0 0 12px 0;font-size:14px;line-height:1.6;color:#707072;">
+                  Join the community chat for schedule updates and more info.
+                </p>
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td align="center" bgcolor="#111111" style="border-radius:9999px;">
+                      <a href="${escapeHtml(v.snsUrl as string)}" target="_blank" rel="noopener noreferrer"
+                         style="display:block;color:#FFFFFF;text-align:center;text-decoration:none;font-size:16px;font-weight:700;padding:16px 20px;border-radius:9999px;">
+                        Join the Community Chat
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>`
+                : ''
+            }
           </table>
           <p style="font-size:11px;color:#9E9EA0;margin:16px 0 0 0;letter-spacing:0.05em;text-transform:uppercase;">
             JNJ DASH · Automated message
@@ -120,6 +149,11 @@ export function buildHtmlBody(v: ConfirmationVars): string {
     </table>
   </body>
 </html>`;
+}
+
+// http/https 로 시작하는 유효 URL 인지 검사 (done 화면 SNS 노출 조건과 동일).
+function isValidUrl(u?: string): boolean {
+  return !!u && /^https?:\/\//i.test(u.trim());
 }
 
 function escapeHtml(s: string): string {
