@@ -102,14 +102,6 @@ export default async function JoinFormPage({
             >
               {contest.name}
             </h1>
-            {(contest.period_start || contest.period_end) && (
-              <p
-                className="jnj-caption"
-                style={{ marginTop: 8, color: 'var(--jnj-text-muted)' }}
-              >
-                {contest.period_start} ~ {contest.period_end ?? ''}
-              </p>
-            )}
           </div>
           <a
             href={absUrl}
