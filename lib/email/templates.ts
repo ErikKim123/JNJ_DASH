@@ -1,4 +1,4 @@
-// 이메일 본문 템플릿 — 영어 전용. JOIN done(완료) 화면과 동일한 내용·룩(다크 테마).
+// 이메일 본문 템플릿 — 영어 전용. (라이트 테마 — JOIN 확인 카드와 동일한 룩)
 // 외부 의존성 없이 inline-style HTML 로 작성 (메일 클라이언트 호환성).
 
 export interface ConfirmationVars {
@@ -14,9 +14,6 @@ export interface ConfirmationVars {
   period: string;
 }
 
-// done 화면 안내와 동일한 발신자 주소.
-const SENDER_DISPLAY = 'bandnara123@gmail.com';
-
 // 참가비 결제 페이지 링크 (done 화면 버튼과 동일).
 const PAYMENT_URL = 'https://phuquocsummerlatinfest.com/jj-competition-battle-2026';
 
@@ -27,19 +24,15 @@ export function buildSubject(v: ConfirmationVars): string {
 }
 
 export function buildTextBody(v: ConfirmationVars): string {
-  const meta = [v.contestName, v.period].filter(Boolean).join(' · ');
   return [
-    `YOUR ENTRY IS CONFIRMED.`,
-    `Your registration has been received.`,
+    `Hello ${v.displayName},`,
     ``,
-    `Your confirmation e-mail has been sent by ${SENDER_DISPLAY}. Please join the Whatsapp group chat and make your payments for J&J (if you haven't already) through the links in the e-mail.`,
+    `Your entry to ${v.contestName} has been received.`,
+    `Please arrive 30 minutes before the competition starts. Your participant number is ${v.num}.`,
+    v.period ? `Schedule: ${v.period}` : '',
     ``,
-    `Participant number: No. ${v.num}`,
-    meta ? meta : '',
-    ``,
-    `Please arrive 30 minutes before the contest starts. Tell the staff your participant number at check-in.`,
-    ``,
-    `Make your payment: ${PAYMENT_URL}`,
+    `To complete your registration, please make your participation-fee payment here:`,
+    PAYMENT_URL,
     ``,
     `JNJ JOIN`,
   ]
@@ -49,7 +42,6 @@ export function buildTextBody(v: ConfirmationVars): string {
 
 export function buildHtmlBody(v: ConfirmationVars): string {
   // 메일 클라이언트는 <link>, <style> 차단이 흔해 inline style 만 사용.
-  const meta = [v.contestName, v.period].filter(Boolean).join(' · ');
   return /* html */ `<!doctype html>
 <html lang="en">
   <head>
@@ -57,99 +49,72 @@ export function buildHtmlBody(v: ConfirmationVars): string {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>${escapeHtml(buildSubject(v))}</title>
   </head>
-  <body style="margin:0;padding:0;background:#17090C;font-family:-apple-system,'Segoe UI','Helvetica Neue',Helvetica,Arial,sans-serif;color:#F3E7E8;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#17090C;padding:32px 0;">
+  <body style="margin:0;padding:0;background:#F5F5F5;font-family:-apple-system,'Segoe UI','Helvetica Neue',Helvetica,Arial,sans-serif;color:#111111;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F5F5F5;padding:24px 0;">
       <tr>
         <td align="center">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
-            <!-- 코드 -->
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#FFFFFF;border-radius:16px;overflow:hidden;border:1px solid #E5E5E5;">
             <tr>
-              <td style="padding:0 28px;">
-                <div style="font-family:'Courier New',ui-monospace,monospace;font-size:11px;letter-spacing:0.12em;color:#A48E90;text-transform:uppercase;">
-                  JNJ / ${escapeHtml(v.contestId)}
+              <td style="padding:28px 28px 8px 28px;">
+                <div style="font-family:'Courier New',ui-monospace,monospace;font-size:11px;letter-spacing:0.1em;color:#707072;text-transform:uppercase;">
+                  JNJ JOIN · ${escapeHtml(v.contestId)}
+                </div>
+                <h1 style="margin:12px 0 0 0;font-family:Oswald,'Helvetica Neue',Arial,sans-serif;font-size:28px;line-height:1.1;letter-spacing:-0.01em;text-transform:uppercase;color:#111111;">
+                  Entry Confirmed.
+                </h1>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:24px 28px 0 28px;">
+                <div style="font-size:13px;color:#707072;letter-spacing:0.05em;text-transform:uppercase;font-weight:600;margin-bottom:6px;">
+                  PARTICIPANT NUMBER
+                </div>
+                <div style="font-family:Oswald,'Helvetica Neue',Arial,sans-serif;font-size:64px;line-height:1;color:#111111;letter-spacing:-0.02em;font-weight:600;">
+                  No. ${escapeHtml(v.num)}
                 </div>
               </td>
             </tr>
-            <!-- 성공 배지 -->
             <tr>
-              <td style="padding:28px 28px 0 28px;">
-                <span style="display:inline-block;padding:8px 14px;border-radius:9999px;background:rgba(0,125,72,0.12);border:1px solid rgba(0,125,72,0.35);color:#3FCB7D;font-size:13px;font-weight:600;">
-                  &#10003;&nbsp; Entry Confirmed
-                </span>
-              </td>
-            </tr>
-            <!-- 헤더 -->
-            <tr>
-              <td style="padding:18px 28px 0 28px;">
-                <h1 style="margin:0;font-family:Oswald,'Helvetica Neue',Arial,sans-serif;font-size:44px;line-height:1.0;letter-spacing:-0.01em;text-transform:uppercase;font-weight:700;color:#F3E7E8;">
-                  Your entry is<br/>confirmed.
-                </h1>
-                <p style="margin:14px 0 0 0;font-family:'Courier New',ui-monospace,monospace;font-size:13px;letter-spacing:0.08em;color:#A48E90;text-transform:uppercase;">
-                  Your registration has been received.
+              <td style="padding:24px 28px 0 28px;">
+                <p style="margin:0 0 12px 0;font-size:16px;line-height:1.6;color:#111111;">
+                  Hello <strong>${escapeHtml(v.displayName)}</strong>,
                 </p>
-              </td>
-            </tr>
-            <!-- 안내: 메일/결제 -->
-            <tr>
-              <td style="padding:18px 28px 0 28px;">
-                <p style="margin:0;font-size:14px;line-height:1.6;color:#A48E90;">
-                  Your confirmation e-mail has been sent by
-                  <strong style="color:#F3E7E8;">${escapeHtml(SENDER_DISPLAY)}</strong>.
-                  Please join the Whatsapp group chat and make your payments
-                  for J&amp;J (if you haven&apos;t already) through the links in the e-mail.
+                <p style="margin:0 0 12px 0;font-size:16px;line-height:1.6;color:#111111;">
+                  Your entry to <strong>${escapeHtml(v.contestName)}</strong> has been received.
                 </p>
+                <p style="margin:0 0 4px 0;font-size:16px;line-height:1.6;color:#111111;">
+                  Please arrive <strong>30 minutes</strong> before the competition starts.
+                  Your participant number is <strong>${escapeHtml(v.num)}</strong>.
+                </p>
+                ${
+                  v.period
+                    ? `<p style="margin:8px 0 0 0;font-size:14px;color:#707072;">Schedule · ${escapeHtml(v.period)}</p>`
+                    : ''
+                }
               </td>
             </tr>
-            <!-- 참가 번호 카드 -->
+            <!-- 결제 버튼 -->
             <tr>
-              <td style="padding:28px 28px 0 28px;">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#251417;border:1px solid #3A2529;border-radius:16px;">
+              <td style="padding:20px 28px 28px 28px;">
+                <p style="margin:0 0 12px 0;font-size:14px;line-height:1.6;color:#707072;">
+                  To complete your registration, please make your participation-fee payment below.
+                </p>
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                   <tr>
-                    <td style="padding:22px 24px;">
-                      <div style="font-family:'Courier New',ui-monospace,monospace;font-size:11px;color:#A48E90;letter-spacing:0.12em;font-weight:600;">
-                        PARTICIPANT NUMBER
-                      </div>
-                      <div style="font-family:Oswald,'Helvetica Neue',Arial,sans-serif;font-size:64px;line-height:1;color:#F3E7E8;letter-spacing:-0.02em;font-weight:700;margin-top:8px;">
-                        No. ${escapeHtml(v.num)}
-                      </div>
-                      ${
-                        meta
-                          ? `<div style="margin-top:12px;font-size:13px;color:#A48E90;">${escapeHtml(meta)}</div>`
-                          : ''
-                      }
+                    <td align="center" bgcolor="#E11D2A" style="border-radius:9999px;">
+                      <a href="${escapeHtml(PAYMENT_URL)}" target="_blank" rel="noopener noreferrer"
+                         style="display:block;color:#FFFFFF;text-align:center;text-decoration:none;font-size:16px;font-weight:700;padding:16px 20px;border-radius:9999px;">
+                        Make Your Payment
+                      </a>
                     </td>
                   </tr>
                 </table>
               </td>
             </tr>
-            <!-- 체크인 안내 -->
-            <tr>
-              <td style="padding:22px 28px 0 28px;">
-                <p style="margin:0;font-size:16px;line-height:1.7;color:#F3E7E8;">
-                  Please arrive <strong>30 minutes before</strong> the contest starts.
-                  <br/>
-                  Tell the staff your <strong>participant number</strong> at check-in.
-                </p>
-              </td>
-            </tr>
-            <!-- 결제 버튼 -->
-            <tr>
-              <td style="padding:24px 28px 0 28px;">
-                <a href="${escapeHtml(PAYMENT_URL)}" target="_blank" rel="noopener noreferrer"
-                   style="display:block;background:#E11D2A;color:#FFFFFF;text-align:center;text-decoration:none;font-size:16px;font-weight:700;padding:16px 20px;border-radius:9999px;">
-                  Make Your Payment
-                </a>
-              </td>
-            </tr>
-            <!-- 푸터 -->
-            <tr>
-              <td style="padding:32px 28px 0 28px;">
-                <p style="margin:0;font-size:11px;color:#6E595B;letter-spacing:0.08em;text-transform:uppercase;">
-                  JNJ DASH &middot; Automated message
-                </p>
-              </td>
-            </tr>
           </table>
+          <p style="font-size:11px;color:#9E9EA0;margin:16px 0 0 0;letter-spacing:0.05em;text-transform:uppercase;">
+            JNJ DASH · Automated message
+          </p>
         </td>
       </tr>
     </table>
