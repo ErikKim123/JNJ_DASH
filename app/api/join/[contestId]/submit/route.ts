@@ -135,7 +135,9 @@ async function dispatchConfirmation(
   if (!to) return { sent: false, reason: 'NO_EMAIL' as const };
   const period = [contest.period_start, contest.period_end].filter(Boolean).join(' ~ ');
   return sendConfirmationEmail(to, {
-    displayName: row.representative || row.team_name || '참가자',
+    // team_name = 폼의 '이름(Name)' 필드, representative = '국가(Country)'.
+    // 인사에는 사람 이름을 써야 하므로 team_name 을 우선한다.
+    displayName: row.team_name || row.representative || '참가자',
     num: row.num,
     contestName: contest.name,
     contestId: contest.id,

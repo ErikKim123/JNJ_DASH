@@ -36,7 +36,8 @@ export async function POST(_req: Request, ctx: RouteCtx) {
 
   const period = [contest.period_start, contest.period_end].filter(Boolean).join(' ~ ');
   const result = await sendConfirmationEmail(to, {
-    displayName: row.representative || row.team_name || '참가자',
+    // team_name = '이름(Name)', representative = '국가(Country)'. 인사엔 이름 우선.
+    displayName: row.team_name || row.representative || '참가자',
     num: row.num,
     contestName: contest.name,
     contestId: contest.id,
