@@ -92,12 +92,23 @@ export function DonePanel({
         >
           {lang === 'en' ? 'YOUR REGISTRATION HAS BEEN RECEIVED.' : '신청이 정상 접수되었습니다.'}
         </p>
-        {/* 결제/그룹채팅 안내 — EN/KO 토글과 무관하게 영어로만 표시. */}
+        {/* 결제/그룹채팅 안내 — EN/KO 토글에 따라 전환. */}
         <p style={{ marginTop: 12, fontSize: 14, lineHeight: 1.6, color: 'var(--jnj-text-muted)' }}>
-          Your confirmation e-mail has been sent by <strong>bandnara123@gmail.com</strong>.
-          Please join the Whatsapp group chat and make your payments
-          <br />
-          for J&amp;J (if you haven&apos;t already) through the links in the e-mail.
+          {lang === 'en' ? (
+            <>
+              Your confirmation e-mail has been sent by <strong>bandnara123@gmail.com</strong>.
+              Please join the Whatsapp group chat and make your payments
+              <br />
+              for J&amp;J (if you haven&apos;t already) through the links in the e-mail.
+            </>
+          ) : (
+            <>
+              확인 메일이 <strong>bandnara123@gmail.com</strong> 에서 발송되었습니다.
+              아직 결제하지 않으셨다면, 메일 안의 링크를 통해
+              <br />
+              WhatsApp 그룹 채팅에 참여하시고 J&amp;J 참가비를 결제해 주세요.
+            </>
+          )}
         </p>
       </div>
 
