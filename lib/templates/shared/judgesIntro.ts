@@ -64,16 +64,20 @@ function judgeCard(
   metaFont: number,
   uid: number,
 ): string {
-  // 카드 1장을 (cx, cy) 기준 위→아래로 쌓는다.
-  //   photo (원형) → name → alias
-  // cy 는 카드 전체의 수직 중앙. photo 는 cy 보다 살짝 위로 올려 텍스트 공간 확보.
-  // 사진/이름 간격은 photoR 의 45% (최소 22) — 답답해 보이지 않게 시각적 호흡 확보.
-  // 이름/별칭 간격은 metaFont 의 90% (최소 10) — 두 텍스트가 분리되어 읽히도록.
-  const photoCY = cy - photoR * 0.35;
-  const photoToName = Math.max(22, photoR * 0.45);
-  const nameToMeta = Math.max(10, metaFont * 0.9);
-  const nameY = photoCY + photoR + nameFont + photoToName;
-  const metaY = nameY + metaFont + nameToMeta;
+  // 카드 = [photo(원형)] + gap1 + [name] + gap2 + [alias] 를 하나의 세로 스택으로 보고
+  // cy 를 스택 '전체'의 수직 중앙에 정렬한다.
+  //   (이전엔 photo 를 cy 위로 올리고 사진↔이름 간격을 고정 22px 로 줘서
+  //    3행(11~12명)·4행(16~20명)처럼 행이 많아지면 카드 높이가 행 높이에 육박해
+  //    아래 행 사진과 윗 행 글씨가 맞붙는 문제가 있었다.)
+  // 간격을 고정값 대신 photoR/metaFont 비례로 잡아 행이 많을수록 자동으로 좁아지고,
+  // 메인 빌더가 photoR 를 cellH 예산 안에 맞추므로 항상 행간 여백이 남는다.
+  const gap1 = Math.max(9, photoR * 0.4); // 사진 ↔ 이름
+  const gap2 = Math.max(6, metaFont * 0.6); // 이름 ↔ 별칭
+  const stackH = photoR * 2 + gap1 + nameFont + gap2 + metaFont;
+  const top = cy - stackH / 2;
+  const photoCY = top + photoR;
+  const nameY = photoCY + photoR + gap1 + nameFont;
+  const metaY = nameY + gap2 + metaFont;
 
   const photoKey = `{{judge_photo_${idx}}}`;
   const nameKey = `{{judge_name_${idx}}}`;
@@ -210,9 +214,10 @@ export function judgesIntroContent(opts: JudgesIntroLayoutOpts): string {
   const cellW = usableW / cols;
   const cellH = usableH / rows;
 
-  // 카드 photo 반경 — 사진/이름 간격을 넉넉히 두고 행 사이도 시원하게 띄우기 위해 cellH 비중 축소.
-  // cellW * 0.30 = 가로 여유, cellH * 0.23 = 텍스트 2줄 + 상하 마진 + 행간 확보용.
-  const photoR = Math.min(cellW * 0.30, cellH * 0.23);
+  // 카드 photo 반경 — 가로(cellW)·세로(cellH) 양쪽 한계 안에서 결정.
+  // 세로는 한 행에 [사진 2R + 간격 + 이름 + 별칭] 스택이 들어가고도 행간 여백이
+  // 남도록 cellH 의 25% 로 제한 → 11~12명(3행), 16~20명(4행)에서도 글씨가 겹치지 않음.
+  const photoR = Math.min(cellW * 0.30, cellH * 0.25);
   // 행 수가 많을수록 글자 크기 축소
   const baseNameFont = rows >= 4 ? 12 : rows === 3 ? 14 : rows === 2 ? 16 : 18;
   const baseMetaFont = rows >= 4 ? 9 : rows === 3 ? 10 : rows === 2 ? 12 : 14;
