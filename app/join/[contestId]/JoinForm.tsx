@@ -328,7 +328,8 @@ export function JoinForm({
                   value={draft.meta[f.key] ?? ''}
                   onChange={(v) => setMeta(f.key, v)}
                   placeholder={f.placeholder ? f.placeholder[lang] : ''}
-                  defaultDial="84"
+                  selectLabel={lang === 'ko' ? '국가 선택' : 'Select'}
+                  defaultDial=""
                 />
               ) : f.type === 'select' && f.options ? (
                 <select
@@ -401,11 +402,13 @@ function WhatsAppInput({
   onChange,
   placeholder,
   defaultDial,
+  selectLabel,
 }: {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   defaultDial: string;
+  selectLabel?: string;
 }) {
   const parsed = parseWhatsApp(value, defaultDial);
   const dial = parsed.dial;
@@ -413,6 +416,11 @@ function WhatsAppInput({
 
   const update = (nextDial: string, nextNumber: string) => {
     const trimmed = nextNumber.trim();
+    if (!nextDial) {
+      // 국가 코드 미선택 시에는 번호만 저장(접두 코드 없이).
+      onChange(trimmed);
+      return;
+    }
     onChange(trimmed ? `+${nextDial} ${trimmed}` : `+${nextDial}`);
   };
 
@@ -446,6 +454,7 @@ function WhatsAppInput({
           maxWidth: 120,
         }}
       >
+        <option value="">{selectLabel ?? 'Select'}</option>
         {COUNTRY_CODES.map((c) => (
           <option key={c.code} value={c.dial}>
             {c.flag} +{c.dial} {c.name}
