@@ -73,6 +73,15 @@ export async function POST(req: Request, ctx: RouteCtx) {
     if (t) cleanMeta[k] = t;
   }
 
+  // 이메일 필수 — 확인 메일 발송 대상이자 본인 식별 수단. 미입력/형식오류 시 저장 거부.
+  const email = cleanMeta['이메일'];
+  if (!email) {
+    return NextResponse.json({ error: 'EMAIL_REQUIRED' }, { status: 400 });
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return NextResponse.json({ error: 'EMAIL_INVALID' }, { status: 400 });
+  }
+
   // 다음 번호 — listParticipants → max+1 (3자리 zero-pad 유지).
   const existing = await listParticipants(contestId);
   const num = nextParticipantNum(existing);

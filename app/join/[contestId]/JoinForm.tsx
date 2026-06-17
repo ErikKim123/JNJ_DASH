@@ -43,12 +43,13 @@ const PROFILE_FIELDS: {
   placeholder?: { ko: string; en: string };
   type?: 'text' | 'email' | 'date' | 'tel' | 'whatsapp' | 'select';
   options?: { value: string; label: { ko: string; en: string } }[];
+  required?: boolean;
 }[] = [
   { key: '부문', label: { ko: '부문', en: 'Category' }, type: 'select', options: CATEGORY_OPTIONS, placeholder: { ko: '부문 선택', en: 'Select category' } },
   { key: '장르', label: { ko: '장르', en: 'Genre' }, type: 'select', options: GENRE_OPTIONS, placeholder: { ko: '장르 선택', en: 'Select genre' } },
   { key: 'Division', label: { ko: '구분', en: 'Division' }, type: 'select', options: DIVISION_OPTIONS, placeholder: { ko: '구분 선택', en: 'Select division' } },
   { key: '연락처', label: { ko: '연락처', en: 'WhatsApp Number' }, placeholder: { ko: '010-0000-0000', en: '10-1234-5678' }, type: 'whatsapp' },
-  { key: '이메일', label: { ko: '이메일', en: 'Email' }, placeholder: { ko: 'name@example.com', en: 'name@example.com' }, type: 'email' },
+  { key: '이메일', label: { ko: '이메일 (필수)', en: 'Email (required)' }, placeholder: { ko: 'name@example.com', en: 'name@example.com' }, type: 'email', required: true },
   // '접수일'은 폼에 노출하지 않고 등록 시 자동으로 오늘 날짜로 저장된다(meta 초기값).
   { key: 'X', label: { ko: '인스타 (@)', en: 'Instagram (@)' }, placeholder: { ko: '@your_id', en: '@your_id' } },
 ];
@@ -108,6 +109,8 @@ const T = {
   submitting: { ko: '제출 중…', en: 'Submitting…' },
   errTeam: { ko: '이름을 입력해주세요.', en: 'Please enter a name.' },
   errRep: { ko: '국가를 입력해주세요.', en: 'Please enter a country.' },
+  errEmail: { ko: '이메일을 입력해주세요.', en: 'Please enter an email.' },
+  errEmailFormat: { ko: '올바른 이메일 형식이 아닙니다.', en: 'Please enter a valid email.' },
   errFileSize: { ko: '파일이 너무 큽니다 (최대 5MB).', en: 'File too large (max 5MB).' },
   errFileType: { ko: '이미지 파일만 업로드 가능합니다 (jpeg/png/webp/gif).', en: 'Only image files allowed (jpeg/png/webp/gif).' },
   errNet: { ko: '네트워크 오류', en: 'Network error' },
@@ -198,6 +201,9 @@ export function JoinForm({
     setError(null);
     if (!draft.team_name.trim()) { setError(t('errTeam', lang)); return; }
     if (!draft.representative.trim()) { setError(t('errRep', lang)); return; }
+    const email = (draft.meta['이메일'] ?? '').trim();
+    if (!email) { setError(t('errEmail', lang)); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError(t('errEmailFormat', lang)); return; }
     setBusy(true);
     try {
       const res = await fetch(`/api/join/${encodeURIComponent(contestId)}/submit`, {
