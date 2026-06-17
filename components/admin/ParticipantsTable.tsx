@@ -205,6 +205,46 @@ export function ParticipantsTable({
     helpers: rows.filter((r) => r.role.startsWith('helper')).length,
   }), [rows]);
 
+  const [exporting, setExporting] = useState(false);
+
+  // 참가자 명단을 엑셀(.xlsx)로 다운로드 — # / TEAM NAME / ROLE / COUNTRY 4개 컬럼.
+  // 현재 검색 필터가 적용된 목록(filtered)을 # 기준 정렬해 내보낸다.
+  async function exportExcel() {
+    setExporting(true);
+    try {
+      const XLSX = await import('xlsx');
+      const sorted = [...filtered].sort((a, b) =>
+        a.num.localeCompare(b.num, undefined, { numeric: true })
+      );
+      const data = sorted.map((r) => ({
+        '#': r.num,
+        'TEAM NAME': r.team_name,
+        ROLE: ROLE_LABEL[r.role],
+        COUNTRY: r.representative,
+      }));
+      const ws = XLSX.utils.json_to_sheet(data, {
+        header: ['#', 'TEAM NAME', 'ROLE', 'COUNTRY'],
+      });
+      ws['!cols'] = [{ wch: 6 }, { wch: 30 }, { wch: 16 }, { wch: 16 }];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Participants');
+      const buf = XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer;
+      const blob = new Blob([buf], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${contestId}-participants.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Excel export failed');
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
@@ -213,6 +253,9 @@ export function ParticipantsTable({
           Leaders {stats.leaders} · Followers {stats.followers} · Helpers {stats.helpers}
         </p>
         <div className="flex items-center gap-2">
+          <Button variant="secondary" onClick={exportExcel} disabled={exporting || rows.length === 0}>
+            {exporting ? 'Exporting…' : '⬇ Excel'}
+          </Button>
           <Input
             placeholder="Search by # / name…"
             value={filter}
