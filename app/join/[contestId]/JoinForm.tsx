@@ -746,40 +746,21 @@ function WhatsAppInput({
   return (
     <div
       style={{
+        position: 'relative',
         display: 'flex',
         gap: 0,
         alignItems: 'stretch',
         border: '1px solid var(--jnj-border)',
         borderRadius: 8,
-        overflow: 'hidden',
         background: 'var(--jnj-surface)',
       }}
     >
-      <select
-        aria-label="Country code"
-        value={dial}
-        onChange={(e) => update(e.target.value, number)}
-        style={{
-          border: 'none',
-          background: 'var(--jnj-track)',
-          padding: '0 10px',
-          fontSize: 14,
-          fontWeight: 500,
-          color: 'var(--jnj-text)',
-          cursor: 'pointer',
-          outline: 'none',
-          borderRight: '1px solid var(--jnj-border)',
-          minWidth: 96,
-          maxWidth: 120,
-        }}
-      >
-        <option value="">{selectLabel ?? 'Select'}</option>
-        {COUNTRY_CODES.map((c) => (
-          <option key={c.code} value={c.dial}>
-            {c.flag} +{c.dial} {c.name}
-          </option>
-        ))}
-      </select>
+      <DialCodeSelect
+        dial={dial}
+        onPick={(d) => update(d, number)}
+        options={COUNTRY_CODES}
+        selectLabel={selectLabel}
+      />
       <input
         type="tel"
         inputMode="tel"
@@ -796,8 +777,175 @@ function WhatsAppInput({
           background: 'transparent',
           color: 'var(--jnj-text)',
           minWidth: 0,
+          borderTopRightRadius: 8,
+          borderBottomRightRadius: 8,
         }}
       />
+    </div>
+  );
+}
+
+// 검색 가능한 국가 전화코드 선택 — 코드가 많아 트리거 클릭 시 검색창 + 필터 목록을 띄운다.
+// 표시: "🇰🇷 +82" / 목록: "🇰🇷 +82 Korea". 이름·코드(KR)·다이얼(82) 모두 검색.
+function DialCodeSelect({
+  dial,
+  onPick,
+  options,
+  selectLabel,
+}: {
+  dial: string;
+  onPick: (dial: string) => void;
+  options: { code: string; dial: string; flag: string; name: string }[];
+  selectLabel?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [active, setActive] = useState(0);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onDocDown(e: MouseEvent) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
+        setOpen(false);
+        setQuery('');
+      }
+    }
+    document.addEventListener('mousedown', onDocDown);
+    return () => document.removeEventListener('mousedown', onDocDown);
+  }, [open]);
+
+  useEffect(() => {
+    if (open) inputRef.current?.focus();
+  }, [open]);
+
+  const selected = options.find((o) => o.dial === dial);
+  const q = query.trim().toLowerCase();
+  const qDigits = q.replace(/^\+/, '');
+  const filtered = q
+    ? options.filter((o) =>
+        o.name.toLowerCase().includes(q) ||
+        o.code.toLowerCase().startsWith(q) ||
+        (qDigits !== '' && o.dial.startsWith(qDigits)),
+      )
+    : options;
+
+  function pick(d: string) {
+    onPick(d);
+    setOpen(false);
+    setQuery('');
+  }
+
+  return (
+    <div ref={wrapRef} style={{ position: 'relative', display: 'flex' }}>
+      <button
+        type="button"
+        aria-label="Country code"
+        onClick={() => { setOpen((o) => !o); setActive(0); }}
+        style={{
+          border: 'none',
+          background: 'var(--jnj-track)',
+          padding: '0 10px',
+          fontSize: 14,
+          fontWeight: 500,
+          color: 'var(--jnj-text)',
+          cursor: 'pointer',
+          outline: 'none',
+          borderRight: '1px solid var(--jnj-border)',
+          borderTopLeftRadius: 8,
+          borderBottomLeftRadius: 8,
+          minWidth: 96,
+          maxWidth: 140,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 4,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {selected ? `${selected.flag} +${selected.dial}` : (selectLabel ?? 'Select')}
+        </span>
+        <span style={{ marginLeft: 'auto', opacity: 0.6, fontSize: 11 }}>▾</span>
+      </button>
+      {open && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            zIndex: 40,
+            marginTop: 4,
+            width: 280,
+            maxWidth: '80vw',
+            background: 'var(--jnj-surface)',
+            border: '1px solid var(--jnj-border)',
+            borderRadius: 8,
+            boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+            overflow: 'hidden',
+          }}
+        >
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={(e) => { setQuery(e.target.value); setActive(0); }}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowDown') { e.preventDefault(); setActive((i) => Math.min(i + 1, filtered.length - 1)); }
+              else if (e.key === 'ArrowUp') { e.preventDefault(); setActive((i) => Math.max(i - 1, 0)); }
+              else if (e.key === 'Enter') { e.preventDefault(); if (filtered[active]) pick(filtered[active].dial); }
+              else if (e.key === 'Escape') { setOpen(false); setQuery(''); }
+            }}
+            placeholder={selectLabel ?? 'Select'}
+            autoComplete="off"
+            style={{
+              width: '100%',
+              boxSizing: 'border-box',
+              border: 'none',
+              borderBottom: '1px solid var(--jnj-border)',
+              outline: 'none',
+              padding: '10px 12px',
+              fontSize: 15,
+              background: 'var(--jnj-track)',
+              color: 'var(--jnj-text)',
+            }}
+          />
+          <ul
+            style={{
+              listStyle: 'none',
+              margin: 0,
+              padding: 4,
+              maxHeight: 260,
+              overflowY: 'auto',
+            }}
+          >
+            {filtered.length === 0 ? (
+              <li style={{ padding: '10px 12px', color: 'var(--jnj-text-muted)', fontSize: 14 }}>—</li>
+            ) : (
+              filtered.map((o, i) => (
+                <li
+                  key={o.code}
+                  onMouseDown={(e) => { e.preventDefault(); pick(o.dial); }}
+                  onMouseEnter={() => setActive(i)}
+                  style={{
+                    padding: '10px 12px',
+                    borderRadius: 6,
+                    cursor: 'pointer',
+                    fontSize: 15,
+                    color: 'var(--jnj-text)',
+                    background: i === active ? 'var(--jnj-track)' : 'transparent',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  {o.flag} +{o.dial} {o.name}
+                </li>
+              ))
+            )}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
