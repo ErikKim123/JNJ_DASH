@@ -213,6 +213,8 @@ export function JudgingMatrix({
     for (const j of judges) {
       let leaderO = 0, followerO = 0, total = 0, cnt = 0;
       for (const e of eligible) {
+        // 헬퍼는 통과 정원 대상이 아니므로 O 카운트(=투표수 제한 기준)에서 제외.
+        if (e.isHelper) continue;
         const v = voteMap.get(`${j.id}:${e.num}`);
         if (!v) continue;
         if (!isFinal) {
@@ -456,6 +458,24 @@ export function JudgingMatrix({
   function cycleMark(judgeId: string, num: string) {
     const cur = voteMap.get(`${judgeId}:${num}`)?.vote_mark ?? null;
     const next: VoteMark | null = cur == null ? 'O' : cur === 'O' ? 'X' : null;
+    // O 투표 개수 제한 — 각 심사위원의 'O'(통과) 표를 역할별 통과 정원(maxPerRole)까지만 허용.
+    // prelim/semi 에서만 적용(final 은 점수제), 헬퍼는 정원 비대상이라 제외.
+    if (!isFinal && next === 'O') {
+      const target = eligible.find((e) => e.num === num);
+      if (target && !target.isHelper) {
+        const a = judgeColAgg.get(judgeId);
+        const count = target.role === 'leader' ? (a?.leaderO ?? 0) : (a?.followerO ?? 0);
+        if (count >= maxPerRole) {
+          setError(
+            t('matrix.voteLimitReached')
+              .replace('{MAX}', String(maxPerRole))
+              .replace('{ROLE}', target.role === 'leader' ? L : F)
+          );
+          return;
+        }
+      }
+    }
+    setError(null);
     setVote(judgeId, num, { vote_mark: next });
   }
 
@@ -780,11 +800,12 @@ export function JudgingMatrix({
                     {t('matrix.passQuotaShort')} {maxPerRole}
                   </td>
                   {judges.map((j) => {
-                    const a = judgeColAgg.get(j.id);
+                    const c = judgeColAgg.get(j.id)?.leaderO ?? 0;
+                    const full = c >= maxPerRole;
                     return (
                       <td key={j.id} className="px-2 py-2 border-l border-border text-center text-sm font-mono">
-                        <span className={a && a.leaderO > 0 ? 'text-ok' : 'text-ink2/40'}>
-                          {a?.leaderO ?? 0}
+                        <span className={full ? 'text-danger font-semibold' : c > 0 ? 'text-ok' : 'text-ink2/40'}>
+                          {c}/{maxPerRole}
                         </span>
                       </td>
                     );
@@ -797,11 +818,12 @@ export function JudgingMatrix({
                     {t('matrix.passQuotaShort')} {maxPerRole}
                   </td>
                   {judges.map((j) => {
-                    const a = judgeColAgg.get(j.id);
+                    const c = judgeColAgg.get(j.id)?.followerO ?? 0;
+                    const full = c >= maxPerRole;
                     return (
                       <td key={j.id} className="px-2 py-2 border-l border-border text-center text-sm font-mono">
-                        <span className={a && a.followerO > 0 ? 'text-ok' : 'text-ink2/40'}>
-                          {a?.followerO ?? 0}
+                        <span className={full ? 'text-danger font-semibold' : c > 0 ? 'text-ok' : 'text-ink2/40'}>
+                          {c}/{maxPerRole}
                         </span>
                       </td>
                     );

@@ -82,8 +82,29 @@ export async function POST(req: Request, ctx: RouteCtx) {
     return NextResponse.json({ error: 'EMAIL_INVALID' }, { status: 400 });
   }
 
+  // 연락처(WhatsApp) 필수 — 이메일과 함께 중복 등록 식별 수단. 숫자 5자리 미만이면 거부.
+  const phone = cleanMeta['연락처'];
+  if (!phone || normalizePhone(phone).length < 5) {
+    return NextResponse.json({ error: 'PHONE_REQUIRED' }, { status: 400 });
+  }
+
   // 다음 번호 — listParticipants → max+1 (3자리 zero-pad 유지).
   const existing = await listParticipants(contestId);
+
+  // 중복 등록 차단 — 같은 이메일 또는 연락처가 이미 있으면 저장하지 않는다.
+  // (두 번째 제출자는 기존 확인 메일을 다시 확인하도록 done 안내로 유도)
+  const emailKey = email.trim().toLowerCase();
+  const phoneKey = normalizePhone(phone);
+  const dup = existing.find((p) => {
+    const m = p.meta as Record<string, unknown>;
+    const e = typeof m['이메일'] === 'string' ? (m['이메일'] as string).trim().toLowerCase() : '';
+    const ph = typeof m['연락처'] === 'string' ? normalizePhone(m['연락처'] as string) : '';
+    return (e !== '' && e === emailKey) || (ph !== '' && ph === phoneKey);
+  });
+  if (dup) {
+    return NextResponse.json({ error: 'DUPLICATE', num: dup.num }, { status: 409 });
+  }
+
   const num = nextParticipantNum(existing);
 
   const sb = getSupabaseAdmin();
@@ -131,6 +152,11 @@ export async function POST(req: Request, ctx: RouteCtx) {
     ? await dispatchConfirmation(contest, data, cleanMeta)
     : undefined;
   return NextResponse.json(emailResult ? { data, email: emailResult } : { data }, { status: 201 });
+}
+
+// 전화번호 비교용 정규화 — 숫자만 남긴다. "+82 10-1234-5678" → "821012345678".
+function normalizePhone(raw: string): string {
+  return raw.replace(/\D/g, '');
 }
 
 // 등록 성공 후 확인 메일 발송. PROFILE.이메일 우선, 미입력이면 skip.
