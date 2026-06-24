@@ -10,7 +10,7 @@
 //   del  : DELETE /admin/contests/[id]/judges/[id]→ 같은 display_order 의 3 row 동시 삭제
 //
 // display_order 직접 편집은 차단 (3 row swap 시 unique 충돌). 순서 변경 필요 시 삭제→재추가.
-import { useMemo, useRef, useState, useTransition, type ChangeEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, useTransition, type ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Badge, Button, Field, Input, Select, Textarea } from './ui';
 import type { JudgeRow, JudgeTargetRole, JudgingRound } from '@/lib/db/types';
@@ -59,6 +59,135 @@ export function JudgesAdmin({
   const [name, setName] = useState('');
   const [expandedOrder, setExpandedOrder] = useState<number | null>(null);
   const apiBase = `/api/admin/contests/${encodeURIComponent(contestId)}/judges`;
+
+  // ── 일괄(bulk) 작업 상태 ──
+  // savedTargets: 타겟 스냅샷(전체를 임시로 Leader/Follower 로 바꾸기 전 원본). localStorage 보관.
+  // rev: 일괄 변경 후 각 행 에디터(JudgeRowEditor)의 로컬 state 를 새 값으로 강제 리마운트.
+  const [savedTargets, setSavedTargets] = useState<Record<string, JudgeTargetRole> | null>(null);
+  const [bulkPrelim, setBulkPrelim] = useState('');
+  const [bulkSemi, setBulkSemi] = useState('');
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [rev, setRev] = useState(0);
+
+  const targetsKey = `judgeTargets:${contestId}`;
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(targetsKey);
+      if (raw) setSavedTargets(JSON.parse(raw));
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contestId]);
+
+  const perRoundUrl = (round: JudgingRound, judgeId: string) =>
+    `/api/admin/contests/${encodeURIComponent(contestId)}/judging/${round}/judges/${judgeId}`;
+
+  // 현재 전체 타겟 상태를 스냅샷으로 저장(원본 시점 보존).
+  function saveTargets() {
+    if (!groups.length) return;
+    const snap: Record<string, JudgeTargetRole> = {};
+    for (const g of groups) snap[String(g.display_order)] = g.canonical.target_role;
+    setSavedTargets(snap);
+    try { localStorage.setItem(targetsKey, JSON.stringify(snap)); } catch { /* ignore */ }
+    setError(null);
+    setNotice(`현재 타겟 ${groups.length}명 저장됨 — 언제든 [복원]으로 되돌릴 수 있습니다.`);
+  }
+
+  // 전체 타겟을 한 역할로 일괄 변경.
+  async function bulkSetTarget(role: JudgeTargetRole) {
+    if (!groups.length || bulkBusy) return;
+    setError(null); setNotice(null); setBulkBusy(true);
+    try {
+      const results = await Promise.all(groups.map((g) =>
+        fetch(`${apiBase}/${g.canonical.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ target_role: role }),
+        })
+      ));
+      const bad = results.find((r) => !r.ok);
+      if (bad) { setError(`타겟 일괄 변경 실패 (${bad.status})`); router.refresh(); return; }
+      setGroups((s) => s.map((g) => ({ ...g, canonical: { ...g.canonical, target_role: role } })));
+      setRev((v) => v + 1);
+      setNotice(`전체 타겟 → ${TARGET_LABEL[role]}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'bulk target failed');
+    } finally { setBulkBusy(false); }
+  }
+
+  // 저장해 둔 스냅샷으로 타겟 복원.
+  async function restoreTargets() {
+    if (!savedTargets || bulkBusy) return;
+    setError(null); setNotice(null); setBulkBusy(true);
+    try {
+      const changes = groups
+        .map((g) => ({ g, t: savedTargets[String(g.display_order)] }))
+        .filter((x) => x.t && x.t !== x.g.canonical.target_role);
+      const results = await Promise.all(changes.map(({ g, t }) =>
+        fetch(`${apiBase}/${g.canonical.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ target_role: t }),
+        })
+      ));
+      const bad = results.find((r) => !r.ok);
+      if (bad) { setError(`타겟 복원 실패 (${bad.status})`); router.refresh(); return; }
+      setGroups((s) => s.map((g) => {
+        const t = savedTargets[String(g.display_order)];
+        return t ? { ...g, canonical: { ...g.canonical, target_role: t } } : g;
+      }));
+      setRev((v) => v + 1);
+      setNotice(`저장된 타겟으로 복원됨 (${changes.length}명 변경).`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'restore failed');
+    } finally { setBulkBusy(false); }
+  }
+
+  // 예선/본선 Max O 를 전 심사위원에 일괄 적용. 빈 칸인 라운드는 변경하지 않음.
+  async function bulkApplyMaxVotes() {
+    if (bulkBusy) return;
+    const pStr = bulkPrelim.trim(), sStr = bulkSemi.trim();
+    if (pStr === '' && sStr === '') return;
+    const clamp = (n: number) => Math.max(0, Math.min(999, Math.round(n)));
+    const p = pStr === '' ? undefined : clamp(Number(pStr));
+    const sm = sStr === '' ? undefined : clamp(Number(sStr));
+    if ((p !== undefined && !Number.isFinite(p)) || (sm !== undefined && !Number.isFinite(sm))) {
+      setError('숫자를 입력하세요.'); return;
+    }
+    setError(null); setNotice(null); setBulkBusy(true);
+    try {
+      const reqs: Promise<Response>[] = [];
+      for (const g of groups) {
+        if (p !== undefined && g.idsByRound.prelim) {
+          reqs.push(fetch(perRoundUrl('prelim', g.idsByRound.prelim), {
+            method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ max_votes: p }),
+          }));
+        }
+        if (sm !== undefined && g.idsByRound.semi) {
+          reqs.push(fetch(perRoundUrl('semi', g.idsByRound.semi), {
+            method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ max_votes: sm }),
+          }));
+        }
+      }
+      const results = await Promise.all(reqs);
+      const bad = results.find((r) => !r.ok);
+      if (bad) { setError(`Max O 일괄 적용 실패 (${bad.status})`); router.refresh(); return; }
+      setGroups((st) => st.map((g) => ({
+        ...g,
+        maxVotesByRound: {
+          ...g.maxVotesByRound,
+          ...(p !== undefined ? { prelim: p } : {}),
+          ...(sm !== undefined ? { semi: sm } : {}),
+        },
+        canonical: p !== undefined ? { ...g.canonical, max_votes: p } : g.canonical,
+      })));
+      setRev((v) => v + 1);
+      const parts = [p !== undefined ? `예선 ${p}` : '', sm !== undefined ? `본선 ${sm}` : ''].filter(Boolean);
+      setNotice(`Max O 일괄 적용 — ${parts.join(' · ')} (${groups.length}명)`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'bulk max votes failed');
+    } finally { setBulkBusy(false); }
+  }
 
   function addJudge() {
     if (!name.trim()) return;
@@ -155,17 +284,52 @@ export function JudgesAdmin({
   return (
     <div className="space-y-6">
       <section className="rounded border border-border bg-panel">
-        <header className="flex items-center justify-between px-4 py-3 border-b border-border bg-bg2/50 flex-wrap gap-2">
+        <header className="flex items-start justify-between px-4 py-3 border-b border-border bg-bg2/50 flex-wrap gap-3">
           <div className="flex items-center gap-3">
             <h3 className="text-sm font-semibold">Judges</h3>
             <Badge tone="info">{groups.length} judges</Badge>
             <span className="text-xs text-ink2">예선 · 본선 · 결승 모두 동일 명단으로 자동 등록</span>
+          </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* TARGET 일괄 — 현재 저장 → 전체 Leader/Follower → 복원 */}
+            <div className="flex items-center gap-1.5 rounded border border-border bg-bg2/40 px-2 py-1">
+              <span className="text-[11px] uppercase tracking-wide text-ink2 mr-0.5">Target</span>
+              <Button onClick={saveTargets} disabled={bulkBusy || pending || groups.length === 0}>현재 저장</Button>
+              <Button onClick={() => bulkSetTarget('leader')} disabled={bulkBusy || pending || groups.length === 0}>전체 Leader</Button>
+              <Button onClick={() => bulkSetTarget('follower')} disabled={bulkBusy || pending || groups.length === 0}>전체 Follower</Button>
+              <Button onClick={restoreTargets} disabled={bulkBusy || pending || !savedTargets}>복원</Button>
+            </div>
+            {/* MAX O 일괄 — 예선/본선 값 입력 후 전체 적용 */}
+            <div className="flex items-center gap-1.5 rounded border border-border bg-bg2/40 px-2 py-1">
+              <span className="text-[11px] uppercase tracking-wide text-ink2 mr-0.5">Max&nbsp;O</span>
+              <label className="flex items-center gap-1 text-[11px] text-ink2">
+                <span>예선</span>
+                <Input type="number" min={0} max={999} value={bulkPrelim}
+                  onChange={(e) => setBulkPrelim(e.target.value)}
+                  placeholder="—" className="w-14 font-mono text-center" />
+              </label>
+              <label className="flex items-center gap-1 text-[11px] text-ink2">
+                <span>본선</span>
+                <Input type="number" min={0} max={999} value={bulkSemi}
+                  onChange={(e) => setBulkSemi(e.target.value)}
+                  placeholder="—" className="w-14 font-mono text-center" />
+              </label>
+              <Button variant="primary" onClick={bulkApplyMaxVotes}
+                disabled={bulkBusy || pending || groups.length === 0 || (bulkPrelim.trim() === '' && bulkSemi.trim() === '')}>
+                적용
+              </Button>
+            </div>
           </div>
         </header>
 
         {error && (
           <div className="px-4 py-2 text-sm text-danger bg-danger/5 border-b border-danger/20" role="alert">
             {error}
+          </div>
+        )}
+        {notice && (
+          <div className="px-4 py-2 text-sm text-ok bg-ok/5 border-b border-ok/20">
+            {notice}
           </div>
         )}
 
@@ -199,7 +363,7 @@ export function JudgesAdmin({
                 const finalVotes = voteCounts[g.idsByRound.final ?? ''] ?? 0;
                 return (
                   <JudgeRowEditor
-                    key={g.display_order}
+                    key={`${g.display_order}-${rev}`}
                     contestId={contestId}
                     group={g}
                     voteCounts={{ prelim: prelimVotes, semi: semiVotes, final: finalVotes }}

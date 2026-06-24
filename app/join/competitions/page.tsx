@@ -396,6 +396,18 @@ function renderContestList(
                     >
                       {c.name}
                     </div>
+                    {c.status === 'closed' && (
+                      <p
+                        style={{
+                          margin: '8px 0 0',
+                          fontSize: 13,
+                          lineHeight: 1.45,
+                          color: 'var(--jnj-text-muted)',
+                        }}
+                      >
+                        Registration is closed. Please contact the desk.
+                      </p>
+                    )}
                   </div>
                   <div
                     title={isOpen ? absUrl : `${statusLabel} — Registration unavailable`}
