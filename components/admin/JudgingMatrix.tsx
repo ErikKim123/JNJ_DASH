@@ -73,6 +73,7 @@ export function JudgingMatrix({
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [resetModalOpen, setResetModalOpen] = useState(false);
   const [uncommitModalOpen, setUncommitModalOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const apiBase = `/api/admin/contests/${encodeURIComponent(contestId)}/judging/${round}`;
   // judges 추가/수정/삭제는 3 라운드 mirror 가 적용된 통합 엔드포인트 사용.
@@ -458,6 +459,93 @@ export function JudgingMatrix({
     setVote(judgeId, num, { vote_mark: next });
   }
 
+  // 현재 화면 상태(아직 commit 안 한 라이브 결정)를 엑셀로 내보낸다.
+  // 행: 역할(L→F) → rank 오름차순. 컬럼: #, TEAM, ROLE, 심사위원별 O/X(또는 결승 점수),
+  //     O/X 합계, RANK, RESULT(PASS / TIE / -). 헬퍼는 순위 없이 맨 아래.
+  async function exportExcel() {
+    setExporting(true);
+    setError(null);
+    try {
+      const XLSX = await import('xlsx');
+
+      // 정렬: leader 먼저, follower 다음. 각 역할 안에서는 rank 오름차순(미배정·헬퍼는 맨 뒤).
+      const roleOrder = (r: 'leader' | 'follower') => (r === 'leader' ? 0 : 1);
+      const sorted = [...eligible].sort((a, b) => {
+        if (roleOrder(a.role) !== roleOrder(b.role)) return roleOrder(a.role) - roleOrder(b.role);
+        const ra = rankMap.get(a.num) ?? Number.POSITIVE_INFINITY;
+        const rb = rankMap.get(b.num) ?? Number.POSITIVE_INFINITY;
+        if (ra !== rb) return ra - rb;
+        return a.num.localeCompare(b.num, undefined, { numeric: true });
+      });
+
+      const judgeNames = judges.map((j) => j.name);
+      const data = sorted.map((e) => {
+        const row: Record<string, string | number> = {
+          '#': e.num,
+          TEAM: e.team_name,
+          ROLE: e.isHelper
+            ? (e.role === 'leader' ? `${L} (Helper)` : `${F} (Helper)`)
+            : (e.role === 'leader' ? L : F),
+        };
+        // 심사위원별 셀
+        for (const j of judges) {
+          const v = voteMap.get(`${j.id}:${e.num}`);
+          if (isFinal) {
+            const agg = v ? aggregateScores(v, activeKeys) : { sum: 0, cnt: 0 };
+            row[j.name] = agg.cnt > 0 ? agg.sum : '';
+          } else {
+            row[j.name] = v?.vote_mark ?? '';
+          }
+        }
+        const tot = totals.get(e.num);
+        const rank = rankMap.get(e.num);
+        if (isFinal) {
+          row['TOTAL'] = tot?.total ?? 0;
+          row['AVG'] = tot?.avg != null ? Number(tot.avg.toFixed(2)) : '';
+        } else {
+          row['O'] = tot?.o ?? 0;
+          row['X'] = tot?.x ?? 0;
+        }
+        row['RANK'] = e.isHelper ? '' : (rank ?? '');
+        const inQuota = !e.isHelper && rank != null && rank <= maxPerRole;
+        const tie = boundaryTieNums.has(e.num);
+        row['RESULT'] = e.isHelper
+          ? 'HELPER'
+          : inQuota
+          ? (tie ? 'PASS (TIE)' : 'PASS')
+          : (tie ? 'TIE' : '-');
+        return row;
+      });
+
+      const tailCols = isFinal ? ['TOTAL', 'AVG', 'RANK', 'RESULT'] : ['O', 'X', 'RANK', 'RESULT'];
+      const header = ['#', 'TEAM', 'ROLE', ...judgeNames, ...tailCols];
+      const ws = XLSX.utils.json_to_sheet(data, { header });
+      ws['!cols'] = [
+        { wch: 6 },
+        { wch: 28 },
+        { wch: 14 },
+        ...judgeNames.map(() => ({ wch: 8 })),
+        ...tailCols.map(() => ({ wch: 8 })),
+      ];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Results');
+      const buf = XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer;
+      const blob = new Blob([buf], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${contestId}-${round}-results.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Excel export failed');
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
@@ -543,6 +631,14 @@ export function JudgingMatrix({
           )}
           <Button variant="primary" onClick={commitToQualifiers} disabled={pending}>
             {isFinal ? t('matrix.commitToFinalResults') : t('matrix.commitToQualifiers')}
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={exportExcel}
+            disabled={exporting || eligible.length === 0}
+            title={t('matrix.exportExcelTooltip')}
+          >
+            {exporting ? 'Exporting…' : '⬇ Excel'}
           </Button>
         </div>
       </div>
