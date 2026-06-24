@@ -200,7 +200,7 @@ export function JudgingMatrix({
   //   slots = 정원 - (동점보다 점수 높은 자동 통과 인원). 관리자가 이 중 slots 명을 올린다.
   const tieGroups = useMemo(() => {
     const out: { role: 'leader' | 'follower'; tieScore: number; slots: number; candidates: { num: string; team_name: string }[] }[] = [];
-    if (isFinal) return out; // 결승은 점수제 — O 표 동점 추려내기 비대상
+    // 예선/본선: O 표 동점(통과 경계). 결승: 총점 동점(시상 top3 경계). scoreOf 가 라운드에 맞춰 처리.
     for (const role of ['leader', 'follower'] as const) {
       const tied = eligible.filter((e) => e.role === role && !e.isHelper && boundaryTieNums.has(e.num));
       if (tied.length < 2) continue;
@@ -753,7 +753,7 @@ export function JudgingMatrix({
               {t('matrix.boundaryTie')} — {boundaryTieNums.size} {t('matrix.boundaryTieDetail')}
             </Badge>
           )}
-          {!isFinal && tieGroups.length > 0 && (
+          {tieGroups.length > 0 && (
             <Button variant="primary" onClick={openTieModal} disabled={pending}>
               {t('matrix.tieResolve')}
             </Button>
@@ -820,8 +820,8 @@ export function JudgingMatrix({
           >
             {exporting ? 'Exporting…' : '⬇ Excel'}
           </Button>
-          {/* 시뮬레이션 — prep 단계에서만. 동점자 수를 정해 자동 투표. */}
-          {!isFinal && roundStatus === 'prep' && (
+          {/* 시뮬레이션 — prep 단계에서만. 예선/본선은 O 표, 결승은 항목 점수를 생성. */}
+          {roundStatus === 'prep' && (
             <Button
               variant="primary"
               onClick={() => setSimModalOpen(true)}
@@ -1152,14 +1152,14 @@ export function JudgingMatrix({
                   <div key={g.role} className="rounded border border-border bg-bg2/40 p-3">
                     <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
                       <span className="text-sm font-semibold">
-                        {roleLabel} · {t('matrix.tieScore')} {g.tieScore} O
+                        {roleLabel} · {t('matrix.tieScore')} {g.tieScore} {isFinal ? t('matrix.tiePts') : 'O'}
                       </span>
                       <span className={`text-xs font-mono ${selected === g.slots ? 'text-ok' : 'text-danger'}`}>
                         {t('matrix.tieAdvance')} {selected} / {g.slots}
                       </span>
                     </div>
                     <ul className="space-y-1">
-                      {g.candidates.map((c) => {
+                      {g.candidates.map((c, ci) => {
                         const checked = !!tiePick[c.num];
                         const atCap = !checked && selected >= g.slots;
                         const headO = !!headJudge && voteMap.get(`${headJudge.id}:${c.num}`)?.vote_mark === 'O';
@@ -1170,6 +1170,7 @@ export function JudgingMatrix({
                                 checked ? 'bg-ok/10 border border-ok/40' : 'border border-transparent hover:bg-bg2'
                               } ${atCap ? 'opacity-40 cursor-not-allowed' : ''}`}
                             >
+                              <span className="font-mono text-ink2/50 w-6 text-right">{ci + 1}</span>
                               <input
                                 type="checkbox"
                                 checked={checked}

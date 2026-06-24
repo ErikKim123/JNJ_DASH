@@ -181,6 +181,14 @@ export function hexagonFrame(
   const numFontSize = Math.max(11, nameFontSize * 0.8);
   const numY = cy + size + numFontSize + 4;
   const nameY = numY + nameFontSize + 2;
+  // 이름 2줄 처리 — nameKey 에서 _l1/_l2 파생(placeholder 가 길면 2줄로 채움, 짧으면 l2 는 빈 값).
+  const nameL1Key = nameKey.replace(/\}\}\s*$/, '_l1}}');
+  const nameL2Key = nameKey.replace(/\}\}\s*$/, '_l2}}');
+  const nameLineH = nameFontSize * 0.98;
+  const nameAttrs = `text-anchor="middle" font-family="'Gulim', '굴림', sans-serif" font-size="${nameFontSize}" letter-spacing="2" fill="#FFEBA0" font-weight="700"`;
+  const nameEls =
+    `<text x="${cx}" y="${nameY.toFixed(1)}" ${nameAttrs}>${nameL1Key}</text>` +
+    `<text x="${cx}" y="${(nameY + nameLineH).toFixed(1)}" ${nameAttrs}>${nameL2Key}</text>`;
   const numTextEl = numKey
     ? `<text x="${cx}" y="${numY.toFixed(1)}" text-anchor="middle" font-family="ui-monospace, monospace" font-size="${numFontSize.toFixed(1)}" letter-spacing="2" fill="#FFFFFF" font-weight="600">${numKey}</text>`
     : '';
@@ -206,7 +214,7 @@ export function hexagonFrame(
       <polygon points="${outer.join(' ')}" fill="url(#hxg)" stroke="url(#goldg)" stroke-width="1.6"/>
       ${photoEl}
       <polygon points="${inner.join(' ')}" fill="none" stroke="#D4AF37" stroke-width="0.5" opacity="0.55"/>
-      <text x="${cx}" y="${nameY.toFixed(1)}" text-anchor="middle" font-family="'Gulim', '굴림', sans-serif" font-size="${nameFontSize}" letter-spacing="2" fill="#FFEBA0" font-weight="700">${nameKey}</text>
+      ${nameEls}
       ${numTextEl}
     </g>
   `;

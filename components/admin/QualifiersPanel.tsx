@@ -6,7 +6,7 @@
 //   - [참가자에서 가져오기]: contest 의 participants 풀에서 미등록 인원을 추가 (passed=false 로).
 //   - 행 단위: 통과 토글 / 표시순위 / 투표수 / 역할 / 사진 편집.
 //   - 일괄 확정 (보여진 행 전부 passed=true).
-import { useEffect, useMemo, useState, useTransition } from 'react';
+import { Fragment, useEffect, useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Badge, Button, Input, Select } from './ui';
 import type { ParticipantRow, ParticipantRole, QualifierRow } from '@/lib/db/types';
@@ -241,6 +241,7 @@ export function QualifiersPanel({
         <table className="w-full text-sm">
           <thead className="bg-bg2 text-ink2 text-xs uppercase tracking-wider">
             <tr>
+              <th className="text-left px-3 py-2 w-12">#</th>
               <th className="text-left px-3 py-2 w-16">Pass</th>
               <th className="text-left px-3 py-2 w-20">Num</th>
               <th className="text-left px-3 py-2">Team</th>
@@ -261,11 +262,12 @@ export function QualifiersPanel({
                   .sort((a, b) => (b.votes - a.votes) || a.participant_num.localeCompare(b.participant_num, undefined, { numeric: true }));
                 list.forEach((r, i) => rankByNum.set(`${r.role}:${r.participant_num}`, i + 1));
               }
-              return sortedRows.map((r) => {
+              const renderRow = (r: QualifierRow, seq: number) => {
                 const rank = rankByNum.get(`${r.role}:${r.participant_num}`) ?? 999;
                 const inQuota = rank <= maxPerRole;
                 return (
                   <tr key={r.id} className={`border-t border-border ${inQuota ? 'bg-ok/[0.04]' : ''}`}>
+                    <td className="px-3 py-2 font-mono text-ink2/60">{seq}</td>
                     <td className="px-3 py-2">
                       <input
                         type="checkbox"
@@ -307,11 +309,33 @@ export function QualifiersPanel({
                     </td>
                   </tr>
                 );
-              });
+              };
+              // 리더 / 팔로워 섹션으로 구분. 순번은 역할별로 1부터. (그 외 역할은 마지막 섹션)
+              const groups: { key: string; label: string; rows: QualifierRow[] }[] = [
+                { key: 'leader', label: ROLE_LABEL.leader, rows: sortedRows.filter((r) => r.role === 'leader') },
+                { key: 'follower', label: ROLE_LABEL.follower, rows: sortedRows.filter((r) => r.role === 'follower') },
+              ];
+              const other = sortedRows.filter((r) => r.role !== 'leader' && r.role !== 'follower');
+              if (other.length) groups.push({ key: 'other', label: 'Other', rows: other });
+              return groups.map((g) => g.rows.length === 0 ? null : (
+                <Fragment key={g.key}>
+                  <tr className="bg-bg2/60 border-t-2 border-accent/30">
+                    <td colSpan={8} className="px-3 py-1.5 text-xs font-semibold text-accent uppercase tracking-wider">
+                      {g.label}
+                      <span className="ml-2 text-ink2 normal-case font-normal">
+                        · {g.rows.length}{g.key !== 'other'
+                          ? ` · pass ${g.rows.filter((r) => liveWouldPass.has(`${g.key}:${r.participant_num}`)).length}/${maxPerRole}`
+                          : ''}
+                      </span>
+                    </td>
+                  </tr>
+                  {g.rows.map((r, i) => renderRow(r, i + 1))}
+                </Fragment>
+              ));
             })()}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={7} className="text-center text-ink2 py-8">
+                <td colSpan={8} className="text-center text-ink2 py-8">
                   No {roundLabel} qualifiers with votes yet. Enter scores in <strong>{roundLabel} Judging</strong> first.
                 </td>
               </tr>

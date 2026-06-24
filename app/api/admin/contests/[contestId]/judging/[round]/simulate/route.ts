@@ -9,6 +9,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getSupabaseAdmin } from '@/lib/db/client';
+import { resolveActiveDefs, type ScoringItemKey } from '@/lib/db/scoring';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -25,7 +26,7 @@ interface RouteCtx { params: Promise<{ contestId: string; round: string }> }
 
 export async function POST(req: Request, ctx: RouteCtx) {
   const { contestId, round } = await ctx.params;
-  if (round !== 'prelim' && round !== 'semi') {
+  if (round !== 'prelim' && round !== 'semi' && round !== 'final') {
     return NextResponse.json({ error: 'ROUND_NOT_SUPPORTED' }, { status: 400 });
   }
   const body = await req.json().catch(() => ({}));
@@ -40,17 +41,76 @@ export async function POST(req: Request, ctx: RouteCtx) {
 
   const { data: contest } = await sb
     .from('contests')
-    .select('prelim_pass_per_role, semi_pass_per_role')
+    .select('prelim_pass_per_role, semi_pass_per_role, scoring_items')
     .eq('id', contestId)
     .maybeSingle();
   if (!contest) return NextResponse.json({ error: 'CONTEST_NOT_FOUND' }, { status: 404 });
-  const maxPerRole = round === 'prelim' ? contest.prelim_pass_per_role : contest.semi_pass_per_role;
 
   const { data: judges } = await sb
     .from('judges').select('id').eq('contest_id', contestId).eq('round', round).order('display_order', { ascending: true });
   const judgeIds = (judges ?? []).map((j) => j.id);
   if (judgeIds.length === 0) return NextResponse.json({ error: 'NO_JUDGES' }, { status: 400 });
   const J = judgeIds.length;
+
+  // ── 결승(final) — 점수제. 활성 항목별 점수를 생성해 시상(top3) 경계 동점을 만든다. ──
+  if (round === 'final') {
+    const activeCols = resolveActiveDefs((contest.scoring_items ?? []) as ScoringItemKey[]).map((d) => d.column);
+    const { data: qs } = await sb.from('qualifiers').select('participant_num, role')
+      .eq('contest_id', contestId).eq('round', 'semi').eq('passed', true);
+    const finalists = (qs ?? []).filter((q) => q.role === 'leader' || q.role === 'follower')
+      .map((q) => ({ num: q.participant_num as string, role: q.role as 'leader' | 'follower' }));
+    if (finalists.length === 0) return NextResponse.json({ error: 'NO_FINALISTS' }, { status: 400 });
+
+    const PODIUM = 3;
+    const base = 8; // 시상 경계(3위) 기준 점수
+    // 결승 진출자별 항목 점수값(모든 심사위원 동일) → 합계 순위. 시상 경계 동점 tieCount 명.
+    const cellByNum = new Map<string, number>();
+    for (const role of ['leader', 'follower'] as const) {
+      const list = finalists.filter((f) => f.role === role);
+      for (let i = list.length - 1; i > 0; i--) {
+        const k = Math.floor(Math.random() * (i + 1));
+        [list[i], list[k]] = [list[k], list[i]];
+      }
+      const E = list.length;
+      const reqTie = tieFor(role);
+      if (E <= PODIUM || reqTie < 2) {
+        // 시상 이하이거나 동점 미요청 — 내림차순 distinct 점수.
+        list.forEach((f, idx) => cellByNum.set(f.num, Math.max(1, base + 2 - idx)));
+        continue;
+      }
+      const aboveCount = PODIUM - 1;                              // 1·2위 확실
+      const T = Math.max(2, Math.min(reqTie, E - aboveCount));
+      list.forEach((f, idx) => {
+        let val: number;
+        if (idx < aboveCount) val = base + (aboveCount - idx);    // 1위 base+2, 2위 base+1
+        else if (idx < aboveCount + T) val = base;               // 시상 경계 동점
+        else val = Math.max(1, base - 1 - (idx - aboveCount - T)); // 그 이하
+        cellByNum.set(f.num, val);
+      });
+    }
+
+    const rows = finalists.flatMap((f) => {
+      const val = cellByNum.get(f.num) ?? 1;
+      const scoreObj: Record<string, number> = {};
+      for (const col of activeCols) scoreObj[col] = val;
+      return judgeIds.map((jid) => ({ judge_id: jid, participant_num: f.num, vote_mark: null, ...scoreObj }));
+    });
+
+    const { error: delErr } = await sb.from('judge_votes').delete().in('judge_id', judgeIds);
+    if (delErr) return NextResponse.json({ error: delErr.message }, { status: 500 });
+    // 새 점수로 기존 결승 결과 확정은 무효.
+    await sb.from('final_results').delete().eq('contest_id', contestId);
+    const CHUNK_F = 500;
+    for (let i = 0; i < rows.length; i += CHUNK_F) {
+      const { error } = await sb.from('judge_votes').insert(rows.slice(i, i + CHUNK_F));
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json({
+      data: { judges: J, finalists: finalists.length, votes: rows.length, tieLeader: tieFor('leader'), tieFollower: tieFor('follower') },
+    });
+  }
+
+  const maxPerRole = round === 'prelim' ? contest.prelim_pass_per_role : contest.semi_pass_per_role;
 
   // 후보 풀 — prelim: 모든 leader/follower 참가자, semi: prelim 통과자.
   let pool: { num: string; role: 'leader' | 'follower' }[] = [];

@@ -56,7 +56,7 @@ export async function POST(req: Request, ctx: RouteCtx) {
 
   // 결승은 별도 로직으로 분기.
   if (r.data === 'final') {
-    return commitFinal(sb, contestId, contest as Pick<ContestRow, 'scoring_items'>);
+    return commitFinal(sb, contestId, contest as Pick<ContestRow, 'scoring_items'>, tieExclude);
   }
 
   const maxPerRole = r.data === 'prelim' ? contest.prelim_pass_per_role : contest.semi_pass_per_role;
@@ -193,7 +193,8 @@ export async function POST(req: Request, ctx: RouteCtx) {
 async function commitFinal(
   sb: ReturnType<typeof getSupabaseAdmin>,
   contestId: string,
-  contest: Pick<ContestRow, 'scoring_items'>
+  contest: Pick<ContestRow, 'scoring_items'>,
+  tieExclude: Set<string> = new Set()
 ) {
   // 활성 채점 항목 → 점수 컬럼 목록.
   const activeDefs = resolveActiveDefs((contest.scoring_items ?? []) as ScoringItemKey[]);
@@ -241,6 +242,10 @@ async function commitFinal(
   }
 
   // 역할별 정렬 + Olympic rank.
+  //   동점 추려내기(tieExclude) 가 있으면 같은 총점에서 미선택자(excluded)를 선택자보다 뒤로 보내고,
+  //   순위 동률 기준에 "선택/미선택" 을 포함해 시상 경계 동점을 깬다(선택자=상위, 미선택=하위).
+  //   tieExclude 가 비어있으면 isEx 가 모두 0 → 기존 Olympic 동작과 동일.
+  const isEx = (num: string) => (tieExclude.has(num) ? 1 : 0);
   const rankMap = new Map<string, number>(); // participant_num → rank (역할별)
   for (const role of ['leader', 'follower'] as const) {
     const list = candidates
@@ -250,13 +255,18 @@ async function commitFinal(
         return { num: c.participant_num, total: t.sum, cnt: t.cnt };
       })
       .filter((x) => x.cnt > 0) // 점수 한 칸이라도 입력된 후보만 랭킹 대상
-      .sort((a, b) => b.total - a.total || a.num.localeCompare(b.num, undefined, { numeric: true }));
-    let lastTotal = Number.POSITIVE_INFINITY;
+      .sort((a, b) =>
+        b.total - a.total ||
+        isEx(a.num) - isEx(b.num) ||
+        a.num.localeCompare(b.num, undefined, { numeric: true })
+      );
+    let lastKey: string | null = null;
     let lastRank = 0;
     for (let i = 0; i < list.length; i++) {
-      if (list[i].total !== lastTotal) {
+      const key = `${list[i].total}:${isEx(list[i].num)}`;
+      if (key !== lastKey) {
         lastRank = i + 1;
-        lastTotal = list[i].total;
+        lastKey = key;
       }
       rankMap.set(list[i].num, lastRank);
     }

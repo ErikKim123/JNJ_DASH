@@ -51,6 +51,20 @@ function fillJudges(
   }
 }
 
+// 이름이 길면 2줄로 분할 — 공백 중 가운데에 가장 가까운 위치에서 끊는다.
+// 짧으면 [전체, ''] (한 줄). 공백 없으면 그대로 한 줄.
+function splitNameTwoLines(name: string): [string, string] {
+  const n = (name ?? '').trim();
+  if (n.length <= 9) return [n, ''];
+  const spaces: number[] = [];
+  for (let i = 0; i < n.length; i++) if (n[i] === ' ') spaces.push(i);
+  if (spaces.length === 0) return [n, ''];
+  const mid = n.length / 2;
+  let best = spaces[0];
+  for (const s of spaces) if (Math.abs(s - mid) < Math.abs(best - mid)) best = s;
+  return [n.slice(0, best).trim(), n.slice(best + 1).trim()];
+}
+
 function fillResultEntries(
   out: Record<string, string>,
   prefix: 'result' | 'champ',
@@ -61,10 +75,17 @@ function fillResultEntries(
   for (let i = 1; i <= maxIdx; i++) {
     const lead = leaders.find((x) => x.idx === i);
     const foll = followers.find((x) => x.idx === i);
+    // 전체 이름 키(기존, 한 줄용) + 2줄 분할 키(_l1/_l2) 동시 제공.
+    const [ll1, ll2] = splitNameTwoLines(lead?.name ?? '');
+    const [fl1, fl2] = splitNameTwoLines(foll?.name ?? '');
     out[`${prefix}_leader_${i}`] = lead?.name ?? '';
+    out[`${prefix}_leader_${i}_l1`] = ll1;
+    out[`${prefix}_leader_${i}_l2`] = ll2;
     out[`${prefix}_leader_num_${i}`] = lead?.num ?? '';
     out[`${prefix}_leader_photo_${i}`] = lead?.photo ?? '';
     out[`${prefix}_follower_${i}`] = foll?.name ?? '';
+    out[`${prefix}_follower_${i}_l1`] = fl1;
+    out[`${prefix}_follower_${i}_l2`] = fl2;
     out[`${prefix}_follower_num_${i}`] = foll?.num ?? '';
     out[`${prefix}_follower_photo_${i}`] = foll?.photo ?? '';
   }
