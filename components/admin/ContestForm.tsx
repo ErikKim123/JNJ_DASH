@@ -43,6 +43,8 @@ export function ContestForm({
     tagline: initial?.tagline ?? '',
     prelim_pass_per_role: initial?.prelim_pass_per_role ?? 10,
     semi_pass_per_role: initial?.semi_pass_per_role ?? 5,
+    prelim_group_size: initial?.prelim_group_size ?? 0,
+    semi_group_size: initial?.semi_group_size ?? 0,
     status: initial?.status ?? 'ready',
     scoring_items:
       Array.isArray(initial?.scoring_items) && initial!.scoring_items.length > 0
@@ -339,6 +341,32 @@ export function ContestForm({
           <Input value={form.tagline} onChange={(e) => update('tagline', e.target.value)} />
         </Field>
       </div>
+
+      {/* 페어링 그룹(조) 설정 — 그룹당 커플 수. >0 이면 페어링 목록을 A·B·C 그룹으로 분할 표시 */}
+      <section className="rounded border border-border bg-panel/40 p-4">
+        <h3 className="text-sm font-semibold mb-1">{t('cf.pairingGroupTitle')}</h3>
+        <p className="text-xs text-ink2 mb-3">{t('cf.pairingGroupHint')}</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Field label={t('cf.prelimGroupSize')}>
+            <Input
+              type="number"
+              min={0}
+              max={200}
+              value={form.prelim_group_size}
+              onChange={(e) => update('prelim_group_size', Number(e.target.value))}
+            />
+          </Field>
+          <Field label={t('cf.semiGroupSize')}>
+            <Input
+              type="number"
+              min={0}
+              max={200}
+              value={form.semi_group_size}
+              onChange={(e) => update('semi_group_size', Number(e.target.value))}
+            />
+          </Field>
+        </div>
+      </section>
 
       <section className="rounded border border-border bg-panel/40 p-4">
         <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">

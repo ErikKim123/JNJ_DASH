@@ -29,6 +29,8 @@ const PatchSchema = z.object({
   tagline: z.string().max(200).optional(),
   prelim_pass_per_role: z.number().int().min(1).max(200).optional(),
   semi_pass_per_role: z.number().int().min(1).max(200).optional(),
+  prelim_group_size: z.number().int().min(0).max(200).optional(),
+  semi_group_size: z.number().int().min(0).max(200).optional(),
   status: z.enum(['ready', 'live', 'done', 'archived']).optional(),
   group_name: z.string().max(100).optional(),
   scoring_items: z.array(ScoringItemEnum).min(1).optional(),

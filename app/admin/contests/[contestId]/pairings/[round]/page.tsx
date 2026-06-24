@@ -30,7 +30,12 @@ export default async function PairingsPage({
         }
       />
       <ContestTabs contestId={contestId} current={`${base}/pairings/${round}`} />
-      <PairingsPanel contestId={contestId} round={round} initial={rows} />
+      <PairingsPanel
+        contestId={contestId}
+        round={round}
+        initial={rows}
+        groupSize={round === 'prelim' ? contest.prelim_group_size : contest.semi_group_size}
+      />
     </>
   );
 }

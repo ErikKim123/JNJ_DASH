@@ -31,6 +31,9 @@ export interface ContestRow {
   tagline: string;
   prelim_pass_per_role: number;
   semi_pass_per_role: number;
+  /** 페어링 그룹(조)당 커플 수. >0 이면 페어링 목록을 그 수만큼씩 끊어 A·B·C… 그룹으로 표시. 0 이면 그룹 미사용. */
+  prelim_group_size: number;
+  semi_group_size: number;
   status: ContestStatus;
   /** 라운드별 진행 상태 — 시트의 라운드 드롭다운 대체. 표출 화면 step 흐름과 매칭. */
   prelim_status: RoundStatus;

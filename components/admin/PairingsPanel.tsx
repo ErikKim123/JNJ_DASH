@@ -8,7 +8,7 @@
 //
 // draft 상태에서는 행 인라인 편집 허용. confirmed 상태에서는 read-only.
 // [확정] 클릭 시 모든 페어 status=confirmed, [리페어링] 클릭 시 모두 draft.
-import { useMemo, useState, useTransition } from 'react';
+import { Fragment, useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Badge, Button, Input } from './ui';
 import type { PairingRow } from '@/lib/db/types';
@@ -17,10 +17,13 @@ export function PairingsPanel({
   contestId,
   round,
   initial,
+  groupSize = 0,
 }: {
   contestId: string;
   round: 'prelim' | 'semi';
   initial: PairingRow[];
+  /** 그룹(조)당 커플 수. >0 이면 목록을 그 수만큼씩 끊어 A·B·C… 그룹 헤더로 구분. */
+  groupSize?: number;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -160,8 +163,24 @@ export function PairingsPanel({
             </tr>
           </thead>
           <tbody>
-            {rows.map((r, i) => (
-              <tr key={r.id} className="border-t border-border">
+            {rows.map((r, i) => {
+              // 그룹 분할 — groupSize 마다 A·B·C… 헤더 행을 삽입.
+              const showHeader = groupSize > 0 && i % groupSize === 0;
+              const groupLabel = showHeader ? String.fromCharCode(65 + Math.floor(i / groupSize)) : '';
+              const groupEnd = Math.min(i + groupSize, rows.length);
+              return (
+              <Fragment key={r.id}>
+                {showHeader && (
+                  <tr className="bg-bg2 border-t-2 border-accent/40">
+                    <td colSpan={5} className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-accent">
+                      Group {groupLabel}
+                      <span className="ml-2 text-ink2 normal-case font-normal">
+                        #{r.pair_idx}–#{rows[groupEnd - 1]?.pair_idx} · {groupEnd - i} couples
+                      </span>
+                    </td>
+                  </tr>
+                )}
+              <tr className="border-t border-border">
                 <td className="px-3 py-2 font-mono text-ink2">{r.pair_idx}</td>
                 {editable ? (
                   <>
@@ -179,7 +198,9 @@ export function PairingsPanel({
                   </>
                 )}
               </tr>
-            ))}
+              </Fragment>
+              );
+            })}
             {rows.length === 0 && (
               <tr>
                 <td colSpan={5} className="text-center text-ink2 py-8">
