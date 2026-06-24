@@ -277,6 +277,7 @@ export function ContestForm({
         <Field label={t('cf.status')}>
           <Select value={form.status} onChange={(e) => update('status', e.target.value as ContestRow['status'])}>
             <option value="ready">{t('cf.statusReady')}</option>
+            <option value="closed">{t('cf.statusClosed')}</option>
             <option value="live">{t('cf.statusLive')}</option>
             <option value="done">{t('cf.statusDone')}</option>
             <option value="archived">{t('cf.statusArchived')}</option>

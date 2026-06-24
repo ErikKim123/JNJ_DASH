@@ -33,7 +33,8 @@ export default async function JoinFormPage({
   // ready 상태에서만 등록 가능. archived 는 목록에서 이미 숨김.
   if (contest.status !== 'ready') {
     const reason =
-      contest.status === 'live' ? '대회가 이미 진행 중입니다.'
+      contest.status === 'closed' ? '접수가 마감되었습니다.'
+      : contest.status === 'live' ? '대회가 이미 진행 중입니다.'
       : contest.status === 'done' ? '대회가 종료되었습니다.'
       : '현재 등록을 받지 않습니다.';
     return (

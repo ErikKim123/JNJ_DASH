@@ -9,7 +9,7 @@ export type ParticipantRole =
   | 'helper_leader'
   | 'helper_follower';
 
-export type ContestStatus = 'ready' | 'live' | 'done' | 'archived';
+export type ContestStatus = 'ready' | 'closed' | 'live' | 'done' | 'archived';
 /** JOIN APP 톤앤매너 — 기본 배경/텍스트 톤(프리셋의 base mode). */
 export type JoinThemeMode = 'light' | 'dark';
 export type RoundStatus = 'prep' | 'pairing' | 'open' | 'live' | 'calculate' | 'close' | 'result';
