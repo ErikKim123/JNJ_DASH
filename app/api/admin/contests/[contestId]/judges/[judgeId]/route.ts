@@ -25,6 +25,7 @@ const Patch = z.object({
   memo: z.string().max(2000).optional(),
   max_votes: z.number().int().min(0).max(999).nullable().optional(),
   photo_url: z.string().max(1024).optional(),
+  is_head: z.boolean().optional(),
 });
 
 interface RouteCtx { params: Promise<{ contestId: string; judgeId: string }> }
@@ -47,6 +48,15 @@ export async function PATCH(req: Request, ctx: RouteCtx) {
     .maybeSingle();
   if (je) return NextResponse.json({ error: je.message }, { status: 500 });
   if (!judge) return NextResponse.json({ error: 'NOT_FOUND' }, { status: 404 });
+
+  // 헤드 지정은 대회당 1명 — true 로 바꿀 때 같은 대회의 다른 심사위원을 모두 해제.
+  if (parsed.data.is_head === true) {
+    const { error: ue } = await sb
+      .from('judges')
+      .update({ is_head: false })
+      .eq('contest_id', contestId);
+    if (ue) return NextResponse.json({ error: ue.message }, { status: 500 });
+  }
 
   // 2) 같은 (contest_id, display_order) 의 모든 라운드 row 갱신
   const { data, error } = await sb

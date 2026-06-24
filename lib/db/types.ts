@@ -154,6 +154,8 @@ export interface JudgeRow {
   max_votes: number | null;
   /** 심사위원 프로필 사진 URL (Supabase Storage public CDN). 비어있으면 미등록. */
   photo_url: string;
+  /** 헤드(타이브레이커) 심사위원 여부 — 경계 동점 시 이 심사위원의 O 표로 진출자 우선 선택. 대회당 1명. */
+  is_head: boolean;
   created_at: string;
   updated_at: string;
 }

@@ -410,14 +410,31 @@ export function JudgingMatrix({
   }
 
   // 동점 추려내기 모달 — 열기/선택/적용.
+  // 헤드(타이브레이커) 심사위원이 지정돼 있으면, 동점자 중 헤드가 O 준 사람을 우선 자동 선택.
+  // 부족분은 정원 안(rank) 순 → 남으면 앞에서부터 채운다. 운영자는 확인 후 저장.
+  const headJudge = useMemo(() => judges.find((j) => j.is_head) ?? null, [judges]);
   function openTieModal() {
-    // 현재 정원 안(rank ≤ maxPerRole)인 동점자를 slots 만큼 미리 선택.
     const init: Record<string, boolean> = {};
     for (const g of tieGroups) {
       let n = 0;
+      // 1) 헤드가 O 준 동점자 우선
+      if (headJudge) {
+        for (const c of g.candidates) {
+          if (n >= g.slots) break;
+          if (voteMap.get(`${headJudge.id}:${c.num}`)?.vote_mark === 'O') { init[c.num] = true; n++; }
+        }
+      }
+      // 2) 부족분은 정원 안(rank ≤ maxPerRole) 순으로 보강
       for (const c of g.candidates) {
-        const inQuota = (rankMap.get(c.num) ?? 999) <= maxPerRole;
-        if (inQuota && n < g.slots) { init[c.num] = true; n++; }
+        if (n >= g.slots) break;
+        if (init[c.num]) continue;
+        if ((rankMap.get(c.num) ?? 999) <= maxPerRole) { init[c.num] = true; n++; }
+      }
+      // 3) 그래도 부족하면 앞에서부터
+      for (const c of g.candidates) {
+        if (n >= g.slots) break;
+        if (init[c.num]) continue;
+        init[c.num] = true; n++;
       }
     }
     setTiePick(init);
@@ -716,17 +733,19 @@ export function JudgingMatrix({
             {t('matrix.passQuota')}: {maxPerRole * 2} {t('matrix.couples')} ({maxPerRole} {L} / {maxPerRole} {F})
           </Badge>
           <span
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-ok/60 bg-ok/10 text-ok text-xs font-semibold"
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-xs font-semibold ${
+              overQuota ? 'border-danger/60 bg-danger/10 text-danger' : 'border-ok/60 bg-ok/10 text-ok'
+            }`}
             title={t('matrix.tooltipLiveCounter')}
           >
-            <span className="text-ok/70 font-normal">{isCommitted ? t('matrix.passingConfirmed') : isFinal ? t('matrix.podium') : t('matrix.currentlyPassing')}:</span>
-            <span className="font-mono">{passDisplay.leaders}</span>
-            <span className="text-ok/60">{L}</span>
-            <span className="text-ok/40">/</span>
-            <span className="font-mono">{passDisplay.followers}</span>
-            <span className="text-ok/60">{F}</span>
+            <span className="font-normal opacity-70">{isCommitted ? t('matrix.passingConfirmed') : isFinal ? t('matrix.podium') : t('matrix.currentlyPassing')}:</span>
+            <span className={`font-mono ${!isCommitted && passDisplay.leaders > maxPerRole ? 'text-danger font-bold' : ''}`}>{passDisplay.leaders}</span>
+            <span className="opacity-60">{L}</span>
+            <span className="opacity-40">/</span>
+            <span className={`font-mono ${!isCommitted && passDisplay.followers > maxPerRole ? 'text-danger font-bold' : ''}`}>{passDisplay.followers}</span>
+            <span className="opacity-60">{F}</span>
             {overQuota && (
-              <span className="ml-1 text-danger font-normal">({t('matrix.tieOverQuota')})</span>
+              <span className="ml-1 font-normal">({t('matrix.tieOverQuota')})</span>
             )}
           </span>
           {boundaryTieNums.size > 0 && (
@@ -1143,6 +1162,7 @@ export function JudgingMatrix({
                       {g.candidates.map((c) => {
                         const checked = !!tiePick[c.num];
                         const atCap = !checked && selected >= g.slots;
+                        const headO = !!headJudge && voteMap.get(`${headJudge.id}:${c.num}`)?.vote_mark === 'O';
                         return (
                           <li key={c.num}>
                             <label
@@ -1159,6 +1179,9 @@ export function JudgingMatrix({
                               />
                               <span className="font-mono text-ink2 w-12">{c.num}</span>
                               <span className="truncate">{c.team_name}</span>
+                              {headO && (
+                                <span className="text-accent text-xs" title={t('matrix.tieHeadPick')}>👑 O</span>
+                              )}
                               <span className={`ml-auto text-xs ${checked ? 'text-ok' : 'text-danger'}`}>
                                 {checked ? t('matrix.tieKeep') : t('matrix.tieDrop')}
                               </span>

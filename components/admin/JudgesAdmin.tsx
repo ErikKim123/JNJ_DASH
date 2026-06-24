@@ -231,6 +231,31 @@ export function JudgesAdmin({
     });
   }
 
+  // 헤드(타이브레이커) 지정/해제 — 지정 시 서버가 다른 심사위원을 모두 해제(대회당 1명).
+  function setHead(group: JudgeGroup) {
+    const makeHead = !group.canonical.is_head;
+    setError(null);
+    startTransition(async () => {
+      const res = await fetch(`${apiBase}/${group.canonical.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_head: makeHead }),
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        setError(j.error ?? `Update failed (${res.status})`);
+        router.refresh();
+        return;
+      }
+      setGroups((s) => s.map((g) => {
+        if (makeHead) return { ...g, canonical: { ...g.canonical, is_head: g.display_order === group.display_order } };
+        return g.display_order === group.display_order
+          ? { ...g, canonical: { ...g.canonical, is_head: false } }
+          : g;
+      }));
+    });
+  }
+
   // 라운드별 max_votes 패치 — mirror 가 아닌 per-round endpoint 사용.
   // 같은 심사위원이라도 예선/본선 정원이 달라 라운드별로 다른 cap 을 둘 수 있어야 한다.
   function patchMaxVotes(group: JudgeGroup, round: JudgingRound, value: number | null) {
@@ -374,6 +399,7 @@ export function JudgesAdmin({
                     onToggle={() => setExpandedOrder(expandedOrder === g.display_order ? null : g.display_order)}
                     onPatch={(p) => patchJudge(g, p)}
                     onPatchMaxVotes={(round, v) => patchMaxVotes(g, round, v)}
+                    onSetHead={() => setHead(g)}
                     onDelete={() => deleteJudge(g)}
                     onPhotoUploaded={(url) => {
                       setGroups((s) => s.map((x) =>
@@ -431,6 +457,7 @@ function JudgeRowEditor({
   onToggle,
   onPatch,
   onPatchMaxVotes,
+  onSetHead,
   onDelete,
   onPhotoUploaded,
 }: {
@@ -444,6 +471,7 @@ function JudgeRowEditor({
   onToggle: () => void;
   onPatch: (patch: Partial<JudgeRow>) => void;
   onPatchMaxVotes: (round: JudgingRound, value: number | null) => void;
+  onSetHead: () => void;
   onDelete: () => void;
   onPhotoUploaded: (url: string) => void;
 }) {
@@ -529,7 +557,24 @@ function JudgeRowEditor({
           </button>
         </td>
         <td className="px-2 py-2">
-          <span className="inline-block w-14 font-mono text-center text-ink2">{group.display_order}</span>
+          <div className="flex flex-col items-center gap-1">
+            <span className="font-mono text-ink2">{group.display_order}</span>
+            <button
+              type="button"
+              onClick={onSetHead}
+              disabled={pending}
+              className={`text-[10px] px-1.5 py-0.5 rounded border leading-none ${
+                judge.is_head
+                  ? 'border-accent/60 bg-accent/15 text-accent font-semibold'
+                  : 'border-border text-ink2/50 hover:text-accent hover:border-accent'
+              }`}
+              title={judge.is_head
+                ? '헤드 심사위원 (동점 타이브레이커) — 해제하려면 클릭'
+                : '헤드(동점 타이브레이커)로 지정 — 경계 동점 시 이 심사위원 O 표로 우선 선택'}
+            >
+              {judge.is_head ? '👑 HEAD' : '👑'}
+            </button>
+          </div>
         </td>
         <td className="px-2 py-2">
           <div className="flex flex-col items-center gap-1">
