@@ -34,6 +34,7 @@ export default async function PairingsPage({
         contestId={contestId}
         round={round}
         initial={rows}
+        groups={round === 'prelim' ? contest.prelim_groups : contest.semi_groups}
         groupSize={round === 'prelim' ? contest.prelim_group_size : contest.semi_group_size}
       />
     </>

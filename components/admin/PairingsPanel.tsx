@@ -17,12 +17,15 @@ export function PairingsPanel({
   contestId,
   round,
   initial,
+  groups = [],
   groupSize = 0,
 }: {
   contestId: string;
   round: 'prelim' | 'semi';
   initial: PairingRow[];
-  /** 그룹(조)당 커플 수. >0 이면 목록을 그 수만큼씩 끊어 A·B·C… 그룹 헤더로 구분. */
+  /** 그룹별 커플 수 배열. 예: [20,20,20] → A·B·C. 우선 적용. */
+  groups?: number[];
+  /** (legacy) 그룹당 커플 수 — groups 가 비어있을 때만 균등 분할 폴백. */
   groupSize?: number;
 }) {
   const router = useRouter();
@@ -43,6 +46,27 @@ export function PairingsPanel({
   }, [rows]);
 
   const editable = status === 'draft' || status === 'empty' || status === 'mixed';
+
+  // 그룹 경계 계산 — groups 배열 우선, 없으면 groupSize 로 균등 분할.
+  // 정의된 그룹 합보다 페어가 많으면 남는 페어는 다음 알파벳 그룹으로.
+  const headerByStart = useMemo(() => {
+    const sizes = (groups && groups.length)
+      ? groups.filter((n) => n > 0)
+      : (groupSize > 0
+          ? Array.from({ length: Math.ceil(rows.length / groupSize) }, (_, i) =>
+              Math.min(groupSize, rows.length - i * groupSize))
+          : []);
+    const m = new Map<number, { end: number; label: string }>();
+    if (!sizes.length) return m;
+    let acc = 0, g = 0;
+    for (; g < sizes.length && acc < rows.length; g++) {
+      const end = Math.min(acc + sizes[g], rows.length);
+      m.set(acc, { end, label: String.fromCharCode(65 + g) });
+      acc = end;
+    }
+    if (acc < rows.length) m.set(acc, { end: rows.length, label: String.fromCharCode(65 + g) });
+    return m;
+  }, [groups, groupSize, rows.length]);
 
   async function call(method: 'POST' | 'PUT', query: string, body?: unknown) {
     setError(null);
@@ -134,10 +158,22 @@ export function PairingsPanel({
         <div className="flex items-center gap-2 flex-wrap">
           <Button onClick={shuffle} disabled={pending}>🎲 Shuffle</Button>
           {editable && rows.length > 0 && (
-            <>
-              <Button onClick={saveManual} disabled={pending}>Save edits</Button>
-              <Button variant="primary" onClick={confirmAll} disabled={pending}>✓ Confirm</Button>
-            </>
+            <Button onClick={saveManual} disabled={pending}>Save edits</Button>
+          )}
+          {/* Confirm 은 항상 노출 — 확정 상태에선 비활성('Confirmed') 으로 표시해 버튼이 사라지지 않게. */}
+          {rows.length > 0 && (
+            <Button
+              variant="primary"
+              onClick={confirmAll}
+              disabled={pending || status === 'confirmed'}
+              title={
+                status === 'confirmed'
+                  ? 'Already confirmed — click Re-pair to edit, then Confirm again'
+                  : 'Confirm pairs (show on display)'
+              }
+            >
+              {status === 'confirmed' ? '✓ Confirmed' : '✓ Confirm'}
+            </Button>
           )}
           {status === 'confirmed' && (
             <Button variant="danger" onClick={repair} disabled={pending}>↺ Re-pair</Button>
@@ -164,10 +200,11 @@ export function PairingsPanel({
           </thead>
           <tbody>
             {rows.map((r, i) => {
-              // 그룹 분할 — groupSize 마다 A·B·C… 헤더 행을 삽입.
-              const showHeader = groupSize > 0 && i % groupSize === 0;
-              const groupLabel = showHeader ? String.fromCharCode(65 + Math.floor(i / groupSize)) : '';
-              const groupEnd = Math.min(i + groupSize, rows.length);
+              // 그룹 분할 — 그룹 시작 위치마다 A·B·C… 헤더 행을 삽입.
+              const hdr = headerByStart.get(i);
+              const showHeader = !!hdr;
+              const groupLabel = hdr?.label ?? '';
+              const groupEnd = hdr?.end ?? i;
               return (
               <Fragment key={r.id}>
                 {showHeader && (

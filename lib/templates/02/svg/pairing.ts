@@ -2,10 +2,10 @@
 // 페어 수에 따라 레이아웃이 달라지므로 변형별 함수 분리
 import { shell, topHeader, citiesFooter } from './common';
 
-// 예선 — 2 columns × ceil(count/2) rows. 최대 25페어 지원.
+// 예선 — 2 columns × ceil(count/2) rows. 최대 30페어 지원(그룹당 ≤30 표출).
 // 중앙 PAIR 번호 배지는 제거(좌우 번호 배지로 충분), 행 높이는 페어 수에 맞춰 자동 축소.
 export function pairingSvg20(pairCount: number = 20): string {
-  const count = Math.max(11, Math.min(25, pairCount));
+  const count = Math.max(11, Math.min(30, pairCount));
   const firstColEnd = Math.ceil(count / 2);
   const rowsPerCol = firstColEnd;
   const startY = 232;
@@ -83,32 +83,36 @@ export function pairingSvg20(pairCount: number = 20): string {
   `);
 }
 
-// 10 pairs (본선) — single column with mid separator at row 5
+// 10 pairs (본선/예선 그룹 10) — 단일 열, 중앙 분리. 좌우로 벌어지지 않게
+// 콘텐츠를 화면 중앙(약 250~1030)으로 모아 콤팩트하게 정렬.
 export function pairingSvg10(): string {
   let rows = '';
   const rowH = 40;
   const groupGap = 10;
   const startY = 230;
+  // 중앙 정렬 좌표 — 이름은 안쪽(560/720), 번호 배지는 바깥쪽(290/990).
+  const LNAME = 560, FNAME = 720, LBADGE = 290, FBADGE = 990;
+  const STRIPE_X = 250, STRIPE_W = 780;
   for (let i = 1; i <= 10; i++) {
     const groupOffset = i > 5 ? groupGap : 0;
     const y = startY + (i - 1) * rowH + groupOffset;
     const delay = (i * 0.07).toFixed(2);
     const isStripe = i % 2 === 0;
     const stripe = isStripe
-      ? `<rect x="100" y="${y - 19}" width="1080" height="38" rx="5" fill="#0F2C20" opacity="0.6"/>`
+      ? `<rect x="${STRIPE_X}" y="${y - 19}" width="${STRIPE_W}" height="38" rx="5" fill="#0F2C20" opacity="0.6"/>`
       : '';
     rows += `
       ${stripe}
       <g transform="translate(0 ${y})" opacity="0">
         <animate attributeName="opacity" values="0;1" dur="0.5s" begin="${delay}s" fill="freeze"/>
-        <g transform="translate(140 0)">
+        <g transform="translate(${LBADGE} 0)">
           <rect x="-32" y="-15" width="64" height="30" rx="15" fill="url(#goldg)" opacity="0.22"/>
           <rect x="-32" y="-15" width="64" height="30" rx="15" fill="none" stroke="#9C7C2C" stroke-width="1"/>
           <text y="6" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" letter-spacing="1" fill="#FFD56B" font-weight="700">{{leader_num_${i}}}</text>
         </g>
-        <text x="340" y="10" text-anchor="end" font-family="'Gulim', '굴림', sans-serif" font-size="28" font-weight="700" fill="#FFEBA0">{{leader_${i}}}</text>
-        <text x="940" y="10" text-anchor="start" font-family="'Gulim', '굴림', sans-serif" font-size="28" font-weight="700" fill="#FFEBA0">{{follower_${i}}}</text>
-        <g transform="translate(1140 0)">
+        <text x="${LNAME}" y="10" text-anchor="end" font-family="'Gulim', '굴림', sans-serif" font-size="26" font-weight="700" fill="#FFEBA0">{{leader_${i}}}</text>
+        <text x="${FNAME}" y="10" text-anchor="start" font-family="'Gulim', '굴림', sans-serif" font-size="26" font-weight="700" fill="#FFEBA0">{{follower_${i}}}</text>
+        <g transform="translate(${FBADGE} 0)">
           <rect x="-32" y="-15" width="64" height="30" rx="15" fill="url(#goldg)" opacity="0.22"/>
           <rect x="-32" y="-15" width="64" height="30" rx="15" fill="none" stroke="#9C7C2C" stroke-width="1"/>
           <text y="6" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" letter-spacing="1" fill="#FFD56B" font-weight="700">{{follower_num_${i}}}</text>
@@ -118,8 +122,8 @@ export function pairingSvg10(): string {
   }
   const midSepY = startY + 5 * rowH + Math.floor(groupGap / 2) - 5;
   const midSep = `
-    <line x1="180" y1="${midSepY}" x2="540" y2="${midSepY}" stroke="#D4AF37" stroke-width="0.5" opacity="0.5" stroke-dasharray="4 5"/>
-    <line x1="740" y1="${midSepY}" x2="1100" y2="${midSepY}" stroke="#D4AF37" stroke-width="0.5" opacity="0.5" stroke-dasharray="4 5"/>
+    <line x1="${LBADGE}" y1="${midSepY}" x2="${LNAME}" y2="${midSepY}" stroke="#D4AF37" stroke-width="0.5" opacity="0.5" stroke-dasharray="4 5"/>
+    <line x1="${FNAME}" y1="${midSepY}" x2="${FBADGE}" y2="${midSepY}" stroke="#D4AF37" stroke-width="0.5" opacity="0.5" stroke-dasharray="4 5"/>
     <text x="640" y="${midSepY + 4}" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-size="11" fill="#D4AF37" opacity="0.65">✦</text>
   `;
 
@@ -129,10 +133,10 @@ export function pairingSvg10(): string {
     <text x="640" y="176" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="15" letter-spacing="6" fill="#E8E6DA" opacity="0.85">{{stage_label}}</text>
 
     <g transform="translate(0 206)">
-      <text x="340" y="0" text-anchor="end" font-family="ui-monospace, monospace" font-size="11" letter-spacing="5" fill="#D4AF37">{{label_leader}}</text>
-      <text x="940" y="0" text-anchor="start" font-family="ui-monospace, monospace" font-size="11" letter-spacing="5" fill="#D4AF37">{{label_follower}}</text>
-      <line x1="120" y1="14" x2="540" y2="14" stroke="url(#goldgh)" stroke-width="0.5" opacity="0.6"/>
-      <line x1="740" y1="14" x2="1160" y2="14" stroke="url(#goldgh)" stroke-width="0.5" opacity="0.6"/>
+      <text x="${LNAME}" y="0" text-anchor="end" font-family="ui-monospace, monospace" font-size="11" letter-spacing="5" fill="#D4AF37">{{label_leader}}</text>
+      <text x="${FNAME}" y="0" text-anchor="start" font-family="ui-monospace, monospace" font-size="11" letter-spacing="5" fill="#D4AF37">{{label_follower}}</text>
+      <line x1="${STRIPE_X}" y1="14" x2="${LNAME}" y2="14" stroke="url(#goldgh)" stroke-width="0.5" opacity="0.6"/>
+      <line x1="${FNAME}" y1="14" x2="${STRIPE_X + STRIPE_W}" y2="14" stroke="url(#goldgh)" stroke-width="0.5" opacity="0.6"/>
     </g>
 
     ${midSep}

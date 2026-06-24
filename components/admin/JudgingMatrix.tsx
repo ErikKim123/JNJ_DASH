@@ -17,6 +17,7 @@ import type {
   QualifierRow,
   JudgingRound,
   VoteMark,
+  RoundStatus,
 } from '@/lib/db/types';
 import {
   resolveActiveDefs,
@@ -44,6 +45,7 @@ export function JudgingMatrix({
   maxPerRole,
   scoringItems,
   initialConfirmed,
+  roundStatus,
 }: {
   contestId: string;
   round: JudgingRound;
@@ -58,6 +60,8 @@ export function JudgingMatrix({
   scoringItems?: readonly ScoringItemKey[];
   /** Qualifiers 테이블에 이미 확정(passed=true)된 인원. prelim/semi 에서만 의미. */
   initialConfirmed?: { leaders: number; followers: number };
+  /** 이 라운드의 진행 상태 — 'prep' 일 때만 시뮬레이션 버튼 노출. */
+  roundStatus?: RoundStatus;
 }) {
   const router = useRouter();
   const t = useT();
@@ -74,6 +78,14 @@ export function JudgingMatrix({
   const [resetModalOpen, setResetModalOpen] = useState(false);
   const [uncommitModalOpen, setUncommitModalOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
+  // 동점 추려내기 모달 — 경계 동점 그룹에서 올릴 사람 선택.
+  const [tieModalOpen, setTieModalOpen] = useState(false);
+  const [tiePick, setTiePick] = useState<Record<string, boolean>>({});
+  // 시뮬레이션 모달 — prep 단계에서 리더/팔로워 동점자 수를 각각 정해 자동 투표.
+  const [simModalOpen, setSimModalOpen] = useState(false);
+  const [simTieLeader, setSimTieLeader] = useState(3);
+  const [simTieFollower, setSimTieFollower] = useState(3);
+  const [simBusy, setSimBusy] = useState(false);
 
   const apiBase = `/api/admin/contests/${encodeURIComponent(contestId)}/judging/${round}`;
   // judges 추가/수정/삭제는 3 라운드 mirror 가 적용된 통합 엔드포인트 사용.
@@ -184,6 +196,30 @@ export function JudgingMatrix({
     return tieSet;
   }, [eligible, scoreOf, maxPerRole]);
 
+  // 경계 동점 그룹 — 역할별로 같은 점수에 묶여 정원 경계에 걸친 후보군.
+  //   slots = 정원 - (동점보다 점수 높은 자동 통과 인원). 관리자가 이 중 slots 명을 올린다.
+  const tieGroups = useMemo(() => {
+    const out: { role: 'leader' | 'follower'; tieScore: number; slots: number; candidates: { num: string; team_name: string }[] }[] = [];
+    if (isFinal) return out; // 결승은 점수제 — O 표 동점 추려내기 비대상
+    for (const role of ['leader', 'follower'] as const) {
+      const tied = eligible.filter((e) => e.role === role && !e.isHelper && boundaryTieNums.has(e.num));
+      if (tied.length < 2) continue;
+      const tieScore = scoreOf(tied[0].num);
+      const aboveCount = eligible.filter(
+        (e) => e.role === role && !e.isHelper && scoreOf(e.num) !== -Infinity && scoreOf(e.num) > tieScore
+      ).length;
+      out.push({
+        role,
+        tieScore,
+        slots: Math.max(0, maxPerRole - aboveCount),
+        candidates: tied
+          .map((t) => ({ num: t.num, team_name: t.team_name }))
+          .sort((a, b) => a.num.localeCompare(b.num, undefined, { numeric: true })),
+      });
+    }
+    return out;
+  }, [eligible, boundaryTieNums, scoreOf, maxPerRole, isFinal]);
+
   // Rank per role (Olympic-style: 1, 1, 3).
   const rankMap = useMemo(() => {
     const r = new Map<string, number>();
@@ -249,6 +285,12 @@ export function JudgingMatrix({
     }
     return { leaders, followers };
   }, [eligible, rankMap, maxPerRole]);
+
+  // 확정(commit/추려내기) 이 있으면 카운터·배지는 라이브(원표 Olympic, 동점 전원 포함)가 아니라
+  // 실제 확정 통과자(confirmed) 를 보여준다 → 추려내기 결과가 즉시 반영.
+  const isCommitted = confirmed.leaders + confirmed.followers > 0;
+  const passDisplay = isCommitted ? confirmed : liveInQuota;
+  const overQuota = !isCommitted && (liveInQuota.leaders > maxPerRole || liveInQuota.followers > maxPerRole);
 
   // Reset 진입점 — 인페이지 모달을 띄워 한 번 더 확인받는다.
   function requestReset() {
@@ -327,18 +369,17 @@ export function JudgingMatrix({
     });
   }
 
-  async function commitToQualifiers() {
-    // 결승은 final_results 테이블 갱신, 예선/본선은 qualifiers 테이블 갱신.
-    // 두 경우 모두 같은 commit 엔드포인트가 처리 (서버 측 분기).
-    if (!confirm(
-      t('matrix.confirmCommit')
-        .replace('{ROUND}', roundLabel)
-        .replace('{MAX}', String(maxPerRole))
-    )) return;
+  // 실제 commit 실행 — tieExclude(탈락시킬 동점자 num) 가 있으면 본문에 실어 보낸다.
+  function runCommit(tieExclude?: string[]) {
     setError(null);
     setActionMsg(null);
+    const hasExclude = Array.isArray(tieExclude) && tieExclude.length > 0;
     startTransition(async () => {
-      const res = await fetch(`${apiBase}/commit`, { method: 'POST' });
+      const res = await fetch(`${apiBase}/commit`, {
+        method: 'POST',
+        headers: hasExclude ? { 'Content-Type': 'application/json' } : undefined,
+        body: hasExclude ? JSON.stringify({ tieExclude }) : undefined,
+      });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
         setError(j.error ?? `Commit failed (${res.status})`);
@@ -355,6 +396,101 @@ export function JudgingMatrix({
       );
       router.refresh();
     });
+  }
+
+  function commitToQualifiers() {
+    // 결승은 final_results 테이블 갱신, 예선/본선은 qualifiers 테이블 갱신.
+    // 두 경우 모두 같은 commit 엔드포인트가 처리 (서버 측 분기).
+    if (!confirm(
+      t('matrix.confirmCommit')
+        .replace('{ROUND}', roundLabel)
+        .replace('{MAX}', String(maxPerRole))
+    )) return;
+    runCommit();
+  }
+
+  // 동점 추려내기 모달 — 열기/선택/적용.
+  function openTieModal() {
+    // 현재 정원 안(rank ≤ maxPerRole)인 동점자를 slots 만큼 미리 선택.
+    const init: Record<string, boolean> = {};
+    for (const g of tieGroups) {
+      let n = 0;
+      for (const c of g.candidates) {
+        const inQuota = (rankMap.get(c.num) ?? 999) <= maxPerRole;
+        if (inQuota && n < g.slots) { init[c.num] = true; n++; }
+      }
+    }
+    setTiePick(init);
+    setError(null);
+    setTieModalOpen(true);
+  }
+  function selectedInGroup(g: (typeof tieGroups)[number], pick: Record<string, boolean>): number {
+    return g.candidates.filter((c) => pick[c.num]).length;
+  }
+  function toggleTiePick(g: (typeof tieGroups)[number], num: string) {
+    setTiePick((s) => {
+      const cur = !!s[num];
+      if (!cur && selectedInGroup(g, s) >= g.slots) return s; // slots 초과 방지
+      return { ...s, [num]: !cur };
+    });
+  }
+  function applyTieResolution() {
+    // 선택되지 않은 동점자 = 탈락 → tieExclude 로 commit.
+    const exclude: string[] = [];
+    for (const g of tieGroups) for (const c of g.candidates) if (!tiePick[c.num]) exclude.push(c.num);
+    setTieModalOpen(false);
+    runCommit(exclude);
+  }
+
+  // 최신 votes/judges 를 다시 받아 로컬 state 갱신 (refreshData 의 awaitable 버전).
+  async function reloadVotes() {
+    try {
+      const res = await fetch(apiBase, { cache: 'no-store' });
+      if (res.ok) {
+        const j = await res.json();
+        const data = j.data ?? {};
+        if (Array.isArray(data.judges)) setJudges(data.judges as JudgeRow[]);
+        if (Array.isArray(data.votes)) setVotes(data.votes as JudgeVoteRow[]);
+      }
+    } catch { /* ignore */ }
+    router.refresh();
+  }
+
+  // 시뮬레이션 적용 — 리더/팔로워 동점자 수를 받아 자동 투표 생성.
+  async function applySimulation() {
+    const clamp = (n: number) => Math.max(0, Math.min(200, Math.round(n) || 0));
+    const tieLeader = clamp(simTieLeader);
+    const tieFollower = clamp(simTieFollower);
+    setSimModalOpen(false);
+    setError(null);
+    setActionMsg(null);
+    setSimBusy(true);
+    try {
+      const res = await fetch(`${apiBase}/simulate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tieLeader, tieFollower }),
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        setError(j.error ?? `Simulation failed (${res.status})`);
+        return;
+      }
+      const j = await res.json();
+      // 시뮬레이션은 기존 확정(qualifiers)을 무효화 → 카운터가 새 투표 라이브를 보이도록 초기화.
+      setConfirmed({ leaders: 0, followers: 0 });
+      setActionMsg(
+        t('matrix.simDone')
+          .replace('{L}', String(tieLeader))
+          .replace('{F}', String(tieFollower))
+          .replace('{V}', String(j.data?.votes ?? 0))
+      );
+      await reloadVotes();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Simulation failed');
+    } finally {
+      setSimBusy(false);
+    }
   }
 
   async function addJudge() {
@@ -583,13 +719,13 @@ export function JudgingMatrix({
             className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-ok/60 bg-ok/10 text-ok text-xs font-semibold"
             title={t('matrix.tooltipLiveCounter')}
           >
-            <span className="text-ok/70 font-normal">{isFinal ? t('matrix.podium') : t('matrix.currentlyPassing')}:</span>
-            <span className="font-mono">{liveInQuota.leaders}</span>
+            <span className="text-ok/70 font-normal">{isCommitted ? t('matrix.passingConfirmed') : isFinal ? t('matrix.podium') : t('matrix.currentlyPassing')}:</span>
+            <span className="font-mono">{passDisplay.leaders}</span>
             <span className="text-ok/60">{L}</span>
             <span className="text-ok/40">/</span>
-            <span className="font-mono">{liveInQuota.followers}</span>
+            <span className="font-mono">{passDisplay.followers}</span>
             <span className="text-ok/60">{F}</span>
-            {(liveInQuota.leaders > maxPerRole || liveInQuota.followers > maxPerRole) && (
+            {overQuota && (
               <span className="ml-1 text-danger font-normal">({t('matrix.tieOverQuota')})</span>
             )}
           </span>
@@ -597,6 +733,11 @@ export function JudgingMatrix({
             <Badge tone="danger">
               {t('matrix.boundaryTie')} — {boundaryTieNums.size} {t('matrix.boundaryTieDetail')}
             </Badge>
+          )}
+          {!isFinal && tieGroups.length > 0 && (
+            <Button variant="primary" onClick={openTieModal} disabled={pending}>
+              {t('matrix.tieResolve')}
+            </Button>
           )}
           {isFinal && (
             <Badge tone="info">
@@ -660,6 +801,17 @@ export function JudgingMatrix({
           >
             {exporting ? 'Exporting…' : '⬇ Excel'}
           </Button>
+          {/* 시뮬레이션 — prep 단계에서만. 동점자 수를 정해 자동 투표. */}
+          {!isFinal && roundStatus === 'prep' && (
+            <Button
+              variant="primary"
+              onClick={() => setSimModalOpen(true)}
+              disabled={pending || simBusy || judges.length === 0}
+              title={t('matrix.simTooltip')}
+            >
+              {simBusy ? '…' : t('matrix.simulate')}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -675,7 +827,8 @@ export function JudgingMatrix({
           {round === 'prelim' ? t('matrix.noParticipants') : t('matrix.noQualifiers')}
         </div>
       ) : (
-        <div className="rounded border border-border bg-panel overflow-auto">
+        // 높이를 제한해 표를 내부 스크롤 → sticky 헤더(심사위원명)·고정 컬럼이 스크롤 중에도 보이게.
+        <div className="rounded border border-border bg-panel overflow-auto max-h-[calc(100vh-240px)]">
           <table className="text-sm min-w-full">
             <thead className="bg-bg2 text-ink2 text-xs uppercase tracking-wider sticky top-0 z-10">
               <tr>
@@ -953,6 +1106,140 @@ export function JudgingMatrix({
         </div>
       )}
 
+      {/* 동점 추려내기 모달 — 경계 동점 후보 중 올릴 사람 선택 → commit(tieExclude) */}
+      {tieModalOpen && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="tie-modal-title"
+          onClick={() => setTieModalOpen(false)}
+          onKeyDown={(e) => { if (e.key === 'Escape') setTieModalOpen(false); }}
+        >
+          <div
+            className="max-w-2xl w-[min(42rem,calc(100vw-2rem))] max-h-[calc(100vh-4rem)] overflow-auto rounded-xl border-2 border-accent/60 bg-panel p-6 shadow-2xl shadow-black/60"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 id="tie-modal-title" className="text-lg font-semibold text-accent mb-1">
+              ⚖ {t('matrix.tieModalTitle')}
+            </h3>
+            <p className="text-sm text-ink2 mb-4 whitespace-pre-line">{t('matrix.tieModalHelp')}</p>
+
+            <div className="space-y-5">
+              {tieGroups.map((g) => {
+                const selected = selectedInGroup(g, tiePick);
+                const roleLabel = g.role === 'leader' ? L : F;
+                return (
+                  <div key={g.role} className="rounded border border-border bg-bg2/40 p-3">
+                    <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+                      <span className="text-sm font-semibold">
+                        {roleLabel} · {t('matrix.tieScore')} {g.tieScore} O
+                      </span>
+                      <span className={`text-xs font-mono ${selected === g.slots ? 'text-ok' : 'text-danger'}`}>
+                        {t('matrix.tieAdvance')} {selected} / {g.slots}
+                      </span>
+                    </div>
+                    <ul className="space-y-1">
+                      {g.candidates.map((c) => {
+                        const checked = !!tiePick[c.num];
+                        const atCap = !checked && selected >= g.slots;
+                        return (
+                          <li key={c.num}>
+                            <label
+                              className={`flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer ${
+                                checked ? 'bg-ok/10 border border-ok/40' : 'border border-transparent hover:bg-bg2'
+                              } ${atCap ? 'opacity-40 cursor-not-allowed' : ''}`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                disabled={atCap}
+                                onChange={() => toggleTiePick(g, c.num)}
+                                className="w-4 h-4 accent-ok"
+                              />
+                              <span className="font-mono text-ink2 w-12">{c.num}</span>
+                              <span className="truncate">{c.team_name}</span>
+                              <span className={`ml-auto text-xs ${checked ? 'text-ok' : 'text-danger'}`}>
+                                {checked ? t('matrix.tieKeep') : t('matrix.tieDrop')}
+                              </span>
+                            </label>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center justify-end gap-2 mt-5">
+              <Button onClick={() => setTieModalOpen(false)} disabled={pending}>
+                {t('matrix.cancel')}
+              </Button>
+              <Button variant="primary" onClick={applyTieResolution} disabled={pending}>
+                {t('matrix.tieApply')}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 시뮬레이션 모달 — 동점자 수 설정 후 자동 투표 */}
+      {simModalOpen && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="sim-modal-title"
+          onClick={() => setSimModalOpen(false)}
+          onKeyDown={(e) => { if (e.key === 'Escape') setSimModalOpen(false); }}
+        >
+          <div
+            className="max-w-md w-[min(28rem,calc(100vw-2rem))] rounded-xl border-2 border-accent/60 bg-panel p-6 shadow-2xl shadow-black/60"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 id="sim-modal-title" className="text-lg font-semibold text-accent mb-1">
+              🎲 {t('matrix.simModalTitle')}
+            </h3>
+            <p className="text-sm text-ink2 mb-4 whitespace-pre-line">{t('matrix.simModalHelp')}</p>
+            <div className="grid grid-cols-2 gap-3 mb-5">
+              <label className="flex flex-col gap-1">
+                <span className="text-xs text-ink2">{L} · {t('matrix.simTieCount')}</span>
+                <Input
+                  type="number"
+                  min={0}
+                  max={200}
+                  value={simTieLeader}
+                  onChange={(e) => setSimTieLeader(Number(e.target.value))}
+                  className="font-mono text-center"
+                  autoFocus
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-xs text-ink2">{F} · {t('matrix.simTieCount')}</span>
+                <Input
+                  type="number"
+                  min={0}
+                  max={200}
+                  value={simTieFollower}
+                  onChange={(e) => setSimTieFollower(Number(e.target.value))}
+                  className="font-mono text-center"
+                />
+              </label>
+            </div>
+            <p className="text-xs text-ink2/70 mb-5">{t('matrix.simTieHint')}</p>
+            <div className="flex items-center justify-end gap-2">
+              <Button onClick={() => setSimModalOpen(false)} disabled={simBusy}>
+                {t('matrix.cancel')}
+              </Button>
+              <Button variant="primary" onClick={applySimulation} disabled={simBusy}>
+                {simBusy ? '…' : t('matrix.simApply')}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 스크롤 위치와 무관하게 항상 보이는 라이브 통과 인원 카운터 */}
       <div
         className="fixed bottom-6 right-6 z-50 pointer-events-none select-none"
@@ -960,25 +1247,28 @@ export function JudgingMatrix({
       >
         <div className="rounded-xl border-2 border-ok/60 bg-bg/95 backdrop-blur px-6 py-4 shadow-2xl shadow-black/50">
           <div className="text-sm uppercase tracking-wider text-ink2 mb-2">
-            {isFinal ? t('matrix.podiumLive') : t('matrix.passingLive')}
+            {isCommitted ? t('matrix.passingConfirmed') : isFinal ? t('matrix.podiumLive') : t('matrix.passingLive')}
           </div>
           <div className="flex items-center gap-5 font-mono text-3xl">
             <span className="flex items-baseline gap-2">
-              <span className={`font-bold ${liveInQuota.leaders > maxPerRole ? 'text-danger' : 'text-ok'}`}>
-                {liveInQuota.leaders}
+              <span className={`font-bold ${!isCommitted && passDisplay.leaders > maxPerRole ? 'text-danger' : 'text-ok'}`}>
+                {passDisplay.leaders}
               </span>
               <span className="text-ink2 text-base">/ {maxPerRole} {L}</span>
             </span>
             <span className="text-ink2/40">·</span>
             <span className="flex items-baseline gap-2">
-              <span className={`font-bold ${liveInQuota.followers > maxPerRole ? 'text-danger' : 'text-ok'}`}>
-                {liveInQuota.followers}
+              <span className={`font-bold ${!isCommitted && passDisplay.followers > maxPerRole ? 'text-danger' : 'text-ok'}`}>
+                {passDisplay.followers}
               </span>
               <span className="text-ink2 text-base">/ {maxPerRole} {F}</span>
             </span>
           </div>
-          {(liveInQuota.leaders > maxPerRole || liveInQuota.followers > maxPerRole) && (
+          {overQuota && (
             <div className="text-sm text-danger mt-2">⚠ {t('matrix.tieOverQuota')}</div>
+          )}
+          {isCommitted && (
+            <div className="text-xs text-ok/70 mt-2">✓ {t('matrix.passingConfirmedNote')}</div>
           )}
         </div>
       </div>

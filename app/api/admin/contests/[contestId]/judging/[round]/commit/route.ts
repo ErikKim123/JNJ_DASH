@@ -26,12 +26,22 @@ interface CandidateInfo {
   photo_url: string;
 }
 
-export async function POST(_req: Request, ctx: RouteCtx) {
+export async function POST(req: Request, ctx: RouteCtx) {
   const { contestId, round } = await ctx.params;
   const r = RoundEnum.safeParse(round);
   if (!r.success) {
     return NextResponse.json({ error: 'INVALID_ROUND' }, { status: 400 });
   }
+
+  // 선택적 동점 추려내기 — tieExclude 에 담긴 participant_num 은 Olympic rank 상 정원 안이라도
+  // passed=false 로 강제(탈락). 관리자가 경계 동점에서 올릴 사람을 직접 고른 결과.
+  let tieExclude = new Set<string>();
+  try {
+    const body = await req.json().catch(() => null);
+    const arr = body && Array.isArray(body.tieExclude) ? body.tieExclude : [];
+    tieExclude = new Set(arr.filter((x: unknown): x is string => typeof x === 'string'));
+  } catch { /* 본문 없음 — 기본 동작(동점 모두 통과) */ }
+
   const sb = getSupabaseAdmin();
 
   // 1) contest 로드 — final 분기에서 scoring_items 도 필요.
@@ -139,7 +149,7 @@ export async function POST(_req: Request, ctx: RouteCtx) {
       representative: e.representative,
       role: e.role,
       photo_url: e.photo_url,
-      passed: inQuota.has(`${e.role}:${e.num}`),
+      passed: inQuota.has(`${e.role}:${e.num}`) && !tieExclude.has(e.num),
       votes: voteCount.get(e.num) ?? 0,
       display_order: 0,
     }));
@@ -156,12 +166,13 @@ export async function POST(_req: Request, ctx: RouteCtx) {
     if (ie) return NextResponse.json({ error: ie.message }, { status: 500 });
   }
 
-  // 6) 응답 — passed 카운트 (in-quota set 으로 계산)
+  // 6) 응답 — passed 카운트 (tieExclude 반영된 실제 insert 행 기준)
   let confirmedLeaders = 0;
   let confirmedFollowers = 0;
-  for (const key of inQuota) {
-    if (key.startsWith('leader:')) confirmedLeaders++;
-    else if (key.startsWith('follower:')) confirmedFollowers++;
+  for (const row of rowsToInsert) {
+    if (!row.passed) continue;
+    if (row.role === 'leader') confirmedLeaders++;
+    else if (row.role === 'follower') confirmedFollowers++;
   }
 
   return NextResponse.json({

@@ -11,8 +11,6 @@ import {
   groupMeta,
   groupFinalScoresByJudge,
   circledOrdinal,
-  classifyMetaKey,
-  type MetaCategory,
 } from './participant-meta';
 import { resolveActiveDefs, type ScoringItemKey, type ScoringItemDef } from '@/lib/db/scoring';
 import { resolvePhotoUrl, normalizePhotoUrl } from './photo-url';
@@ -209,75 +207,22 @@ export function ParticipantsTable({
 
   const [exporting, setExporting] = useState(false);
 
-  // 참가자 명단을 엑셀(.xlsx)로 다운로드 — 모든 정보 포함.
-  // 기본 컬럼(#, TEAM NAME, ROLE, COUNTRY, PHOTO) + 모든 meta 키(프로필/시트 필드 전부) + CREATED_AT.
-  // meta 키는 참가자별로 다를 수 있어 전체 합집합을 모아 카테고리 순으로 정렬해 컬럼을 만든다.
-  // 현재 검색 필터가 적용된 목록(filtered)을 # 기준 정렬해 내보낸다.
+  // 참가자 명단을 엑셀(.xlsx)로 다운로드 — 모든 정보 + 사진(셀 이미지) 포함.
+  // 사진 임베드는 외부 호스트 CORS 회피를 위해 서버에서 생성(exceljs). 전체 참가자 대상.
   async function exportExcel() {
     setExporting(true);
+    setError(null);
     try {
-      const XLSX = await import('xlsx');
-      const sorted = [...filtered].sort((a, b) =>
-        a.num.localeCompare(b.num, undefined, { numeric: true })
+      const res = await fetch(
+        `/api/admin/contests/${encodeURIComponent(contestId)}/participants/export-xlsx`,
+        { cache: 'no-store' }
       );
-
-      // 모든 참가자의 meta 키 합집합 → 카테고리 순으로 정렬(프로필 먼저, 예선/결승 점수, 집계, 통과, 등수, 기타).
-      const metaKeySet = new Set<string>();
-      for (const r of sorted) {
-        for (const k of Object.keys(r.meta ?? {})) metaKeySet.add(k);
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        setError(j.error ?? `Excel export failed (${res.status})`);
+        return;
       }
-      const CAT_RANK: Record<MetaCategory, number> = {
-        profile: 0, prelim_vote: 1, final_score: 2, score_agg: 3, pass_flag: 4, rank: 5, other: 6,
-      };
-      const PROFILE_ORDER = ['부문', '장르', 'Division', '연락처', '이메일', 'Nationality', '접수일', '사진원본', 'X'];
-      const metaKeys = [...metaKeySet].sort((a, b) => {
-        const ca = classifyMetaKey(a), cb = classifyMetaKey(b);
-        if (CAT_RANK[ca] !== CAT_RANK[cb]) return CAT_RANK[ca] - CAT_RANK[cb];
-        if (ca === 'profile') {
-          const ai = PROFILE_ORDER.indexOf(a), bi = PROFILE_ORDER.indexOf(b);
-          if (ai >= 0 || bi >= 0) {
-            if (ai < 0) return 1;
-            if (bi < 0) return -1;
-            return ai - bi;
-          }
-        }
-        if (ca === 'prelim_vote' || ca === 'final_score') {
-          const d = circledOrdinal(a) - circledOrdinal(b);
-          if (d !== 0) return d;
-        }
-        return a.localeCompare(b);
-      });
-
-      const cellOf = (v: unknown): string =>
-        v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v);
-
-      const header = ['#', 'TEAM NAME', 'ROLE', 'COUNTRY', 'PHOTO', ...metaKeys, 'CREATED_AT'];
-      const data = sorted.map((r) => {
-        const row: Record<string, string> = {
-          '#': r.num,
-          'TEAM NAME': r.team_name,
-          ROLE: ROLE_LABEL[r.role],
-          COUNTRY: r.representative,
-          PHOTO: r.photo_url ?? '',
-        };
-        const meta = (r.meta ?? {}) as Record<string, unknown>;
-        for (const k of metaKeys) row[k] = cellOf(meta[k]);
-        row['CREATED_AT'] = r.created_at ?? '';
-        return row;
-      });
-
-      const ws = XLSX.utils.json_to_sheet(data, { header });
-      ws['!cols'] = [
-        { wch: 6 }, { wch: 30 }, { wch: 14 }, { wch: 16 }, { wch: 44 },
-        ...metaKeys.map(() => ({ wch: 18 })),
-        { wch: 22 },
-      ];
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Participants');
-      const buf = XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer;
-      const blob = new Blob([buf], {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      });
+      const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

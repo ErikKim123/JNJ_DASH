@@ -41,6 +41,11 @@ export default async function JudgingPage({
     3;
 
   // 라운드의 Qualifiers 에서 passed=true 카운트 (Commit 직후 매트릭스 상단에 즉시 반영용)
+  const roundStatus =
+    r === 'prelim' ? contest.prelim_status :
+    r === 'semi' ? contest.semi_status :
+    contest.final_status;
+
   const roundQualifiers = r === 'prelim' ? qPrelim : r === 'semi' ? qSemi : [];
   const initialConfirmed = {
     leaders: roundQualifiers.filter((q) => q.passed && q.role === 'leader').length,
@@ -69,6 +74,7 @@ export default async function JudgingPage({
         maxPerRole={maxPerRole}
         scoringItems={contest.scoring_items}
         initialConfirmed={initialConfirmed}
+        roundStatus={roundStatus}
       />
     </>
   );

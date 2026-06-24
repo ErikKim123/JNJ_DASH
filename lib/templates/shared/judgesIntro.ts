@@ -195,8 +195,9 @@ export function judgesIntroContent(opts: JudgesIntroLayoutOpts): string {
   const count = Math.max(0, Math.min(20, Math.floor(opts.count)));
   // 1행은 타이틀 가까이 끌어올리고 2행은 citiesFooter(y=700) 직전까지 내려서 행간을 시원하게.
   // usableH 가 커진 만큼 cellH 도 늘어남 → row1(cy≈438)과 row2(cy≈603)이 약 165 떨어짐.
-  const contentTop = opts.contentTop ?? 355;
-  const contentBottom = opts.contentBottom ?? 685;
+  // contentTop/Bottom 을 자막(y=336)·푸터(y=700) 한계까지 넓혀 다행 그리드의 행간 여백을 확보.
+  const contentTop = opts.contentTop ?? 348;
+  const contentBottom = opts.contentBottom ?? 690;
   const paddingX = opts.paddingX ?? 60;
 
   // 타이틀은 항상 표출. 카드는 count 에 따라 분기.
@@ -215,9 +216,10 @@ export function judgesIntroContent(opts: JudgesIntroLayoutOpts): string {
   const cellH = usableH / rows;
 
   // 카드 photo 반경 — 가로(cellW)·세로(cellH) 양쪽 한계 안에서 결정.
-  // 세로는 한 행에 [사진 2R + 간격 + 이름 + 별칭] 스택이 들어가고도 행간 여백이
-  // 남도록 cellH 의 25% 로 제한 → 11~12명(3행), 16~20명(4행)에서도 글씨가 겹치지 않음.
-  const photoR = Math.min(cellW * 0.30, cellH * 0.25);
+  // 세로는 한 행에 [사진 2R + 간격 + 이름 + 별칭] 스택이 들어가고도 행간 여백이 남도록 cellH 비율로 제한.
+  // 4행(16~20명)은 행 높이가 작아 캡을 0.20 으로 더 죄어 사진을 약간 줄이고 행간 간격을 넉넉히 확보.
+  const vCap = rows >= 4 ? 0.20 : 0.25;
+  const photoR = Math.min(cellW * 0.30, cellH * vCap);
   // 행 수가 많을수록 글자 크기 축소
   const baseNameFont = rows >= 4 ? 12 : rows === 3 ? 14 : rows === 2 ? 16 : 18;
   const baseMetaFont = rows >= 4 ? 9 : rows === 3 ? 10 : rows === 2 ? 12 : 14;

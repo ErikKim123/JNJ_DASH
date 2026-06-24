@@ -45,6 +45,16 @@ export function ContestForm({
     semi_pass_per_role: initial?.semi_pass_per_role ?? 5,
     prelim_group_size: initial?.prelim_group_size ?? 0,
     semi_group_size: initial?.semi_group_size ?? 0,
+    prelim_groups: ((): number[] => {
+      const a = initial?.prelim_groups;
+      if (Array.isArray(a) && a.length) return a.map((n) => Math.max(0, Math.round(Number(n) || 0)));
+      return initial?.prelim_group_size ? [initial.prelim_group_size] : [];
+    })(),
+    semi_groups: ((): number[] => {
+      const a = initial?.semi_groups;
+      if (Array.isArray(a) && a.length) return a.map((n) => Math.max(0, Math.round(Number(n) || 0)));
+      return initial?.semi_group_size ? [initial.semi_group_size] : [];
+    })(),
     status: initial?.status ?? 'ready',
     scoring_items:
       Array.isArray(initial?.scoring_items) && initial!.scoring_items.length > 0
@@ -212,6 +222,71 @@ export function ContestForm({
     setForm((s) => ({ ...s, [k]: v }));
   }
 
+  // 페어링 그룹 배열 편집 — 그룹별 커플 수 개별 입력.
+  type GroupField = 'prelim_groups' | 'semi_groups';
+  function setGroupVal(field: GroupField, idx: number, val: number) {
+    setForm((s) => {
+      const arr = [...s[field]];
+      arr[idx] = Math.max(0, Math.min(2000, Math.round(val) || 0));
+      return { ...s, [field]: arr };
+    });
+  }
+  function addGroup(field: GroupField) {
+    setForm((s) => ({ ...s, [field]: [...s[field], 0] }));
+  }
+  function removeGroup(field: GroupField, idx: number) {
+    setForm((s) => ({ ...s, [field]: s[field].filter((_, i) => i !== idx) }));
+  }
+  function renderGroupRound(field: GroupField, label: string) {
+    const arr = form[field];
+    const total = arr.reduce((a, b) => a + (b || 0), 0);
+    return (
+      <div>
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-sm font-medium">{label}</span>
+          <span className="text-xs text-ink2">{arr.length} groups · {total} couples</span>
+        </div>
+        <div className="space-y-2">
+          {arr.map((n, idx) => (
+            <div key={idx} className="flex items-center gap-2">
+              <span className="w-6 text-center font-mono font-semibold text-accent">
+                {String.fromCharCode(65 + idx)}
+              </span>
+              <Input
+                type="number"
+                min={0}
+                max={2000}
+                value={n}
+                onChange={(e) => setGroupVal(field, idx, Number(e.target.value))}
+                className="w-24"
+              />
+              <span className="text-xs text-ink2">couples</span>
+              <button
+                type="button"
+                onClick={() => removeGroup(field, idx)}
+                className="ml-auto text-danger/80 hover:text-danger text-sm px-2 leading-none"
+                aria-label="remove group"
+                title="remove group"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+          {arr.length === 0 && (
+            <p className="text-xs text-ink2">그룹 없음 — 전체가 한 목록으로 표시됩니다.</p>
+          )}
+          <button
+            type="button"
+            onClick={() => addGroup(field)}
+            className="text-xs text-accent hover:underline"
+          >
+            + {t('cf.addGroup')}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
@@ -347,25 +422,9 @@ export function ContestForm({
       <section className="rounded border border-border bg-panel/40 p-4">
         <h3 className="text-sm font-semibold mb-1">{t('cf.pairingGroupTitle')}</h3>
         <p className="text-xs text-ink2 mb-3">{t('cf.pairingGroupHint')}</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label={t('cf.prelimGroupSize')}>
-            <Input
-              type="number"
-              min={0}
-              max={200}
-              value={form.prelim_group_size}
-              onChange={(e) => update('prelim_group_size', Number(e.target.value))}
-            />
-          </Field>
-          <Field label={t('cf.semiGroupSize')}>
-            <Input
-              type="number"
-              min={0}
-              max={200}
-              value={form.semi_group_size}
-              onChange={(e) => update('semi_group_size', Number(e.target.value))}
-            />
-          </Field>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {renderGroupRound('prelim_groups', t('cf.pairingPrelim'))}
+          {renderGroupRound('semi_groups', t('cf.pairingSemi'))}
         </div>
       </section>
 

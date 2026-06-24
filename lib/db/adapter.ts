@@ -289,14 +289,18 @@ async function getQualifiersForResult(
   ]);
 
   function buildList(role: 'leader' | 'follower'): ResultEntry[] {
+    const roleRows = rows.filter((r) => r.role === role);
     // 1) votes > 0 인 후보만 (점수 못 받은 사람 제외)
-    const eligible = rows.filter((r) => r.role === role && r.votes > 0);
-    // 2) passed=true 우선 (운영자 확정) + 부족분은 votes desc 자동 보강
+    const eligible = roleRows.filter((r) => r.votes > 0);
     const passed = eligible.filter((r) => r.passed)
       .sort((a, b) => (a.display_order - b.display_order) || (b.votes - a.votes));
     const unpassed = eligible.filter((r) => !r.passed)
       .sort((a, b) => (b.votes - a.votes) || (a.display_order - b.display_order));
-    const need = Math.max(0, maxPerRole - passed.length);
+    // 2) 커밋(확정)된 라운드는 운영자의 passed 를 그대로 반영 — 동점 추려내기로 정원보다
+    //    적게 확정했어도 자동 보강하지 않는다. (qualifiers 행이 있으면 = 커밋됨)
+    //    미커밋(qualifiers 비어있음) 상태에서만 votes desc 로 정원만큼 미리보기 채움.
+    const committed = roleRows.length > 0;
+    const need = committed ? 0 : Math.max(0, maxPerRole - passed.length);
     const combined = [...passed, ...unpassed.slice(0, need)];
     return combined.map((r, i) => ({
       idx: i + 1,
@@ -608,13 +612,27 @@ export async function getStepData(params: GetStepDataParams): Promise<StepDataPa
 
     // 페이지 분할 — sheets adapter 와 동일 규칙.
     const pageLetter = step === 'pairingC' ? 'C' : step === 'pairingB' ? 'B' : 'A';
+    const pageIndex = pageLetter === 'C' ? 2 : pageLetter === 'B' ? 1 : 0;
     const sortedPairs = pairs.slice().sort((a, b) => a.idx - b.idx);
+
+    // 페이지 분할 — 관리자 설정 그룹(prelim_groups/semi_groups)을 우선 사용해
+    // 표출(DASH) 페어링도 관리자 페어링 화면과 동일하게 A·B·C 로 나눈다.
+    // 그룹 미설정 시 기존 고정 규칙(예선 20씩, 본선 반반)으로 폴백.
+    const groups = round === 'prelim' ? contest.prelim_groups : contest.semi_groups;
     let pagedPairs: Pair[];
-    if (round === 'prelim') {
+    if (Array.isArray(groups) && groups.length > 0) {
+      const sizes = groups.map((n) => Math.max(0, Math.floor(Number(n) || 0)));
+      let start = 0;
+      for (let g = 0; g < pageIndex && g < sizes.length; g++) start += sizes[g];
+      // 마지막 표출 페이지(C)는 정의된 그룹 합을 넘는 잔여 페어까지 흡수(표출 누락 방지).
+      const end = pageIndex >= 2 ? sortedPairs.length : start + (sizes[pageIndex] ?? 0);
+      const lo = Math.min(start, sortedPairs.length);
+      const hi = Math.min(Math.max(start, end), sortedPairs.length);
+      pagedPairs = sortedPairs.slice(lo, hi).map((p, i) => ({ ...p, idx: i + 1 }));
+    } else if (round === 'prelim') {
       const PAGE_SIZE = 20;
-      const pageNumber = pageLetter === 'C' ? 3 : pageLetter === 'B' ? 2 : 1;
-      const lo = (pageNumber - 1) * PAGE_SIZE + 1;
-      const hi = pageNumber * PAGE_SIZE;
+      const lo = pageIndex * PAGE_SIZE + 1;
+      const hi = (pageIndex + 1) * PAGE_SIZE;
       pagedPairs = sortedPairs.filter((p) => p.idx >= lo && p.idx <= hi).map((p, i) => ({ ...p, idx: i + 1 }));
     } else {
       const half = Math.ceil(sortedPairs.length / 2);

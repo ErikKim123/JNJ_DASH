@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.105.4",
+    "exceljs": "^4.4.0",
     "lru-cache": "^11.0.2",
     "next": "^15.1.6",
     "pg": "^8.20.0",
