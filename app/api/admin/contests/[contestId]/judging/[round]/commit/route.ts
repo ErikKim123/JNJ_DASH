@@ -8,6 +8,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getSupabaseAdmin } from '@/lib/db/client';
+import { selectJudgeVotesAll } from '@/lib/db/queries';
 import { resolveActiveDefs } from '@/lib/db/scoring';
 import type { ScoringItemKey, ContestRow } from '@/lib/db/types';
 
@@ -67,12 +68,9 @@ export async function POST(req: Request, ctx: RouteCtx) {
   const judgeIds = (judges ?? []).map((j) => j.id);
   const voteCount = new Map<string, number>();
   if (judgeIds.length > 0) {
-    const { data: votes, error: ve } = await sb
-      .from('judge_votes')
-      .select('participant_num, vote_mark')
-      .in('judge_id', judgeIds);
-    if (ve) return NextResponse.json({ error: ve.message }, { status: 500 });
-    for (const v of (votes ?? []) as { participant_num: string; vote_mark: 'O' | 'X' | null }[]) {
+    // 1000행 제한 회피 — 전체 votes 페이지네이션.
+    const votes = await selectJudgeVotesAll(sb, judgeIds, 'participant_num, vote_mark');
+    for (const v of votes as unknown as { participant_num: string; vote_mark: 'O' | 'X' | null }[]) {
       if (v.vote_mark === 'O') {
         voteCount.set(v.participant_num, (voteCount.get(v.participant_num) ?? 0) + 1);
       }
@@ -226,12 +224,8 @@ async function commitFinal(
     // 명시적으로 컬럼만 SELECT — 컬럼 이름이 dynamic 이라 SQL injection 우려 차단을 위해
     // activeCols 는 SCORING_ITEMS canonical column 목록에서만 나옴 (사용자 입력 아님).
     const cols = ['participant_num', ...activeCols].join(',');
-    const { data: votes, error: ve } = await sb
-      .from('judge_votes')
-      .select(cols)
-      .in('judge_id', judgeIds);
-    if (ve) return NextResponse.json({ error: ve.message }, { status: 500 });
-    for (const v of (votes ?? []) as unknown as Array<Record<string, number | string | null>>) {
+    const votes = await selectJudgeVotesAll(sb, judgeIds, cols); // 1000행 제한 회피
+    for (const v of votes as unknown as Array<Record<string, number | string | null>>) {
       const num = String(v.participant_num ?? '');
       if (!num) continue;
       let s = 0, c = 0;

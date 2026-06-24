@@ -4,6 +4,7 @@
 //   응답 헤더: Content-Disposition = attachment 로 파일 다운로드 트리거.
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/db/client';
+import { selectJudgeVotesAll } from '@/lib/db/queries';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -40,9 +41,7 @@ export async function GET(_req: Request, ctx: RouteCtx) {
   const judgeIds = (judges.data ?? []).map((j) => j.id);
   let judgeVotesData: unknown[] = [];
   if (judgeIds.length > 0) {
-    const r = await sb.from('judge_votes').select('*').in('judge_id', judgeIds);
-    if (r.error) return NextResponse.json({ error: r.error.message }, { status: 500 });
-    judgeVotesData = r.data ?? [];
+    judgeVotesData = await selectJudgeVotesAll(sb, judgeIds, '*'); // 1000행 제한 회피
   }
 
   const payload = {

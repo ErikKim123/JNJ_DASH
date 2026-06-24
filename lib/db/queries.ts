@@ -100,6 +100,31 @@ export async function listJudges(contestId: string, round: JudgingRound): Promis
   return (data ?? []) as JudgeRow[];
 }
 
+// Supabase/PostgREST 기본 1000행 제한 회피 — judge_id IN 조회를 페이지네이션으로 전부 가져온다.
+// (심사위원 20 × 참가자 120 = 2400표처럼 1000행을 넘으면 잘려서 매트릭스/집계가 틀어짐)
+export async function selectJudgeVotesAll(
+  sb: ReturnType<typeof getSupabaseAdmin>,
+  judgeIds: string[],
+  columns = '*'
+): Promise<Record<string, unknown>[]> {
+  if (judgeIds.length === 0) return [];
+  const PAGE = 1000;
+  const all: Record<string, unknown>[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await sb
+      .from('judge_votes')
+      .select(columns)
+      .in('judge_id', judgeIds)
+      .order('id', { ascending: true })
+      .range(from, from + PAGE - 1);
+    if (error) throw new Error(`selectJudgeVotesAll: ${error.message}`);
+    const rows = (data ?? []) as unknown as Record<string, unknown>[];
+    all.push(...rows);
+    if (rows.length < PAGE) break;
+  }
+  return all;
+}
+
 export async function listJudgeVotes(contestId: string, round: JudgingRound): Promise<JudgeVoteRow[]> {
   const sb = getSupabaseAdmin();
   // judges 의 id 들로 필터 → 라운드 votes 만.
@@ -111,12 +136,8 @@ export async function listJudgeVotes(contestId: string, round: JudgingRound): Pr
   if (je) throw new Error(`listJudgeVotes(judges): ${je.message}`);
   const ids = (judges ?? []).map((j) => j.id);
   if (ids.length === 0) return [];
-  const { data, error } = await sb
-    .from('judge_votes')
-    .select('*')
-    .in('judge_id', ids);
-  if (error) throw new Error(`listJudgeVotes: ${error.message}`);
-  return (data ?? []) as JudgeVoteRow[];
+  const data = await selectJudgeVotesAll(sb, ids, '*');
+  return data as unknown as JudgeVoteRow[];
 }
 
 /**
@@ -145,12 +166,8 @@ export async function listQualifiersWithLiveVotes(
   // O 만 카운트하다 보면 "전부 X 로 바꿈 → voteCounts 미존재 → stale r.votes 폴백" 버그가 생긴다.
   const judgedSet = new Set<string>();
   if (judgeIds.length > 0) {
-    const { data: votes, error: ve } = await sb
-      .from('judge_votes')
-      .select('participant_num, vote_mark')
-      .in('judge_id', judgeIds);
-    if (ve) throw new Error(`listQualifiersWithLiveVotes(votes): ${ve.message}`);
-    for (const v of (votes ?? []) as { participant_num: string; vote_mark: 'O' | 'X' | null }[]) {
+    const votes = await selectJudgeVotesAll(sb, judgeIds, 'participant_num, vote_mark');
+    for (const v of votes as unknown as { participant_num: string; vote_mark: 'O' | 'X' | null }[]) {
       judgedSet.add(v.participant_num);
       if (v.vote_mark === 'O') {
         voteCounts.set(v.participant_num, (voteCounts.get(v.participant_num) ?? 0) + 1);
