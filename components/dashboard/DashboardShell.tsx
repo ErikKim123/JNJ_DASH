@@ -116,6 +116,7 @@ export function DashboardShell({
     else if (step === 'pairingB') pretty = 'PAIRING B';
     else if (step === 'pairing' && hasMultiPair) pretty = 'PAIRING A';
     else if (step === 'judgesIntro') pretty = 'JUDGES INTRO';
+    else if (step === 'judgesVideo') pretty = 'JUDGES VIDEO';
     else pretty = step.toUpperCase();
     const roundEn: Record<RoundKey, string> = {
       prelim: 'PRELIMINARY',

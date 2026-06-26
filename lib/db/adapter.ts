@@ -539,6 +539,29 @@ async function buildJudgesIntro(
   return { kind: 'judgesIntro', data: out };
 }
 
+/**
+ * 심사위원 소개 영상 화면 데이터 — contests.judges_video_url 을 그대로 전달.
+ * 표출 화면에서 <video> 로 직접 재생. URL 이 비어있으면 안내 슬라이드가 표출됨.
+ */
+function buildJudgesVideo(
+  roundLabel: string,
+  festivalHeader: string,
+  tagline: string,
+  videoUrl: string,
+): StepDataPayload {
+  return {
+    kind: 'judgesVideo',
+    data: {
+      festival_header: festivalHeader,
+      stage_label: `${roundLabel.toUpperCase()} ROUND`,
+      intro_title: 'JUDGES INTRODUCTION',
+      intro_subtitle: 'A word from our distinguished panel',
+      video_url: videoUrl,
+      tagline,
+    },
+  };
+}
+
 function staticWrapup(
   roundLabel: string,
   festivalHeader: string,
@@ -718,6 +741,11 @@ export async function getStepData(params: GetStepDataParams): Promise<StepDataPa
   // ── Judges Intro (prelim 만) ──
   if (step === 'judgesIntro') {
     return buildJudgesIntro(contestId, roundLabel, festivalHeader, tagline);
+  }
+
+  // ── Judges Intro Video (prelim 만) ──
+  if (step === 'judgesVideo') {
+    return buildJudgesVideo(roundLabel, festivalHeader, tagline, contest.judges_video_url ?? '');
   }
 
   // ── Static ──

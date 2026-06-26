@@ -6,6 +6,7 @@ import type { RoundKey, StepDataPayload, StepKey } from '@/lib/sheets/types';
 import { applyPlaceholders, flattenStepData } from '../placeholder';
 import { prepSvg } from './svg/prep';
 import { judgesIntroSvg } from './svg/judgesIntro';
+import { judgesVideoSvg } from './svg/judgesVideo';
 import { pickPairingSvg } from './svg/pairing';
 import { openSvg } from './svg/open';
 import { liveSvg } from './svg/live';
@@ -44,6 +45,8 @@ function selectSvg(round: RoundKey, _step: StepKey, data: StepDataPayload): stri
       return prepSvg();
     case 'judgesIntro':
       return judgesIntroSvg(data.data.judges?.length ?? 0);
+    case 'judgesVideo':
+      return judgesVideoSvg(data.data.video_url ?? '');
     case 'pairing':
       return pickPairingSvg(data.data.pairs?.length ?? 0);
     case 'open':

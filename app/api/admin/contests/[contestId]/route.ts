@@ -46,6 +46,8 @@ const PatchSchema = z.object({
     .optional(),
   background_image: z.union([z.literal(''), z.string().url().max(2000)]).optional(),
   background_opacity: z.number().int().min(0).max(100).optional(),
+  // 원격 URL(https) 또는 로컬 파일 풀경로(Z:\...) 모두 허용 — 표출 시 /api/video 로 변환.
+  judges_video_url: z.union([z.literal(''), z.string().min(1).max(2000)]).optional(),
   join_theme: z.string().refine((k) => JOIN_PRESET_KEYS.includes(k), 'unknown theme preset').optional(),
   join_accent: z
     .union([z.literal(''), z.string().regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, 'accent 는 #RGB 또는 #RRGGBB hex')])

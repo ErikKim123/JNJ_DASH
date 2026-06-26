@@ -137,6 +137,12 @@ viewBox: **1280 × 720**.
 ### 3.9 CEREMONY (그랜드 파이널 시상식)
 중앙 1위 헥사곤(큰) + 좌우 2/3위(작은) + 벚꽃 토글 애니메이션.
 
+### 3.10 JUDGES VIDEO (심사위원 소개 영상 — 예선 JUDGES 다음)
+- 스텝 키 `judgesVideo` — 예선 흐름에서 `judgesIntro`(JUDGES) 와 `pairing`(PAIRING A) 사이.
+- 헤더/타이틀/푸터 없이 16:9 영상만 거의 전체 화면으로 표출 (1280×720 viewBox 기준 x36/y20, **1209×680** + 골드 프레임). 영상은 SVG `<foreignObject>` 안의 HTML `<video controls>` 로 직접 재생.
+- 영상 소스: `contests.judges_video_url` (관리자 "심사위원 소개 영상" 섹션에서 mp4 등 직접 링크 입력). 비어있으면 점선 박스 + "영상 미설정" 안내 슬라이드.
+- 공용 콘텐츠: [lib/templates/shared/judgesVideo.ts](../lib/templates/shared/judgesVideo.ts) — 3개 템플릿(01/02/03) `svg/judgesVideo.ts` 가 `shell()` 만으로 래핑 (헤더/푸터 미포함).
+
 ---
 
 ## 4. 공통 컴포넌트 (Shared Helpers)
@@ -229,6 +235,11 @@ contest.sponsor_logos + sponsor_logo_opacities
 ## 6. 최근 커스터마이징 이력 (Changelog)
 
 > 디자인 변경 시 본 섹션에 추가.
+
+### 2026-06-25 (추가)
+- 심사위원 소개 영상 스텝 `judgesVideo` 추가 (예선 JUDGES↔PAIRING A 사이, 마이그레이션 0023)
+- `contests.judges_video_url` (mp4 등 직접 링크) — 관리자 "심사위원 소개 영상" 섹션(결제 링크 ↔ JOIN 톤앤매너 사이)에서 입력
+- 표출 화면이 SVG `<foreignObject>` 안 `<video>` 로 직접 재생, 미설정 시 안내 슬라이드 — §3.10 참조
 
 ### 2026-05-24 (추가)
 - 대회별 커스텀 배경 이미지 업로드 기능 추가 (마이그레이션 0009)

@@ -52,6 +52,11 @@ const CreateContestSchema = z.object({
     .optional()
     .default(''),
   background_opacity: z.number().int().min(0).max(100).optional().default(100),
+  // 원격 URL(https) 또는 로컬 파일 풀경로(Z:\...) 모두 허용 — 표출 시 /api/video 로 변환.
+  judges_video_url: z
+    .union([z.literal(''), z.string().min(1).max(2000)])
+    .optional()
+    .default(''),
   // JOIN APP 톤앤매너 — 기본 톤(light/dark) + 포인트 색상(hex 또는 빈 문자열).
   join_theme: z.string().refine((k) => JOIN_PRESET_KEYS.includes(k), 'unknown theme preset').optional().default('dark'),
   join_accent: z

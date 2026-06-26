@@ -90,6 +90,7 @@ export function ContestForm({
       const v = initial?.join_accent ?? '';
       return /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(v) ? v : '';
     })(),
+    judges_video_url: initial?.judges_video_url ?? '',
     sns_url: initial?.sns_url ?? '',
     sns_enabled: initial?.sns_enabled ?? false,
     payment_url: initial?.payment_url ?? '',
@@ -496,6 +497,22 @@ export function ContestForm({
             placeholder="https://..."
             maxLength={2000}
             disabled={!form.payment_enabled}
+          />
+        </Field>
+      </section>
+
+      <section className="rounded border border-border bg-panel/40 p-4">
+        <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+          <h3 className="text-sm font-semibold">{t('cf.judgesVideoTitle')}</h3>
+          <span className="text-xs text-ink2">{t('cf.judgesVideoMeta')}</span>
+        </div>
+        <Field label={t('cf.judgesVideoLabel')} hint={t('cf.judgesVideoHint')}>
+          <Input
+            type="text"
+            value={form.judges_video_url}
+            onChange={(e) => update('judges_video_url', e.target.value)}
+            placeholder="Z:\projects\jnj-dash-db_V1.2\Video\2026-jeju-jnj-ama\Bachata Pro.mp4"
+            maxLength={2000}
           />
         </Field>
       </section>

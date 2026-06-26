@@ -39,3 +39,6 @@ UI기준.html
 
 # 레거시 백업 데이터 — 운영 데이터, 리포에 올리지 않음
 data/judges-legacy-backup.json
+
+# 심사위원 소개 영상 등 로컬 영상파일 — 대용량, /api/video 로 서빙
+Video/

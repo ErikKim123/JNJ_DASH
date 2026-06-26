@@ -5,6 +5,7 @@ export type RoundKey = 'prelim' | 'semi' | 'final';
 export type StepKey =
   | 'prep'
   | 'judgesIntro'
+  | 'judgesVideo'
   | 'pairing'
   | 'pairingB'
   | 'pairingC'
@@ -19,6 +20,7 @@ export const ROUND_KEYS = ['prelim', 'semi', 'final'] as const;
 export const STEP_KEYS = [
   'prep',
   'judgesIntro',
+  'judgesVideo',
   'pairing',
   'pairingB',
   'pairingC',
@@ -41,6 +43,7 @@ export const STEPS_BY_ROUND: Record<RoundKey, ReadonlyArray<StepKey>> = {
   prelim: [
     'prep',
     'judgesIntro',
+    'judgesVideo',
     'pairing',
     'pairingB',
     'pairingC',
@@ -231,6 +234,7 @@ export interface CeremonyData {
 export type StepDataPayload =
   | { kind: 'prep'; data: PrepData }
   | { kind: 'judgesIntro'; data: JudgesIntroData }
+  | { kind: 'judgesVideo'; data: JudgesVideoData }
   | { kind: 'pairing'; data: PairingData }
   | { kind: 'open'; data: OpenData }
   | { kind: 'live'; data: LiveData }
@@ -260,6 +264,21 @@ export interface JudgesIntroData {
   intro_title: string;
   intro_subtitle: string;
   judges: JudgesIntroEntry[];
+  tagline: string;
+}
+
+/**
+ * 심사위원 소개 영상 화면 — 예선 JUDGES(judgesIntro) 다음 스텝.
+ * 표출 화면이 video_url 의 영상파일(mp4 등)을 SVG foreignObject 안의 <video> 로 직접 재생.
+ * video_url 이 비어있으면 "영상 미설정" 안내 슬라이드를 표출.
+ */
+export interface JudgesVideoData {
+  festival_header: string;
+  stage_label: string;
+  intro_title: string;
+  intro_subtitle: string;
+  /** 직접 재생할 영상파일 public URL (contests.judges_video_url). 비어있으면 안내 슬라이드. */
+  video_url: string;
   tagline: string;
 }
 

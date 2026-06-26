@@ -12,6 +12,7 @@ const ROUND_LABEL_EN: Record<RoundKey, string> = {
 const STEP_LABEL: Record<StepKey, string> = {
   prep: 'PREP',
   judgesIntro: 'JUDGES',
+  judgesVideo: 'VID',
   pairing: 'PAIR',
   pairingB: 'PAIR-B',
   pairingC: 'PAIR-C',
