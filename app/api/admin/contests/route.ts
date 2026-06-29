@@ -57,6 +57,16 @@ const CreateContestSchema = z.object({
     .union([z.literal(''), z.string().min(1).max(2000)])
     .optional()
     .default(''),
+  // 라운드별 추가 영상(예선/본선/결승 각 3개).
+  extra_videos: z
+    .object({
+      prelim: z.array(z.union([z.literal(''), z.string().max(2000)])).max(3),
+      semi: z.array(z.union([z.literal(''), z.string().max(2000)])).max(3),
+      final: z.array(z.union([z.literal(''), z.string().max(2000)])).max(3),
+    })
+    .partial()
+    .optional()
+    .default({}),
   // JOIN APP 톤앤매너 — 기본 톤(light/dark) + 포인트 색상(hex 또는 빈 문자열).
   join_theme: z.string().refine((k) => JOIN_PRESET_KEYS.includes(k), 'unknown theme preset').optional().default('dark'),
   join_accent: z

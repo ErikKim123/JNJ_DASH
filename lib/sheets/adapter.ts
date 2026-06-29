@@ -449,6 +449,7 @@ export async function getContestMeta(contestId: string): Promise<ContestMeta | n
     festivalHeader,
     tagline,
     participantStats,
+    extraVideos: { prelim: ['', '', ''], semi: ['', '', ''], final: ['', '', ''] },
     rounds: {
       prelim: { label: '예선', steps: STEPS_BY_ROUND.prelim },
       semi: { label: '본선', steps: STEPS_BY_ROUND.semi },

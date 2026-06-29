@@ -36,6 +36,7 @@ import type {
   CeremonyData,
 } from '@/lib/sheets/types';
 import { STEPS_BY_ROUND } from '@/lib/sheets/types';
+import { normalizeExtraVideos } from '@/lib/contest/extraVideos';
 
 // ─── 에러 (sheets adapter 와 동일 시그니처) ─────────────────────────────
 export class ContestNotFoundError extends Error {
@@ -242,6 +243,7 @@ export async function getContestMeta(contestId: string): Promise<ContestMeta | n
     backgroundImage: contest.background_image ?? '',
     backgroundOpacity:
       typeof contest.background_opacity === 'number' ? contest.background_opacity : 100,
+    extraVideos: normalizeExtraVideos(contest.extra_videos),
     rounds: {
       prelim: { label: '예선', steps: STEPS_BY_ROUND.prelim },
       semi: { label: '본선', steps: STEPS_BY_ROUND.semi },

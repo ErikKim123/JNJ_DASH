@@ -17,6 +17,7 @@ import { FullscreenToggle } from './FullscreenToggle';
 import { OverflowAlert } from './OverflowAlert';
 import { FinalTieAlert } from './FinalTieAlert';
 import { ParticipantStatsPanel } from './ParticipantStatsPanel';
+import { VideoOverlay } from './VideoOverlay';
 
 function parseRound(v: string | null): RoundKey {
   if (v && (ROUND_KEYS as readonly string[]).includes(v)) return v as RoundKey;
@@ -47,6 +48,33 @@ export function DashboardShell({
 
   const round = parseRound(searchParams.get('round'));
   const requestedStep = parseStep(searchParams.get('step'));
+
+  // 라운드별 추가 영상 — 현재 라운드의 3칸 중 채워진 것만 버튼으로 노출. 클릭 시 오버레이.
+  const [overlayUrl, setOverlayUrl] = useState<string | null>(null);
+  const roundVideos = (meta.extraVideos?.[round] ?? []).map((u) => u.trim());
+  const videoButtons = roundVideos
+    .map((url, i) => ({ url, label: `영상${i + 1}` }))
+    .filter((v) => v.url);
+
+  const renderVideoButtons = (variant: 'normal' | 'fs') =>
+    videoButtons.length ? (
+      <div className="flex items-center gap-1.5 flex-wrap justify-end">
+        {videoButtons.map((v) => (
+          <button
+            key={v.label}
+            type="button"
+            onClick={() => setOverlayUrl(v.url)}
+            className={
+              variant === 'fs'
+                ? 'px-2 py-1 rounded border border-accent2 bg-panel text-[10px] font-mono tracking-widest text-accent hover:bg-accent2 hover:text-bg transition-colors'
+                : 'px-3 py-1.5 rounded border border-accent2 bg-panel text-xs font-mono tracking-widest text-accent hover:bg-accent2 hover:text-bg transition-colors'
+            }
+          >
+            ▶ {v.label}
+          </button>
+        ))}
+      </div>
+    ) : null;
 
   // 결승은 일부 스텝만 존재 → 현재 round에서 허용되지 않으면 첫 스텝으로 폴백
   const allowedSteps = meta.rounds[round].steps;
@@ -230,6 +258,7 @@ export function DashboardShell({
             controlsVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
           }`}
         >
+          {renderVideoButtons('fs')}
           <button
             type="button"
             onClick={onRefreshAll}
@@ -241,6 +270,7 @@ export function DashboardShell({
           </button>
           <FullscreenToggle active={fullscreen} onToggle={() => setFullscreen(false)} />
         </div>
+        {overlayUrl && <VideoOverlay url={overlayUrl} onClose={() => setOverlayUrl(null)} />}
         {/* 좌상단: Live 인디케이터 (Live 단계에만) — 마우스 움직임 시에만 표시 */}
         {step === 'live' ? (
           <div
@@ -301,7 +331,12 @@ export function DashboardShell({
           {/* 라운드별 요약 패널: 예선/본선은 참가자·헬퍼·통과 목표, 결승은 참가자·1·2·3위 */}
           <ParticipantStatsPanel stats={meta.participantStats} round={round} />
         </div>
-        <StepNav meta={meta} round={round} currentStep={step} onSelect={onStepSelect} />
+        <div className="flex items-start gap-3 flex-wrap">
+          <div className="flex-1 min-w-0">
+            <StepNav meta={meta} round={round} currentStep={step} onSelect={onStepSelect} />
+          </div>
+          {renderVideoButtons('normal')}
+        </div>
         {(() => {
           // RESULT와 CALC TOTAL(wrapup) 모두에서 동일한 동점자/순위권 정보를 노출.
           // - 예선/본선: OverflowAlert (정원 초과 + 투표수)
@@ -354,6 +389,7 @@ export function DashboardShell({
           />
         )}
       </section>
+      {overlayUrl && <VideoOverlay url={overlayUrl} onClose={() => setOverlayUrl(null)} />}
     </main>
   );
 }

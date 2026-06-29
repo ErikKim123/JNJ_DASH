@@ -5,6 +5,11 @@ import { useRef, useState, useTransition, type ChangeEvent, type FormEvent } fro
 import { useRouter } from 'next/navigation';
 import { Button, Field, Input, Select } from './ui';
 import { youTubeEmbedUrl } from '@/lib/templates/shared/judgesVideo';
+import {
+  normalizeExtraVideos,
+  EXTRA_VIDEOS_PER_ROUND,
+  type ExtraVideos,
+} from '@/lib/contest/extraVideos';
 import type { ContestRow } from '@/lib/db/types';
 import { SCORING_ITEMS, DEFAULT_SCORING_ITEMS, type ScoringItemKey } from '@/lib/db/scoring';
 import { JOIN_PRESETS, JOIN_PRESET_MAP, resolveJoinPalette } from '@/lib/join/theme';
@@ -92,6 +97,7 @@ export function ContestForm({
       return /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(v) ? v : '';
     })(),
     judges_video_url: initial?.judges_video_url ?? '',
+    extra_videos: normalizeExtraVideos(initial?.extra_videos) as ExtraVideos,
     sns_url: initial?.sns_url ?? '',
     sns_enabled: initial?.sns_enabled ?? false,
     payment_url: initial?.payment_url ?? '',
@@ -224,16 +230,28 @@ export function ContestForm({
     setForm((s) => ({ ...s, [k]: v }));
   }
 
-  // 심사위원 소개 영상 미리보기 — 입력한 링크를 새 창(팝업)으로 띄운다.
-  // YouTube 링크면 임베드 플레이어, 그 외면 입력 URL 을 그대로 연다.
-  function previewVideo() {
-    const raw = form.judges_video_url.trim();
-    if (!raw) {
+  // 라운드별 추가 영상 — 특정 슬롯 값 변경.
+  function setExtraVideo(round: keyof ExtraVideos, idx: number, value: string) {
+    setForm((s) => {
+      const next: ExtraVideos = {
+        prelim: [...s.extra_videos.prelim],
+        semi: [...s.extra_videos.semi],
+        final: [...s.extra_videos.final],
+      };
+      next[round][idx] = value;
+      return { ...s, extra_videos: next };
+    });
+  }
+
+  // 링크(미리보기) 새 창 — YouTube 면 임베드, 그 외면 URL 그대로.
+  function openPreview(raw: string) {
+    const v = raw.trim();
+    if (!v) {
       alert(t('cf.judgesVideoPreviewEmpty'));
       return;
     }
-    const embed = youTubeEmbedUrl(raw);
-    const target = embed ? `${embed}&autoplay=1` : raw;
+    const embed = youTubeEmbedUrl(v);
+    const target = embed ? `${embed}&autoplay=1` : v;
     const w = 854;
     const h = 480;
     const left = Math.max(0, Math.round(window.screen.width / 2 - w / 2));
@@ -243,6 +261,11 @@ export function ContestForm({
       'jnj-video-preview',
       `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=no`,
     );
+  }
+
+  // 심사위원 소개 영상 미리보기 — 입력한 링크를 새 창(팝업)으로 띄운다.
+  function previewVideo() {
+    openPreview(form.judges_video_url);
   }
 
   // 페어링 그룹 배열 편집 — 그룹별 커플 수 개별 입력.
@@ -543,6 +566,47 @@ export function ContestForm({
             </Button>
           </div>
         </Field>
+      </section>
+
+      <section className="rounded border border-border bg-panel/40 p-4">
+        <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+          <h3 className="text-sm font-semibold">{t('cf.extraVideosTitle')}</h3>
+          <span className="text-xs text-ink2">{t('cf.extraVideosMeta')}</span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {([
+            ['prelim', t('cf.roundPrelim')],
+            ['semi', t('cf.roundSemi')],
+            ['final', t('cf.roundFinal')],
+          ] as const).map(([roundKey, roundLabel]) => (
+            <div key={roundKey} className="flex flex-col gap-2">
+              <span className="text-xs font-semibold uppercase tracking-widest text-accent">
+                {roundLabel}
+              </span>
+              {Array.from({ length: EXTRA_VIDEOS_PER_ROUND }, (_, i) => (
+                <div key={i} className="flex gap-1.5 items-stretch">
+                  <Input
+                    type="text"
+                    value={form.extra_videos[roundKey][i] ?? ''}
+                    onChange={(e) => setExtraVideo(roundKey, i, e.target.value)}
+                    placeholder={fmt(t('cf.extraVideosPlaceholder'), { N: i + 1 })}
+                    maxLength={2000}
+                    className="flex-1 min-w-0"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => openPreview(form.extra_videos[roundKey][i] ?? '')}
+                    title={t('cf.judgesVideoPreview')}
+                  >
+                    ▶
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-ink2 mt-3">{t('cf.extraVideosHint')}</p>
       </section>
 
       <JoinThemeSection

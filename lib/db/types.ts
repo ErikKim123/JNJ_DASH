@@ -60,6 +60,8 @@ export interface ContestRow {
   background_opacity: number;
   /** 심사위원 영상소개 스텝(예선 JUDGES 다음)에서 표출 화면이 직접 재생하는 영상파일(mp4 등) URL. 비어있으면 안내 슬라이드. */
   judges_video_url: string;
+  /** 라운드별 추가 영상(예선/본선/결승 각 3개) — 표출 오른쪽 위 버튼으로 오버레이 재생. jsonb. 미설정 시 {}. */
+  extra_videos: { prelim?: string[]; semi?: string[]; final?: string[] };
   /** JOIN APP 톤앤매너 프리셋 키 (lib/join/theme.ts JOIN_PRESETS). 예 'dark','midnight','cream'. */
   join_theme: string;
   /** JOIN APP 포인트 색상 hex (예 '#007D48'). 빈 문자열이면 톤 기본 잉크색. */

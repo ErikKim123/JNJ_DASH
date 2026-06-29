@@ -191,6 +191,14 @@ export const MESSAGES_EN = {
   'cf.judgesVideoHint': 'Paste a YouTube link (e.g. https://youtu.be/xxxxxxxxxxx or https://www.youtube.com/watch?v=xxxxxxxxxxx). The video plays embedded on the display screen (needs internet). Leave empty to show a placeholder slide.',
   'cf.judgesVideoPreview': 'Preview',
   'cf.judgesVideoPreviewEmpty': 'Enter a video link first.',
+  // Extra videos (per round)
+  'cf.extraVideosTitle': 'Extra Videos (per round)',
+  'cf.extraVideosMeta': '3 per round · shown as buttons at the top-right of the display',
+  'cf.extraVideosPlaceholder': 'YouTube link {N}',
+  'cf.extraVideosHint': 'Up to 3 YouTube links per round. On the display, buttons (Video 1/2/3) for the current round appear at the top-right; clicking plays the video as a full-screen overlay. Use ▶ to preview.',
+  'cf.roundPrelim': 'Preliminary',
+  'cf.roundSemi': 'Semi-final',
+  'cf.roundFinal': 'Grand Final',
   // Tone & Manner (JOIN app theme)
   'cf.themeTitle': 'JOIN App Tone & Manner',
   'cf.themeMeta': 'Applies across the whole JOIN flow (landing / list / form / done)',
@@ -462,6 +470,14 @@ export const MESSAGES_KO: Record<MessageKey, string> = {
   'cf.judgesVideoHint': 'YouTube 링크를 붙여넣으세요 (예: https://youtu.be/xxxxxxxxxxx 또는 https://www.youtube.com/watch?v=xxxxxxxxxxx). 표출 화면에 임베드되어 재생됩니다(인터넷 필요). 비워두면 "영상 미설정" 안내 슬라이드가 표출됩니다.',
   'cf.judgesVideoPreview': '미리보기',
   'cf.judgesVideoPreviewEmpty': '먼저 영상 링크를 입력하세요.',
+  // Extra videos (per round)
+  'cf.extraVideosTitle': '라운드별 추가 영상',
+  'cf.extraVideosMeta': '라운드당 3개 · 표출 화면 오른쪽 위 버튼으로 표시',
+  'cf.extraVideosPlaceholder': 'YouTube 링크 {N}',
+  'cf.extraVideosHint': '라운드별로 YouTube 링크를 최대 3개까지 넣으세요. 표출 화면 오른쪽 위에 현재 라운드의 버튼(영상1/2/3)이 나타나며, 누르면 전체화면 오버레이로 재생됩니다. ▶ 로 미리볼 수 있습니다.',
+  'cf.roundPrelim': '예선',
+  'cf.roundSemi': '본선',
+  'cf.roundFinal': '결승',
   // Tone & Manner (JOIN app theme)
   'cf.themeTitle': 'JOIN 앱 톤앤매너',
   'cf.themeMeta': 'JOIN 전체(랜딩/목록/등록폼/완료)에 적용됩니다',

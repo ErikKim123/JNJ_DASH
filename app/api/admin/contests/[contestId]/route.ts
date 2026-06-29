@@ -19,6 +19,14 @@ const RoundStatusEnum = z.enum([
   'prep', 'pairing', 'open', 'live', 'calculate', 'close', 'result',
 ]);
 
+// 라운드별 추가 영상 — 각 라운드 최대 3개, 각 항목은 빈 문자열 또는 URL/링크 문자열.
+const ExtraVideoArray = z.array(z.union([z.literal(''), z.string().max(2000)])).max(3);
+const ExtraVideosSchema = z.object({
+  prelim: ExtraVideoArray,
+  semi: ExtraVideoArray,
+  final: ExtraVideoArray,
+}).partial();
+
 const PatchSchema = z.object({
   name: z.string().min(1).max(200).optional(),
   host_org: z.string().max(200).optional(),
@@ -48,6 +56,7 @@ const PatchSchema = z.object({
   background_opacity: z.number().int().min(0).max(100).optional(),
   // 원격 URL(https) 또는 로컬 파일 풀경로(Z:\...) 모두 허용 — 표출 시 /api/video 로 변환.
   judges_video_url: z.union([z.literal(''), z.string().min(1).max(2000)]).optional(),
+  extra_videos: ExtraVideosSchema.optional(),
   join_theme: z.string().refine((k) => JOIN_PRESET_KEYS.includes(k), 'unknown theme preset').optional(),
   join_accent: z
     .union([z.literal(''), z.string().regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, 'accent 는 #RGB 또는 #RRGGBB hex')])

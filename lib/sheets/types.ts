@@ -330,4 +330,6 @@ export interface ContestMeta {
   backgroundImage?: string;
   /** 커스텀 배경 투명도 (0-100). 미지정 시 100. */
   backgroundOpacity?: number;
+  /** 라운드별 추가 영상(예선/본선/결승 각 3개). 표출 오른쪽 위 버튼 → 전체화면 오버레이 재생. */
+  extraVideos: import('@/lib/contest/extraVideos').ExtraVideos;
 }
