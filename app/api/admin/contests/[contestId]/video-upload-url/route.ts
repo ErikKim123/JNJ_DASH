@@ -91,10 +91,29 @@ export async function POST(req: Request, ctx: RouteCtx) {
   }
 
   const { data: pub } = sb.storage.from(BUCKET).getPublicUrl(path);
+
+  // 브라우저가 직접 업로드할 때 쓸 Supabase URL/anon 키를 런타임 env 에서 함께 내려준다.
+  // (클라이언트 번들의 NEXT_PUBLIC 인라인 여부에 의존하지 않게 — Vercel 빌드 캐시 등으로
+  //  클라이언트에 키가 안 박히는 경우 회피.) anon 키는 공개 키라 브라우저 전달이 안전하다.
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !anonKey) {
+    return NextResponse.json(
+      {
+        error: 'SUPABASE_ENV_MISSING',
+        message:
+          '서버에 NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY 가 없습니다. Vercel 환경변수에 추가하세요.',
+      },
+      { status: 500 },
+    );
+  }
+
   return NextResponse.json({
     bucket: BUCKET,
     path: data.path,
     token: data.token,
     publicUrl: pub.publicUrl,
+    supabaseUrl,
+    anonKey,
   });
 }

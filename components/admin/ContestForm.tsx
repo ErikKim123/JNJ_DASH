@@ -280,7 +280,7 @@ export function ContestForm({
 
     setUploadingVideo(true);
     try {
-      // 1) 서버에서 서명된 업로드 URL/토큰 발급 (관리자 인증)
+      // 1) 서버에서 서명된 업로드 URL/토큰 + Supabase url/anon 키 발급 (관리자 인증)
       const r = await fetch(`/api/admin/contests/${contestId}/video-upload-url`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -288,18 +288,17 @@ export function ContestForm({
       });
       const meta = await r.json().catch(() => ({}));
       if (!r.ok) {
-        alert(`${t('cf.judgesVideoUploadFail')}\n${meta.error ?? ''}`);
+        alert(`${t('cf.judgesVideoUploadFail')}\n[${r.status}] ${meta.message ?? meta.error ?? ''}`);
+        return;
+      }
+      if (!meta.supabaseUrl || !meta.anonKey || !meta.token) {
+        alert(`${t('cf.judgesVideoUploadFail')}\n(server response missing keys)`);
         return;
       }
 
-      // 2) 브라우저 → Supabase 직접 업로드 (Vercel 본문 제한 우회)
-      const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      if (!url || !anon) {
-        alert(t('cf.judgesVideoUploadFail'));
-        return;
-      }
-      const sb = createClient(url, anon);
+      // 2) 브라우저 → Supabase 직접 업로드 (Vercel 본문 제한 우회).
+      //    url/anon 키는 서버 응답값 사용 → 클라이언트 빌드 env 인라인 여부에 무관.
+      const sb = createClient(meta.supabaseUrl, meta.anonKey);
       const { error: upErr } = await sb.storage
         .from(meta.bucket)
         .uploadToSignedUrl(meta.path, meta.token, file, {
@@ -313,7 +312,7 @@ export function ContestForm({
       // 3) 공개 URL 을 입력칸에 반영 (https URL → 로컬·Vercel 어디서든 재생)
       update('judges_video_url', meta.publicUrl);
     } catch (err) {
-      alert(`${t('cf.judgesVideoUploadFail')}\n${err instanceof Error ? err.message : ''}`);
+      alert(`${t('cf.judgesVideoUploadFail')}\n${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setUploadingVideo(false);
     }
