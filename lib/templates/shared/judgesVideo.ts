@@ -23,11 +23,11 @@ function escapeAttr(s: string): string {
     .replace(/'/g, '&#39;');
 }
 
-// 영상 영역 — 16:9 비율을 유지하며 1280×720 프레임을 거의 가득 채움.
-const VIDEO_H = 660; // 680 → 660 (상·하 약 3% 축소)
-const VIDEO_W = Math.round((VIDEO_H * 16) / 9); // 1173
-const VIDEO_X = Math.round((1280 - VIDEO_W) / 2); // 54
-const VIDEO_Y = Math.round((720 - VIDEO_H) / 2); // 30 (세로 중앙 유지)
+// 영상 영역 — 16:9 비율을 유지하며 1280×720 프레임 중앙에 배치.
+const VIDEO_H = 600; // 680 → 660 → 600 (상·하 여백 확대로 화면 축소)
+const VIDEO_W = Math.round((VIDEO_H * 16) / 9); // 1067
+const VIDEO_X = Math.round((1280 - VIDEO_W) / 2); // 107
+const VIDEO_Y = Math.round((720 - VIDEO_H) / 2); // 60 (세로 중앙 유지)
 
 /** 골드 라운드 프레임 (영상/안내 박스 공통 테두리). */
 function goldFrame(): string {
