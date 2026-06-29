@@ -67,10 +67,22 @@ function emptyState(): string {
  *  - http(s):// 또는 / 로 시작 → 이미 URL → 그대로.
  *  - 그 외(로컬 파일경로 Z:\... 등) → /api/video?file=<인코딩> 로 변환해 로컬 파일 스트리밍.
  */
-function resolveVideoSrc(raw: string): string {
+export function resolveVideoSrc(raw: string): string {
   if (/^https?:\/\//i.test(raw) || raw.startsWith('/')) return raw;
   return `/api/video?file=${encodeURIComponent(raw)}`;
 }
+
+/**
+ * 영상 영역의 1280×720 좌표를 비율(%)로 노출 — TemplateRenderer 가 foreignObject 위에
+ * 실제 HTML <video> 오버레이를 같은 위치로 겹쳐 그릴 때 사용 (foreignObject 내부 video 는
+ * Chromium 에서 오디오가 안 나오는 제약이 있어, 소리 재생용 실제 video 를 덧댄다).
+ */
+export const VIDEO_RECT_PCT = {
+  left: (VIDEO_X / 1280) * 100,
+  top: (VIDEO_Y / 720) * 100,
+  width: (VIDEO_W / 1280) * 100,
+  height: (VIDEO_H / 720) * 100,
+} as const;
 
 /** 영상 플레이어 (foreignObject + HTML video). */
 function videoPlayer(url: string): string {

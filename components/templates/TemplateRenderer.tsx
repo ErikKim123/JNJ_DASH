@@ -7,6 +7,7 @@ import { forwardRef, memo, useEffect, useLayoutEffect, useMemo, useRef, useState
 import type { RoundKey, StepKey, StepDataPayload } from '@/lib/sheets/types';
 import { getTemplate } from '@/lib/templates/registry';
 import { ScalingFrame } from '@/components/ui/ScalingFrame';
+import { resolveVideoSrc, VIDEO_RECT_PCT } from '@/lib/templates/shared/judgesVideo';
 
 export interface TemplateRendererProps {
   templateId: number;
@@ -49,6 +50,15 @@ export function TemplateRenderer({ templateId, round, step, data, fit = 'width',
 
   const isFinalResult = round === 'final' && step === 'result';
   const isCeremony = round === 'final' && step === 'ceremony';
+
+  // 심사위원 소개 영상 — SVG foreignObject 내부 <video> 는 Chromium 에서 화면은 나와도
+  // 오디오가 재생되지 않는다. 그래서 같은 위치에 실제 HTML <video> 오버레이를 덧대고
+  // (소리 재생), 원래 foreignObject video 는 제거해 중복 재생을 막는다.
+  const judgesVideoSrc =
+    step === 'judgesVideo' && data.kind === 'judgesVideo' && data.data.video_url.trim()
+      ? resolveVideoSrc(data.data.video_url.trim())
+      : '';
+
   const wrapRef = useRef<HTMLDivElement>(null);
   // 발표된 ID 집합 — monotonic
   const [revealed, setRevealed] = useState<Set<RevealId>>(() => new Set());
@@ -68,6 +78,17 @@ export function TemplateRenderer({ templateId, round, step, data, fit = 'width',
   useEffect(() => {
     setSakuraActive(false);
   }, [isCeremony, round, step]);
+
+  // 심사위원 영상 스텝 — SVG 내부의 무음 foreignObject <video> 를 제거해
+  // 실제 오버레이 <video> 와 이중 재생/이중 다운로드가 되지 않게 한다.
+  useLayoutEffect(() => {
+    if (!judgesVideoSrc || !wrapRef.current) return;
+    const inner = wrapRef.current.querySelector('foreignObject video');
+    if (inner) {
+      (inner as HTMLVideoElement).pause?.();
+      inner.remove();
+    }
+  }, [judgesVideoSrc, svg]);
 
   // Ceremony — .jnj-sakura 클래스에 active 토글 적용
   useLayoutEffect(() => {
@@ -158,6 +179,26 @@ export function TemplateRenderer({ templateId, round, step, data, fit = 'width',
         }
       >
         <SvgHost ref={wrapRef} svg={svg} />
+        {judgesVideoSrc && (
+          // foreignObject 영상과 동일한 1280×720 좌표(비율)로 겹쳐, 소리가 나오는 실제 영상.
+          <video
+            key={judgesVideoSrc}
+            src={judgesVideoSrc}
+            controls
+            playsInline
+            preload="metadata"
+            className="absolute"
+            style={{
+              left: `${VIDEO_RECT_PCT.left}%`,
+              top: `${VIDEO_RECT_PCT.top}%`,
+              width: `${VIDEO_RECT_PCT.width}%`,
+              height: `${VIDEO_RECT_PCT.height}%`,
+              objectFit: 'contain',
+              background: '#000',
+              borderRadius: '0.6vw',
+            }}
+          />
+        )}
       </div>
     </ScalingFrame>
   );

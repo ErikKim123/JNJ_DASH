@@ -223,6 +223,27 @@ export function ContestForm({
     setForm((s) => ({ ...s, [k]: v }));
   }
 
+  // 심사위원 소개 영상 — 서버(이 PC)에서 Windows 파일창을 띄워 전체 경로를 받는다.
+  // 로컬 서버에서만 동작 (Vercel 등 헤드리스 환경 불가). 자세한 이유는 app/api/admin/pick-video.
+  const [pickingVideo, setPickingVideo] = useState(false);
+  async function pickVideoFile() {
+    setPickingVideo(true);
+    try {
+      const res = await fetch('/api/admin/pick-video');
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(data.message || t('cf.judgesVideoBrowseFail'));
+        return;
+      }
+      if (data.canceled) return;
+      if (data.path) update('judges_video_url', data.path);
+    } catch {
+      alert(t('cf.judgesVideoBrowseFail'));
+    } finally {
+      setPickingVideo(false);
+    }
+  }
+
   // 페어링 그룹 배열 편집 — 그룹별 커플 수 개별 입력.
   type GroupField = 'prelim_groups' | 'semi_groups';
   function setGroupVal(field: GroupField, idx: number, val: number) {
@@ -504,7 +525,17 @@ export function ContestForm({
       <section className="rounded border border-border bg-panel/40 p-4">
         <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
           <h3 className="text-sm font-semibold">{t('cf.judgesVideoTitle')}</h3>
-          <span className="text-xs text-ink2">{t('cf.judgesVideoMeta')}</span>
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+            <span className="text-xs text-ink2">{t('cf.judgesVideoMeta')}</span>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={pickVideoFile}
+              disabled={pickingVideo}
+            >
+              📁 {pickingVideo ? t('cf.judgesVideoPicking') : t('cf.judgesVideoBrowse')}
+            </Button>
+          </div>
         </div>
         <Field label={t('cf.judgesVideoLabel')} hint={t('cf.judgesVideoHint')}>
           <Input
