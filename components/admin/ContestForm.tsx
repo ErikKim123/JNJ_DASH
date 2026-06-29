@@ -3,6 +3,7 @@
 // 대회 생성/편집 폼. mode='create' 면 id 입력 허용, mode='edit' 면 id 락.
 import { useRef, useState, useTransition, type ChangeEvent, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@supabase/supabase-js';
 import { Button, Field, Input, Select } from './ui';
 import type { ContestRow } from '@/lib/db/types';
 import { SCORING_ITEMS, DEFAULT_SCORING_ITEMS, type ScoringItemKey } from '@/lib/db/scoring';
@@ -258,6 +259,63 @@ export function ContestForm({
       if (data.path) update('judges_video_url', data.path);
     } finally {
       setPickingVideo(false);
+    }
+  }
+
+  // 심사위원 소개 영상 — Supabase Storage 업로드(클라우드). 어디서든(로컬·Vercel) 재생 가능.
+  // 큰 영상도 올릴 수 있도록 브라우저 → Supabase 직접 업로드(서명 토큰). Vercel 본문 제한 우회.
+  const videoFileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+
+  async function onVideoFileChosen(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // 같은 파일 재선택 가능하게 리셋
+    if (!file) return;
+
+    const contestId = initial?.id ?? form.id;
+    if (!contestId) {
+      alert(t('cf.judgesVideoUploadNeedSave'));
+      return;
+    }
+
+    setUploadingVideo(true);
+    try {
+      // 1) 서버에서 서명된 업로드 URL/토큰 발급 (관리자 인증)
+      const r = await fetch(`/api/admin/contests/${contestId}/video-upload-url`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: file.name }),
+      });
+      const meta = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        alert(`${t('cf.judgesVideoUploadFail')}\n${meta.error ?? ''}`);
+        return;
+      }
+
+      // 2) 브라우저 → Supabase 직접 업로드 (Vercel 본문 제한 우회)
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      if (!url || !anon) {
+        alert(t('cf.judgesVideoUploadFail'));
+        return;
+      }
+      const sb = createClient(url, anon);
+      const { error: upErr } = await sb.storage
+        .from(meta.bucket)
+        .uploadToSignedUrl(meta.path, meta.token, file, {
+          contentType: file.type || 'video/mp4',
+        });
+      if (upErr) {
+        alert(`${t('cf.judgesVideoUploadFail')}\n${upErr.message}`);
+        return;
+      }
+
+      // 3) 공개 URL 을 입력칸에 반영 (https URL → 로컬·Vercel 어디서든 재생)
+      update('judges_video_url', meta.publicUrl);
+    } catch (err) {
+      alert(`${t('cf.judgesVideoUploadFail')}\n${err instanceof Error ? err.message : ''}`);
+    } finally {
+      setUploadingVideo(false);
     }
   }
 
@@ -544,14 +602,31 @@ export function ContestForm({
           <h3 className="text-sm font-semibold">{t('cf.judgesVideoTitle')}</h3>
           <div className="flex items-center gap-2 flex-wrap justify-end">
             <span className="text-xs text-ink2">{t('cf.judgesVideoMeta')}</span>
+            {/* 로컬 파일 지정 (로컬 표출용) */}
             <Button
               type="button"
               variant="secondary"
               onClick={pickVideoFile}
-              disabled={pickingVideo}
+              disabled={pickingVideo || uploadingVideo}
             >
               📁 {pickingVideo ? t('cf.judgesVideoPicking') : t('cf.judgesVideoBrowse')}
             </Button>
+            {/* 클라우드 업로드 (Vercel 등 어디서든 재생) */}
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => videoFileInputRef.current?.click()}
+              disabled={uploadingVideo || pickingVideo}
+            >
+              ☁️ {uploadingVideo ? t('cf.judgesVideoUploading') : t('cf.judgesVideoUpload')}
+            </Button>
+            <input
+              ref={videoFileInputRef}
+              type="file"
+              accept="video/mp4,video/webm,video/quicktime,video/x-m4v,video/x-matroska,video/ogg,.mp4,.webm,.mov,.m4v,.mkv,.ogg,.ogv"
+              className="hidden"
+              onChange={onVideoFileChosen}
+            />
           </div>
         </div>
         <Field label={t('cf.judgesVideoLabel')} hint={t('cf.judgesVideoHint')}>
