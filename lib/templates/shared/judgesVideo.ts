@@ -84,6 +84,33 @@ export const VIDEO_RECT_PCT = {
   height: (VIDEO_H / 720) * 100,
 } as const;
 
+/**
+ * YouTube 링크에서 영상 ID(11자) 추출. watch?v= / youtu.be / embed / shorts / live 형태 지원.
+ * YouTube 링크가 아니면 null.
+ */
+export function parseYouTubeId(raw: string): string | null {
+  const url = (raw ?? '').trim();
+  const patterns = [
+    /youtube\.com\/watch\?(?:.*&)?v=([\w-]{11})/i,
+    /youtu\.be\/([\w-]{11})/i,
+    /youtube\.com\/embed\/([\w-]{11})/i,
+    /youtube\.com\/shorts\/([\w-]{11})/i,
+    /youtube\.com\/live\/([\w-]{11})/i,
+  ];
+  for (const p of patterns) {
+    const m = p.exec(url);
+    if (m) return m[1];
+  }
+  return null;
+}
+
+/** YouTube 링크면 임베드 URL(iframe src) 반환, 아니면 null. */
+export function youTubeEmbedUrl(raw: string): string | null {
+  const id = parseYouTubeId(raw);
+  if (!id) return null;
+  return `https://www.youtube.com/embed/${id}?rel=0&modestbranding=1&playsinline=1`;
+}
+
 /** 영상 플레이어 (foreignObject + HTML video). */
 function videoPlayer(url: string): string {
   const src = escapeAttr(resolveVideoSrc(url));

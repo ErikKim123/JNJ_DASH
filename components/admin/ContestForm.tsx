@@ -3,7 +3,6 @@
 // 대회 생성/편집 폼. mode='create' 면 id 입력 허용, mode='edit' 면 id 락.
 import { useRef, useState, useTransition, type ChangeEvent, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@supabase/supabase-js';
 import { Button, Field, Input, Select } from './ui';
 import type { ContestRow } from '@/lib/db/types';
 import { SCORING_ITEMS, DEFAULT_SCORING_ITEMS, type ScoringItemKey } from '@/lib/db/scoring';
@@ -222,100 +221,6 @@ export function ContestForm({
 
   function update<K extends keyof typeof form>(k: K, v: (typeof form)[K]) {
     setForm((s) => ({ ...s, [k]: v }));
-  }
-
-  // 심사위원 소개 영상 — "이 PC의 로컬 서버"가 Windows 파일창을 띄워 전체 경로를 받는다.
-  // 로컬(localhost)에서 열었으면 동일 출처로, Vercel 등 원격에서 열었으면 이 PC의
-  // localhost(3000→3001) 로 cross-origin 호출한다(로컬 브리지). 어느 쪽이든 파일창은
-  // "이 PC"에 뜨고 경로가 입력칸에 채워진다. 자세한 동작은 app/api/local-pick-video.
-  const [pickingVideo, setPickingVideo] = useState(false);
-  async function pickVideoFile() {
-    setPickingVideo(true);
-    try {
-      const host = typeof window !== 'undefined' ? window.location.hostname : '';
-      const isLocal = host === 'localhost' || host === '127.0.0.1';
-      // 로컬에서 열었으면 같은 출처(현재 포트), 원격이면 이 PC 로컬서버 후보 포트들.
-      const bases = isLocal ? [''] : ['http://localhost:3000', 'http://localhost:3001'];
-
-      let data: { path?: string; canceled?: boolean; message?: string } | null = null;
-      for (const base of bases) {
-        try {
-          const res = await fetch(`${base}/api/local-pick-video`, { mode: 'cors' });
-          const body = await res.json().catch(() => ({}));
-          if (!res.ok) {
-            // 서버는 응답했으나 거절(예: 비-Windows). 메시지 있으면 그대로 알림 후 종료.
-            if (body.message) { alert(body.message); return; }
-            continue;
-          }
-          data = body;
-          break;
-        } catch {
-          // 연결 실패(해당 포트에 로컬서버 없음) → 다음 후보 시도.
-        }
-      }
-
-      if (!data) { alert(t('cf.judgesVideoBrowseFail')); return; }
-      if (data.canceled) return;
-      if (data.path) update('judges_video_url', data.path);
-    } finally {
-      setPickingVideo(false);
-    }
-  }
-
-  // 심사위원 소개 영상 — Supabase Storage 업로드(클라우드). 어디서든(로컬·Vercel) 재생 가능.
-  // 큰 영상도 올릴 수 있도록 브라우저 → Supabase 직접 업로드(서명 토큰). Vercel 본문 제한 우회.
-  const videoFileInputRef = useRef<HTMLInputElement>(null);
-  const [uploadingVideo, setUploadingVideo] = useState(false);
-
-  async function onVideoFileChosen(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    e.target.value = ''; // 같은 파일 재선택 가능하게 리셋
-    if (!file) return;
-
-    const contestId = initial?.id ?? form.id;
-    if (!contestId) {
-      alert(t('cf.judgesVideoUploadNeedSave'));
-      return;
-    }
-
-    setUploadingVideo(true);
-    try {
-      // 1) 서버에서 서명된 업로드 URL/토큰 + Supabase url/anon 키 발급 (관리자 인증)
-      const r = await fetch(`/api/admin/contests/${contestId}/video-upload-url`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filename: file.name }),
-      });
-      const meta = await r.json().catch(() => ({}));
-      if (!r.ok) {
-        alert(`${t('cf.judgesVideoUploadFail')}\n[${r.status}] ${meta.message ?? meta.error ?? ''}`);
-        return;
-      }
-      if (!meta.supabaseUrl || !meta.anonKey || !meta.token) {
-        alert(`${t('cf.judgesVideoUploadFail')}\n(server response missing keys)`);
-        return;
-      }
-
-      // 2) 브라우저 → Supabase 직접 업로드 (Vercel 본문 제한 우회).
-      //    url/anon 키는 서버 응답값 사용 → 클라이언트 빌드 env 인라인 여부에 무관.
-      const sb = createClient(meta.supabaseUrl, meta.anonKey);
-      const { error: upErr } = await sb.storage
-        .from(meta.bucket)
-        .uploadToSignedUrl(meta.path, meta.token, file, {
-          contentType: file.type || 'video/mp4',
-        });
-      if (upErr) {
-        alert(`${t('cf.judgesVideoUploadFail')}\n${upErr.message}`);
-        return;
-      }
-
-      // 3) 공개 URL 을 입력칸에 반영 (https URL → 로컬·Vercel 어디서든 재생)
-      update('judges_video_url', meta.publicUrl);
-    } catch (err) {
-      alert(`${t('cf.judgesVideoUploadFail')}\n${err instanceof Error ? err.message : String(err)}`);
-    } finally {
-      setUploadingVideo(false);
-    }
   }
 
   // 페어링 그룹 배열 편집 — 그룹별 커플 수 개별 입력.
@@ -599,41 +504,14 @@ export function ContestForm({
       <section className="rounded border border-border bg-panel/40 p-4">
         <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
           <h3 className="text-sm font-semibold">{t('cf.judgesVideoTitle')}</h3>
-          <div className="flex items-center gap-2 flex-wrap justify-end">
-            <span className="text-xs text-ink2">{t('cf.judgesVideoMeta')}</span>
-            {/* 로컬 파일 지정 (로컬 표출용) */}
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={pickVideoFile}
-              disabled={pickingVideo || uploadingVideo}
-            >
-              📁 {pickingVideo ? t('cf.judgesVideoPicking') : t('cf.judgesVideoBrowse')}
-            </Button>
-            {/* 클라우드 업로드 (Vercel 등 어디서든 재생) */}
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => videoFileInputRef.current?.click()}
-              disabled={uploadingVideo || pickingVideo}
-            >
-              ☁️ {uploadingVideo ? t('cf.judgesVideoUploading') : t('cf.judgesVideoUpload')}
-            </Button>
-            <input
-              ref={videoFileInputRef}
-              type="file"
-              accept="video/mp4,video/webm,video/quicktime,video/x-m4v,video/x-matroska,video/ogg,.mp4,.webm,.mov,.m4v,.mkv,.ogg,.ogv"
-              className="hidden"
-              onChange={onVideoFileChosen}
-            />
-          </div>
+          <span className="text-xs text-ink2">{t('cf.judgesVideoMeta')}</span>
         </div>
         <Field label={t('cf.judgesVideoLabel')} hint={t('cf.judgesVideoHint')}>
           <Input
             type="text"
             value={form.judges_video_url}
             onChange={(e) => update('judges_video_url', e.target.value)}
-            placeholder="Z:\projects\jnj-dash-db_V1.2\Video\2026-jeju-jnj-ama\Bachata Pro.mp4"
+            placeholder="https://www.youtube.com/watch?v=..."
             maxLength={2000}
           />
         </Field>
