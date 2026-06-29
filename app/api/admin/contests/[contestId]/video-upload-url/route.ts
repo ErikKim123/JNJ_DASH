@@ -16,9 +16,6 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 const BUCKET = 'judge-videos';
-// 버킷 자체 한도(넉넉히). 단, 실제 업로드 최대 크기는 Supabase 프로젝트 전역
-// 파일 크기 한도(대시보드 Settings → Storage)에도 종속된다.
-const MAX_BYTES = 2 * 1024 * 1024 * 1024; // 2GB
 const ALLOWED_MIME = [
   'video/mp4',
   'video/webm',
@@ -36,9 +33,11 @@ async function ensureBucket(sb: ReturnType<typeof getSupabaseAdmin>): Promise<vo
   const { data: buckets, error } = await sb.storage.listBuckets();
   if (error) throw new Error(`listBuckets failed: ${error.message}`);
   if (!buckets?.some((b) => b.name === BUCKET)) {
+    // fileSizeLimit 은 지정하지 않는다 — 버킷 한도는 프로젝트 전역 "Upload file size
+    // limit"(Settings → Storage)을 넘을 수 없어, 높게 지정하면 createBucket 이 거부된다.
+    // 미지정 시 전역 한도를 그대로 따른다(기본 50MB, Pro 에서 상향 가능).
     const { error: createErr } = await sb.storage.createBucket(BUCKET, {
       public: true,
-      fileSizeLimit: MAX_BYTES,
       allowedMimeTypes: ALLOWED_MIME,
     });
     if (createErr && !/already exists/i.test(createErr.message)) {
