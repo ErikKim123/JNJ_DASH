@@ -160,6 +160,8 @@ export interface JudgeRow {
   photo_url: string;
   /** 헤드(타이브레이커) 심사위원 여부 — 경계 동점 시 이 심사위원의 O 표로 진출자 우선 선택. 대회당 1명. */
   is_head: boolean;
+  /** 이 라운드 채점 제출 완료 시각(ISO). null = 채점 중. 값 있으면 관리자 매트릭스에서 해당 컬럼 녹색 표시. */
+  submitted_at: string | null;
   created_at: string;
   updated_at: string;
 }

@@ -18,6 +18,8 @@ const Patch = z.object({
   email: z.string().max(200).optional(),
   memo: z.string().max(2000).optional(),
   max_votes: z.number().int().min(0).max(999).nullable().optional(),
+  // 채점 제출 완료 토글 — ISO 시각 = 제출됨, null = 제출 해제. 이 라운드 row 만 갱신(미러 X).
+  submitted_at: z.string().datetime().nullable().optional(),
 });
 
 interface RouteCtx { params: Promise<{ contestId: string; round: string; judgeId: string }> }

@@ -565,6 +565,30 @@ export function JudgingMatrix({
     });
   }
 
+  // 채점 "제출 완료" 토글 — 이 라운드의 해당 심사위원 row 만 갱신(미러 X).
+  // submitted_at 값이 있으면 관리자 매트릭스에서 해당 컬럼 전체가 녹색으로 표시된다.
+  // 점수 입력 자체는 막지 않는다(시야 표시 용도). 다시 누르면 제출 해제.
+  async function toggleSubmit(id: string, next: boolean) {
+    const submitted_at = next ? new Date().toISOString() : null;
+    // Optimistic
+    setJudges((s) => s.map((x) => (x.id === id ? { ...x, submitted_at } : x)));
+    startTransition(async () => {
+      const res = await fetch(`${apiBase}/judges/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ submitted_at }),
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        setError(j.error ?? `Submit toggle failed (${res.status})`);
+        router.refresh();
+        return;
+      }
+      const j = await res.json();
+      if (j.data) setJudges((s) => s.map((x) => (x.id === j.data.id ? j.data : x)));
+    });
+  }
+
   async function setVote(judgeId: string, num: string, patch: Partial<JudgeVoteRow>) {
     // Optimistic local update first
     const key = `${judgeId}:${num}`;
@@ -856,17 +880,23 @@ export function JudgingMatrix({
                 {judges.map((j) => (
                   <th
                     key={j.id}
-                    className="text-left px-2 py-2 border-l border-border"
+                    className={`text-left px-2 py-2 border-l ${j.submitted_at ? 'border-ok/40 bg-ok/20' : 'border-border'}`}
                     style={isFinal ? { minWidth: `${Math.max(8, activeDefs.length * 2.5)}rem` } : { minWidth: '5rem' }}
                   >
                     <JudgeHeader
                       judge={j}
                       onRename={renameJudge}
                       onDelete={deleteJudge}
+                      onToggleSubmit={toggleSubmit}
+                      submitted={j.submitted_at != null}
                       pending={pending}
                       leaderShort={L}
                       followerShort={F}
                       allShort={t('matrix.judgeAllShort')}
+                      submitLabel={t('matrix.judgeSubmit')}
+                      submittedLabel={t('matrix.judgeSubmitted')}
+                      submitTitle={t('matrix.judgeSubmitTitle')}
+                      unsubmitTitle={t('matrix.judgeUnsubmitTitle')}
                       tooltips={{
                         leader: t('matrix.judgeTargetLeader'),
                         follower: t('matrix.judgeTargetFollower'),
@@ -907,9 +937,11 @@ export function JudgingMatrix({
                     </td>
                     {judges.map((j) => {
                       const v = voteMap.get(`${j.id}:${e.num}`);
+                      // 제출 완료 컬럼 → 셀 전체 녹색 틴트(행 배경 위에 덧입혀짐).
+                      const subCell = j.submitted_at ? 'border-ok/40 bg-ok/[0.12]' : 'border-border';
                       if (isFinal) {
                         return (
-                          <td key={j.id} className="px-1 py-1 border-l border-border">
+                          <td key={j.id} className={`px-1 py-1 border-l ${subCell}`}>
                             <FinalScoreCell
                               v={v}
                               defs={activeDefs}
@@ -919,7 +951,7 @@ export function JudgingMatrix({
                         );
                       }
                       return (
-                        <td key={j.id} className="px-1 py-1 border-l border-border text-center">
+                        <td key={j.id} className={`px-1 py-1 border-l text-center ${subCell}`}>
                           <MarkCell mark={v?.vote_mark ?? null} onClick={() => cycleMark(j.id, e.num)} />
                         </td>
                       );
@@ -975,7 +1007,7 @@ export function JudgingMatrix({
                     const c = judgeColAgg.get(j.id)?.leaderO ?? 0;
                     const full = c >= maxPerRole;
                     return (
-                      <td key={j.id} className="px-2 py-2 border-l border-border text-center text-sm font-mono">
+                      <td key={j.id} className={`px-2 py-2 border-l text-center text-sm font-mono ${j.submitted_at ? 'border-ok/40 bg-ok/20' : 'border-border'}`}>
                         <span className={full ? 'text-danger font-semibold' : c > 0 ? 'text-ok' : 'text-ink2/40'}>
                           {c}/{maxPerRole}
                         </span>
@@ -993,7 +1025,7 @@ export function JudgingMatrix({
                     const c = judgeColAgg.get(j.id)?.followerO ?? 0;
                     const full = c >= maxPerRole;
                     return (
-                      <td key={j.id} className="px-2 py-2 border-l border-border text-center text-sm font-mono">
+                      <td key={j.id} className={`px-2 py-2 border-l text-center text-sm font-mono ${j.submitted_at ? 'border-ok/40 bg-ok/20' : 'border-border'}`}>
                         <span className={full ? 'text-danger font-semibold' : c > 0 ? 'text-ok' : 'text-ink2/40'}>
                           {c}/{maxPerRole}
                         </span>
@@ -1034,7 +1066,7 @@ export function JudgingMatrix({
                     const a = judgeColAgg.get(j.id);
                     const avg = a && a.cnt > 0 ? a.total / a.cnt : null;
                     return (
-                      <td key={j.id} className="px-2 py-2 border-l border-border text-center text-xs font-mono">
+                      <td key={j.id} className={`px-2 py-2 border-l text-center text-xs font-mono ${j.submitted_at ? 'border-ok/40 bg-ok/20' : 'border-border'}`}>
                         <span className={avg != null ? 'text-ok' : 'text-ink2/40'}>
                           {avg != null ? avg.toFixed(2) : '—'}
                         </span>
@@ -1303,16 +1335,23 @@ export function JudgingMatrix({
 // ─── Judge header (name + rename + delete) ──────────────────────────────
 
 function JudgeHeader({
-  judge, onRename, onDelete, pending,
-  leaderShort, followerShort, allShort, tooltips,
+  judge, onRename, onDelete, onToggleSubmit, submitted, pending,
+  leaderShort, followerShort, allShort,
+  submitLabel, submittedLabel, submitTitle, unsubmitTitle, tooltips,
 }: {
   judge: JudgeRow;
   onRename: (id: string, name: string) => void;
   onDelete: (id: string, name: string) => void;
+  onToggleSubmit: (id: string, next: boolean) => void;
+  submitted: boolean;
   pending: boolean;
   leaderShort: string;
   followerShort: string;
   allShort: string;
+  submitLabel: string;
+  submittedLabel: string;
+  submitTitle: string;
+  unsubmitTitle: string;
   tooltips: { leader: string; follower: string; both: string };
 }) {
   const [editing, setEditing] = useState(false);
@@ -1329,41 +1368,57 @@ function JudgeHeader({
     target === 'follower' ? { label: followerShort, tone: 'border-border text-ink2',      title: tooltips.follower } :
                             { label: allShort,      tone: 'border-accent/40 text-accent', title: tooltips.both };
   return (
-    <div className="flex items-center gap-1">
-      <span className="text-ink2/70 font-mono text-xs">{judge.display_order}.</span>
-      <span
-        className={`inline-flex items-center px-1 py-0 rounded border text-[10px] leading-tight font-mono ${badge.tone}`}
-        title={badge.title}
-      >
-        {badge.label}
-      </span>
-      {editing ? (
-        <input
-          autoFocus
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          onBlur={commit}
-          onKeyDown={(e) => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') { setName(judge.name); setEditing(false); } }}
-          className="flex-1 min-w-0 px-1 py-0.5 text-xs bg-bg border border-accent rounded"
-        />
-      ) : (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-1">
+        <span className="text-ink2/70 font-mono text-xs">{judge.display_order}.</span>
+        <span
+          className={`inline-flex items-center px-1 py-0 rounded border text-[10px] leading-tight font-mono ${badge.tone}`}
+          title={badge.title}
+        >
+          {badge.label}
+        </span>
+        {editing ? (
+          <input
+            autoFocus
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onBlur={commit}
+            onKeyDown={(e) => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') { setName(judge.name); setEditing(false); } }}
+            className="flex-1 min-w-0 px-1 py-0.5 text-xs bg-bg border border-accent rounded"
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className={`flex-1 min-w-0 text-left text-xs hover:text-accent truncate ${submitted ? 'text-ok font-semibold' : 'text-ink'}`}
+            title="Click to rename"
+          >
+            {judge.name}
+          </button>
+        )}
         <button
           type="button"
-          onClick={() => setEditing(true)}
-          className="text-ink text-xs hover:text-accent truncate"
-          title="Click to rename"
+          onClick={() => onDelete(judge.id, judge.name)}
+          disabled={pending}
+          className="text-ink2 hover:text-danger text-xs px-1"
+          title="Delete judge"
         >
-          {judge.name}
+          ✕
         </button>
-      )}
+      </div>
+      {/* 채점 제출 토글 — 누르면 컬럼 전체가 녹색으로(관리자 시야 편의). 다시 누르면 해제. */}
       <button
         type="button"
-        onClick={() => onDelete(judge.id, judge.name)}
+        onClick={() => onToggleSubmit(judge.id, !submitted)}
         disabled={pending}
-        className="text-ink2 hover:text-danger text-xs px-1"
-        title="Delete judge"
+        title={submitted ? unsubmitTitle : submitTitle}
+        className={`w-full rounded border px-1 py-0.5 text-[10px] leading-tight font-semibold transition ${
+          submitted
+            ? 'border-ok/60 bg-ok/25 text-ok hover:bg-ok/35'
+            : 'border-border text-ink2 hover:border-ok/50 hover:text-ok'
+        }`}
       >
-        ✕
+        {submitted ? `✓ ${submittedLabel}` : submitLabel}
       </button>
     </div>
   );
