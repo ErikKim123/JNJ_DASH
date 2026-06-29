@@ -565,30 +565,6 @@ export function JudgingMatrix({
     });
   }
 
-  // 채점 "제출 완료" 토글 — 이 라운드의 해당 심사위원 row 만 갱신(미러 X).
-  // submitted_at 값이 있으면 관리자 매트릭스에서 해당 컬럼 전체가 녹색으로 표시된다.
-  // 점수 입력 자체는 막지 않는다(시야 표시 용도). 다시 누르면 제출 해제.
-  async function toggleSubmit(id: string, next: boolean) {
-    const submitted_at = next ? new Date().toISOString() : null;
-    // Optimistic
-    setJudges((s) => s.map((x) => (x.id === id ? { ...x, submitted_at } : x)));
-    startTransition(async () => {
-      const res = await fetch(`${apiBase}/judges/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ submitted_at }),
-      });
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        setError(j.error ?? `Submit toggle failed (${res.status})`);
-        router.refresh();
-        return;
-      }
-      const j = await res.json();
-      if (j.data) setJudges((s) => s.map((x) => (x.id === j.data.id ? j.data : x)));
-    });
-  }
-
   async function setVote(judgeId: string, num: string, patch: Partial<JudgeVoteRow>) {
     // Optimistic local update first
     const key = `${judgeId}:${num}`;
@@ -887,16 +863,16 @@ export function JudgingMatrix({
                       judge={j}
                       onRename={renameJudge}
                       onDelete={deleteJudge}
-                      onToggleSubmit={toggleSubmit}
                       submitted={j.submitted_at != null}
                       pending={pending}
                       leaderShort={L}
                       followerShort={F}
                       allShort={t('matrix.judgeAllShort')}
-                      submitLabel={t('matrix.judgeSubmit')}
+                      linkBase={`/judge/${encodeURIComponent(contestId)}/${round}`}
                       submittedLabel={t('matrix.judgeSubmitted')}
-                      submitTitle={t('matrix.judgeSubmitTitle')}
-                      unsubmitTitle={t('matrix.judgeUnsubmitTitle')}
+                      copyLinkLabel={t('matrix.judgeCopyLink')}
+                      copiedLabel={t('matrix.judgeLinkCopied')}
+                      copyLinkTitle={t('matrix.judgeCopyLinkTitle')}
                       tooltips={{
                         leader: t('matrix.judgeTargetLeader'),
                         follower: t('matrix.judgeTargetFollower'),
@@ -1335,27 +1311,35 @@ export function JudgingMatrix({
 // ─── Judge header (name + rename + delete) ──────────────────────────────
 
 function JudgeHeader({
-  judge, onRename, onDelete, onToggleSubmit, submitted, pending,
+  judge, onRename, onDelete, submitted, pending,
   leaderShort, followerShort, allShort,
-  submitLabel, submittedLabel, submitTitle, unsubmitTitle, tooltips,
+  linkBase, submittedLabel, copyLinkLabel, copiedLabel, copyLinkTitle, tooltips,
 }: {
   judge: JudgeRow;
   onRename: (id: string, name: string) => void;
   onDelete: (id: string, name: string) => void;
-  onToggleSubmit: (id: string, next: boolean) => void;
   submitted: boolean;
   pending: boolean;
   leaderShort: string;
   followerShort: string;
   allShort: string;
-  submitLabel: string;
+  linkBase: string;
   submittedLabel: string;
-  submitTitle: string;
-  unsubmitTitle: string;
+  copyLinkLabel: string;
+  copiedLabel: string;
+  copyLinkTitle: string;
   tooltips: { leader: string; follower: string; both: string };
 }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(judge.name);
+  const [copied, setCopied] = useState(false);
+  function copyLink() {
+    const url = `${window.location.origin}${linkBase}/${judge.id}`;
+    navigator.clipboard?.writeText(url).then(
+      () => { setCopied(true); setTimeout(() => setCopied(false), 1500); },
+      () => { window.prompt(copyLinkTitle, url); }
+    );
+  }
   function commit() {
     setEditing(false);
     if (name.trim() && name.trim() !== judge.name) onRename(judge.id, name.trim());
@@ -1393,7 +1377,7 @@ function JudgeHeader({
             className={`flex-1 min-w-0 text-left text-xs hover:text-accent truncate ${submitted ? 'text-ok font-semibold' : 'text-ink'}`}
             title="Click to rename"
           >
-            {judge.name}
+            {submitted && <span className="mr-0.5">✓</span>}{judge.name}
           </button>
         )}
         <button
@@ -1406,20 +1390,21 @@ function JudgeHeader({
           ✕
         </button>
       </div>
-      {/* 채점 제출 토글 — 누르면 컬럼 전체가 녹색으로(관리자 시야 편의). 다시 누르면 해제. */}
-      <button
-        type="button"
-        onClick={() => onToggleSubmit(judge.id, !submitted)}
-        disabled={pending}
-        title={submitted ? unsubmitTitle : submitTitle}
-        className={`w-full rounded border px-1 py-0.5 text-[10px] leading-tight font-semibold transition ${
-          submitted
-            ? 'border-ok/60 bg-ok/25 text-ok hover:bg-ok/35'
-            : 'border-border text-ink2 hover:border-ok/50 hover:text-ok'
-        }`}
-      >
-        {submitted ? `✓ ${submittedLabel}` : submitLabel}
-      </button>
+      {/* 제출 상태(심사위원이 본인 페이지에서 SUBMIT) · 미제출 시 심사 링크 복사 버튼 */}
+      {submitted ? (
+        <div className="w-full rounded border border-ok/60 bg-ok/25 px-1 py-0.5 text-[10px] leading-tight font-semibold text-ok text-center">
+          ✓ {submittedLabel}
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={copyLink}
+          title={copyLinkTitle}
+          className="w-full rounded border border-border px-1 py-0.5 text-[10px] leading-tight text-ink2 hover:border-accent hover:text-accent transition"
+        >
+          {copied ? `✓ ${copiedLabel}` : copyLinkLabel}
+        </button>
+      )}
     </div>
   );
 }

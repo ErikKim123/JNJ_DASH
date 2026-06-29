@@ -141,10 +141,10 @@ export const MESSAGES_EN = {
   'matrix.confirmUncommit': 'Undo {ROUND} qualifiers commit?\n· Deletes every qualifier row for {ROUND}.\n· Votes / judges / pairings are preserved — you can commit again.\n· If the next round already has pairings or votes based on these qualifiers, they may become stale.',
   'matrix.confirmDeleteJudge': 'Delete judge "{NAME}"? Removes the judge from prelim, semi, and final, and erases all of their votes/scores across rounds.',
   'matrix.commitOnlyPrelimSemi': 'Commit is only for Prelim/Semi. Final results are managed separately.',
-  'matrix.judgeSubmit': 'Submit',
   'matrix.judgeSubmitted': 'Submitted',
-  'matrix.judgeSubmitTitle': "Mark this judge's scoring as submitted — turns the whole column green.",
-  'matrix.judgeUnsubmitTitle': 'Undo submission — clears the green highlight.',
+  'matrix.judgeCopyLink': '🔗 Judge link',
+  'matrix.judgeLinkCopied': 'Copied',
+  'matrix.judgeCopyLinkTitle': "Copy this judge's private scoring link. Share it so the judge can enter scores and press SUBMIT.",
 
   // ── Contest form (Contest Info tab) ────────────────────────────
   'cf.id': 'Contest ID (slug)',
@@ -424,10 +424,10 @@ export const MESSAGES_KO: Record<MessageKey, string> = {
   'matrix.confirmUncommit': '{ROUND} 통과자 확정을 되돌릴까요?\n· {ROUND} 의 통과자 행을 모두 삭제합니다.\n· 투표 / 심사위원 / 페어링은 유지되며, 다시 확정할 수 있습니다.\n· 다음 라운드에 이 통과자 기준의 페어링이나 투표가 이미 있으면 정합성이 깨질 수 있습니다.',
   'matrix.confirmDeleteJudge': '심사위원 "{NAME}"을 삭제할까요? 예선·본선·결승 모두에서 제거되며, 모든 라운드의 투표/점수가 함께 삭제됩니다.',
   'matrix.commitOnlyPrelimSemi': '확정은 예선/본선에서만 가능합니다. 결승 결과는 별도 관리됩니다.',
-  'matrix.judgeSubmit': '제출',
   'matrix.judgeSubmitted': '제출완료',
-  'matrix.judgeSubmitTitle': '이 심사위원의 채점을 제출 완료로 표시 — 해당 컬럼 전체가 녹색으로 바뀝니다.',
-  'matrix.judgeUnsubmitTitle': '제출 해제 — 녹색 표시를 끕니다.',
+  'matrix.judgeCopyLink': '🔗 심사 링크',
+  'matrix.judgeLinkCopied': '복사됨',
+  'matrix.judgeCopyLinkTitle': '이 심사위원 전용 채점 링크를 복사합니다. 심사위원에게 전달하면 점수를 입력하고 SUBMIT 할 수 있습니다.',
 
   // ── Contest form (Contest Info tab) ────────────────────────────
   'cf.id': '대회 ID (슬러그)',
