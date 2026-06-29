@@ -4,6 +4,7 @@
 import { useRef, useState, useTransition, type ChangeEvent, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Field, Input, Select } from './ui';
+import { youTubeEmbedUrl } from '@/lib/templates/shared/judgesVideo';
 import type { ContestRow } from '@/lib/db/types';
 import { SCORING_ITEMS, DEFAULT_SCORING_ITEMS, type ScoringItemKey } from '@/lib/db/scoring';
 import { JOIN_PRESETS, JOIN_PRESET_MAP, resolveJoinPalette } from '@/lib/join/theme';
@@ -221,6 +222,27 @@ export function ContestForm({
 
   function update<K extends keyof typeof form>(k: K, v: (typeof form)[K]) {
     setForm((s) => ({ ...s, [k]: v }));
+  }
+
+  // 심사위원 소개 영상 미리보기 — 입력한 링크를 새 창(팝업)으로 띄운다.
+  // YouTube 링크면 임베드 플레이어, 그 외면 입력 URL 을 그대로 연다.
+  function previewVideo() {
+    const raw = form.judges_video_url.trim();
+    if (!raw) {
+      alert(t('cf.judgesVideoPreviewEmpty'));
+      return;
+    }
+    const embed = youTubeEmbedUrl(raw);
+    const target = embed ? `${embed}&autoplay=1` : raw;
+    const w = 854;
+    const h = 480;
+    const left = Math.max(0, Math.round(window.screen.width / 2 - w / 2));
+    const top = Math.max(0, Math.round(window.screen.height / 2 - h / 2));
+    window.open(
+      target,
+      'jnj-video-preview',
+      `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=no`,
+    );
   }
 
   // 페어링 그룹 배열 편집 — 그룹별 커플 수 개별 입력.
@@ -507,13 +529,19 @@ export function ContestForm({
           <span className="text-xs text-ink2">{t('cf.judgesVideoMeta')}</span>
         </div>
         <Field label={t('cf.judgesVideoLabel')} hint={t('cf.judgesVideoHint')}>
-          <Input
-            type="text"
-            value={form.judges_video_url}
-            onChange={(e) => update('judges_video_url', e.target.value)}
-            placeholder="https://www.youtube.com/watch?v=..."
-            maxLength={2000}
-          />
+          <div className="flex gap-2 items-stretch">
+            <Input
+              type="text"
+              value={form.judges_video_url}
+              onChange={(e) => update('judges_video_url', e.target.value)}
+              placeholder="https://www.youtube.com/watch?v=..."
+              maxLength={2000}
+              className="flex-1 min-w-0"
+            />
+            <Button type="button" variant="secondary" onClick={previewVideo}>
+              ▶ {t('cf.judgesVideoPreview')}
+            </Button>
+          </div>
         </Field>
       </section>
 

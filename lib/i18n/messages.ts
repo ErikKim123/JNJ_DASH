@@ -189,6 +189,8 @@ export const MESSAGES_EN = {
   'cf.judgesVideoMeta': 'Played on the JUDGES VIDEO step (after JUDGES) · paste a YouTube link',
   'cf.judgesVideoLabel': 'Judge Intro Video (YouTube link)',
   'cf.judgesVideoHint': 'Paste a YouTube link (e.g. https://youtu.be/xxxxxxxxxxx or https://www.youtube.com/watch?v=xxxxxxxxxxx). The video plays embedded on the display screen (needs internet). Leave empty to show a placeholder slide.',
+  'cf.judgesVideoPreview': 'Preview',
+  'cf.judgesVideoPreviewEmpty': 'Enter a video link first.',
   // Tone & Manner (JOIN app theme)
   'cf.themeTitle': 'JOIN App Tone & Manner',
   'cf.themeMeta': 'Applies across the whole JOIN flow (landing / list / form / done)',
@@ -458,6 +460,8 @@ export const MESSAGES_KO: Record<MessageKey, string> = {
   'cf.judgesVideoMeta': '예선 JUDGES 다음 "영상소개" 스텝에서 재생 · YouTube 링크 붙여넣기',
   'cf.judgesVideoLabel': '심사위원 소개 영상 (YouTube 링크)',
   'cf.judgesVideoHint': 'YouTube 링크를 붙여넣으세요 (예: https://youtu.be/xxxxxxxxxxx 또는 https://www.youtube.com/watch?v=xxxxxxxxxxx). 표출 화면에 임베드되어 재생됩니다(인터넷 필요). 비워두면 "영상 미설정" 안내 슬라이드가 표출됩니다.',
+  'cf.judgesVideoPreview': '미리보기',
+  'cf.judgesVideoPreviewEmpty': '먼저 영상 링크를 입력하세요.',
   // Tone & Manner (JOIN app theme)
   'cf.themeTitle': 'JOIN 앱 톤앤매너',
   'cf.themeMeta': 'JOIN 전체(랜딩/목록/등록폼/완료)에 적용됩니다',
