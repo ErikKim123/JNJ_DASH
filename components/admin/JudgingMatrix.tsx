@@ -565,6 +565,26 @@ export function JudgingMatrix({
     });
   }
 
+  // 제출 취소 — 심사위원이 실수로 SUBMIT 한 경우 운영자가 해제.
+  // 제출 상태는 라운드별이므로 mirror(judgesApiBase) 가 아닌 라운드 전용 엔드포인트로
+  // 이 라운드 row 의 submitted_at 만 null 로 만든다(점수는 유지).
+  async function unsubmitJudge(id: string, name: string) {
+    if (!confirm(t('matrix.confirmUnsubmitJudge').replace('{NAME}', name))) return;
+    startTransition(async () => {
+      const res = await fetch(`${apiBase}/judges/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ submitted_at: null }),
+      });
+      if (!res.ok) { setError(`Unsubmit failed (${res.status})`); router.refresh(); return; }
+      const j = await res.json();
+      const myRow: JudgeRow | undefined = j.data;
+      setJudges((s) =>
+        s.map((x) => (x.id === id ? (myRow ?? { ...x, submitted_at: null }) : x)),
+      );
+    });
+  }
+
   async function setVote(judgeId: string, num: string, patch: Partial<JudgeVoteRow>) {
     // Optimistic local update first
     const key = `${judgeId}:${num}`;
@@ -863,6 +883,7 @@ export function JudgingMatrix({
                       judge={j}
                       onRename={renameJudge}
                       onDelete={deleteJudge}
+                      onUnsubmit={unsubmitJudge}
                       submitted={j.submitted_at != null}
                       pending={pending}
                       leaderShort={L}
@@ -870,6 +891,8 @@ export function JudgingMatrix({
                       allShort={t('matrix.judgeAllShort')}
                       linkBase={`/judge/${encodeURIComponent(contestId)}/${round}`}
                       submittedLabel={t('matrix.judgeSubmitted')}
+                      unsubmitLabel={t('matrix.judgeUnsubmit')}
+                      unsubmitTitle={t('matrix.judgeUnsubmitTitle')}
                       copyLinkLabel={t('matrix.judgeCopyLink')}
                       copiedLabel={t('matrix.judgeLinkCopied')}
                       copyLinkTitle={t('matrix.judgeCopyLinkTitle')}
@@ -1311,13 +1334,14 @@ export function JudgingMatrix({
 // ─── Judge header (name + rename + delete) ──────────────────────────────
 
 function JudgeHeader({
-  judge, onRename, onDelete, submitted, pending,
+  judge, onRename, onDelete, onUnsubmit, submitted, pending,
   leaderShort, followerShort, allShort,
-  linkBase, submittedLabel, copyLinkLabel, copiedLabel, copyLinkTitle, tooltips,
+  linkBase, submittedLabel, unsubmitLabel, unsubmitTitle, copyLinkLabel, copiedLabel, copyLinkTitle, tooltips,
 }: {
   judge: JudgeRow;
   onRename: (id: string, name: string) => void;
   onDelete: (id: string, name: string) => void;
+  onUnsubmit: (id: string, name: string) => void;
   submitted: boolean;
   pending: boolean;
   leaderShort: string;
@@ -1325,6 +1349,8 @@ function JudgeHeader({
   allShort: string;
   linkBase: string;
   submittedLabel: string;
+  unsubmitLabel: string;
+  unsubmitTitle: string;
   copyLinkLabel: string;
   copiedLabel: string;
   copyLinkTitle: string;
@@ -1392,9 +1418,17 @@ function JudgeHeader({
       </div>
       {/* 제출 상태(심사위원이 본인 페이지에서 SUBMIT) · 미제출 시 심사 링크 복사 버튼 */}
       {submitted ? (
-        <div className="w-full rounded border border-ok/60 bg-ok/25 px-1 py-0.5 text-[10px] leading-tight font-semibold text-ok text-center">
-          ✓ {submittedLabel}
-        </div>
+        // 클릭 시 제출 취소(실수 제출 대비). hover 하면 취소 안내로 바뀜.
+        <button
+          type="button"
+          onClick={() => onUnsubmit(judge.id, judge.name)}
+          disabled={pending}
+          title={unsubmitTitle}
+          className="group w-full rounded border border-ok/60 bg-ok/25 px-1 py-0.5 text-[10px] leading-tight font-semibold text-ok text-center transition hover:border-danger/60 hover:bg-danger/20 hover:text-danger disabled:opacity-50"
+        >
+          <span className="group-hover:hidden">✓ {submittedLabel}</span>
+          <span className="hidden group-hover:inline">✕ {unsubmitLabel}</span>
+        </button>
       ) : (
         <button
           type="button"

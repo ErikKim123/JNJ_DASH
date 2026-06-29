@@ -1,0 +1,38 @@
+/* Design Ref: §7.1 — JNJ SCORE design tokens. 디자인 토큰(:root 변수)은
+   ./styles/colors_and_type.css 에서 오고, layout.tsx 에서 이 파일과 함께 import 된다.
+
+   이 stylesheet 는 Next 의 세그먼트 스코프 규칙상 /vote/* 라우트에서만 번들·로드된다
+   (Dash 페이지에는 실리지 않음 → 전역 html/body 를 재정의해도 Dash 로 새지 않는다).
+   또한 루트 layout.css(Dash · Tailwind, 어두운 테마) 다음에 로드되므로 /vote 에서는
+   아래 흰 캔버스 규칙이 Dash 의 dark html/body 를 이긴다. */
+
+html,
+body {
+  background: var(--jnj-white);
+  color: var(--jnj-text-primary);
+  font-family: var(--jnj-font-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* Mobile-first reset for input zoom on iOS */
+input,
+select,
+textarea {
+  font-size: 16px;
+}
+
+/* Disable text selection on tap-active surfaces (judge cards, toggles) */
+.jnj-no-select {
+  -webkit-user-select: none;
+  user-select: none;
+}

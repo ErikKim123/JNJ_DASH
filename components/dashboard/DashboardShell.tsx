@@ -64,7 +64,7 @@ export function DashboardShell({
             key={v.n}
             type="button"
             onClick={() => setOverlayUrl(v.url)}
-            title={`영상 ${v.n} / VIDEO ${v.n}`}
+            title={`VIDEO ${v.n}`}
             className={`group flex items-center rounded-lg border border-accent2/50 bg-panel/80 shadow-sm hover:bg-accent2 hover:border-accent2 transition-colors ${
               variant === 'fs' ? 'gap-1.5 px-2.5 py-1' : 'gap-2 px-3 py-1.5'
             }`}
@@ -76,21 +76,12 @@ export function DashboardShell({
             >
               ▶
             </span>
-            <span className="flex flex-col items-start leading-none gap-0.5">
-              <span
-                className={`font-semibold text-ink group-hover:text-bg transition-colors ${
-                  variant === 'fs' ? 'text-[11px]' : 'text-xs'
-                }`}
-              >
-                영상 {v.n}
-              </span>
-              <span
-                className={`font-mono tracking-widest text-ink2 group-hover:text-bg/80 transition-colors ${
-                  variant === 'fs' ? 'text-[8px]' : 'text-[9px]'
-                }`}
-              >
-                VIDEO {v.n}
-              </span>
+            <span
+              className={`font-mono font-semibold tracking-widest text-ink group-hover:text-bg transition-colors ${
+                variant === 'fs' ? 'text-[11px]' : 'text-xs'
+              }`}
+            >
+              VIDEO {v.n}
             </span>
           </button>
         ))}

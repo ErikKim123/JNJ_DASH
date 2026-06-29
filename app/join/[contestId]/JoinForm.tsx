@@ -13,8 +13,6 @@ type Lang = 'ko' | 'en';
 const ROLE_OPTIONS: { value: ParticipantRole; label: string }[] = [
   { value: 'leader', label: 'Leader' },
   { value: 'follower', label: 'Follower' },
-  { value: 'helper_leader', label: 'Helper (Leader)' },
-  { value: 'helper_follower', label: 'Helper (Follower)' },
 ];
 
 // 부문/장르 선택지 — value 와 라벨 모두 영문 단일 키 (대회 운영 표준 명칭).
@@ -48,8 +46,7 @@ const PROFILE_FIELDS: {
   { key: '부문', label: { ko: '부문', en: 'Category' }, type: 'select', options: CATEGORY_OPTIONS, placeholder: { ko: '부문 선택', en: 'Select category' } },
   { key: '장르', label: { ko: '장르', en: 'Genre' }, type: 'select', options: GENRE_OPTIONS, placeholder: { ko: '장르 선택', en: 'Select genre' } },
   { key: 'Division', label: { ko: '구분', en: 'Division' }, type: 'select', options: DIVISION_OPTIONS, placeholder: { ko: '구분 선택', en: 'Select division' } },
-  // '연락처'(WhatsApp)는 BASIC 섹션(이름↔국가 사이)으로 이동 — 아래 렌더에서 직접 처리.
-  { key: '이메일', label: { ko: '이메일 (필수)', en: 'Email (required)' }, placeholder: { ko: 'name@example.com', en: 'name@example.com' }, type: 'email', required: true },
+  // '연락처'(WhatsApp)와 '이메일'은 BASIC 섹션으로 이동 — 아래 렌더에서 직접 처리.
   // '접수일'은 폼에 노출하지 않고 등록 시 자동으로 오늘 날짜로 저장된다(meta 초기값).
   { key: 'X', label: { ko: '인스타 (@)', en: 'Instagram (@)' }, placeholder: { ko: '@your_id', en: '@your_id' } },
 ];
@@ -524,6 +521,23 @@ export function JoinForm({
               placeholder={t('repPlaceholder', lang)}
               options={COUNTRY_CODES}
             />
+          </Field>
+
+          {/* '이메일'은 PROFILE 에서 BASIC 으로 이동 — 확인 메일 수신 주소임을 안내. */}
+          <Field label={lang === 'ko' ? '이메일 (필수)' : 'Email (required)'}>
+            <input
+              type="email"
+              className="jnj-input"
+              value={draft.meta['이메일'] ?? ''}
+              onChange={(e) => setMeta('이메일', e.target.value)}
+              placeholder="name@example.com"
+              maxLength={2048}
+            />
+            <p className="jnj-small">
+              {lang === 'ko'
+                ? '확인 메일을 받으실 주소입니다.'
+                : 'Where you will receive your confirmation mail'}
+            </p>
           </Field>
         </div>
       </section>

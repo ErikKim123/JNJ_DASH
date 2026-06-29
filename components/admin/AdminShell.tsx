@@ -68,6 +68,15 @@ function AdminShellInner({
         <div className="flex items-center gap-3 text-sm">
           <LocaleSwitcher />
           <Link
+            href="/vote"
+            target="_blank"
+            rel="noopener"
+            className="px-3 py-1 rounded border border-border text-ink2 hover:text-ink hover:border-ink transition font-mono text-xs uppercase tracking-widest"
+            title="심사위원 투표/채점 앱을 새 창으로 엽니다"
+          >
+            Vote App ↗
+          </Link>
+          <Link
             href="/join"
             target="_blank"
             rel="noopener"

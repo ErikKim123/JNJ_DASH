@@ -14,25 +14,27 @@ import { shell, topHeader, citiesFooter } from './common';
 function renderCirclePairing(pairCount: number): string {
   const count = Math.max(2, Math.min(25, pairCount));
 
-  // 카운트 티어별 ellipse 와 폰트 — 라벨 폭과 인접 간격을 함께 고려해 튜닝.
-  let RX: number, RY: number, nameFontSize: number, stagger: number;
+  // 카운트 티어별 ellipse 와 폰트 — 이름 제거로 라벨(L/F+번호)이 짧아졌으므로 글자를
+  // 크게 키우고, 2줄 블록이 세로로 커진 만큼 RY·stagger 를 늘려 인접 라벨 비중첩.
+  let RX: number, RY: number, roleFontSize: number, stagger: number;
   if (count <= 8) {
-    RX = 230; RY = 130; nameFontSize = 18; stagger = 0;
+    RX = 235; RY = 150; roleFontSize = 30; stagger = 12;
   } else if (count <= 14) {
-    RX = 330; RY = 152; nameFontSize = 14; stagger = 18;
+    RX = 335; RY = 165; roleFontSize = 22; stagger = 26;
   } else if (count <= 20) {
-    RX = 400; RY = 158; nameFontSize = 12; stagger = 22;
+    RX = 405; RY = 172; roleFontSize = 18; stagger = 36;
   } else {
-    RX = 425; RY = 154; nameFontSize = 11; stagger = 24;
+    RX = 430; RY = 176; roleFontSize = 15; stagger = 44;
   }
 
   const cx = 640;
-  const cy = 425;
+  const cy = 420;
 
-  const partNumSize = Math.max(9, Math.round(nameFontSize * 0.78));
-  const lineH = nameFontSize + 4;
-  const flourishGap = Math.round(nameFontSize * 0.35);
-  const flourishHalf = Math.round(nameFontSize * 1.6);
+  // 코드성 텍스트(L095/F100)라 가독성 높은 굵은 sans-serif 로 표시.
+  const roleFont = "'Helvetica Neue', 'Segoe UI', Arial, 'Malgun Gothic', '맑은 고딕', sans-serif";
+  const lineH = roleFontSize + 6;
+  const flourishGap = Math.round(roleFontSize * 0.28);
+  const flourishHalf = Math.round(roleFontSize * 1.0);
   const blockH = lineH * 2 + flourishGap;
 
   // 가운데 워드마크
@@ -87,14 +89,8 @@ function renderCirclePairing(pairCount: number): string {
       <g opacity="0">
         <animate attributeName="opacity" values="0;1" dur="0.5s" begin="${delay}s" fill="freeze"/>
         <g transform="translate(${px.toFixed(1)} ${py.toFixed(1)})" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif">
-          <text text-anchor="${anchor}" y="${leaderY}" font-size="${nameFontSize}" font-weight="600" letter-spacing="0.4" fill="#FFD56B">
-            <tspan font-size="${partNumSize}" letter-spacing="1.5">{{leader_num_${i}}}</tspan>
-            <tspan dx="7">{{leader_${i}}}</tspan>
-          </text>
-          <text text-anchor="${anchor}" y="${followerY}" font-size="${nameFontSize}" font-weight="600" letter-spacing="0.4" fill="url(#silverg)">
-            <tspan font-size="${partNumSize}" letter-spacing="1.5">{{follower_num_${i}}}</tspan>
-            <tspan dx="7">{{follower_${i}}}</tspan>
-          </text>
+          <text text-anchor="${anchor}" y="${leaderY}" font-family="${roleFont}" font-size="${roleFontSize}" font-weight="700" letter-spacing="0.5" fill="#FFD56B">L{{leader_num_${i}}}</text>
+          <text text-anchor="${anchor}" y="${followerY}" font-family="${roleFont}" font-size="${roleFontSize}" font-weight="700" letter-spacing="0.5" fill="url(#silverg)">F{{follower_num_${i}}}</text>
           <line x1="${fx1}" y1="${flourishY}" x2="${fx2}" y2="${flourishY}" stroke="url(#goldgh)" stroke-width="0.7" opacity="0.75"/>
         </g>
       </g>
