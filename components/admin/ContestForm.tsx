@@ -223,22 +223,39 @@ export function ContestForm({
     setForm((s) => ({ ...s, [k]: v }));
   }
 
-  // 심사위원 소개 영상 — 서버(이 PC)에서 Windows 파일창을 띄워 전체 경로를 받는다.
-  // 로컬 서버에서만 동작 (Vercel 등 헤드리스 환경 불가). 자세한 이유는 app/api/admin/pick-video.
+  // 심사위원 소개 영상 — "이 PC의 로컬 서버"가 Windows 파일창을 띄워 전체 경로를 받는다.
+  // 로컬(localhost)에서 열었으면 동일 출처로, Vercel 등 원격에서 열었으면 이 PC의
+  // localhost(3000→3001) 로 cross-origin 호출한다(로컬 브리지). 어느 쪽이든 파일창은
+  // "이 PC"에 뜨고 경로가 입력칸에 채워진다. 자세한 동작은 app/api/local-pick-video.
   const [pickingVideo, setPickingVideo] = useState(false);
   async function pickVideoFile() {
     setPickingVideo(true);
     try {
-      const res = await fetch('/api/admin/pick-video');
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        alert(data.message || t('cf.judgesVideoBrowseFail'));
-        return;
+      const host = typeof window !== 'undefined' ? window.location.hostname : '';
+      const isLocal = host === 'localhost' || host === '127.0.0.1';
+      // 로컬에서 열었으면 같은 출처(현재 포트), 원격이면 이 PC 로컬서버 후보 포트들.
+      const bases = isLocal ? [''] : ['http://localhost:3000', 'http://localhost:3001'];
+
+      let data: { path?: string; canceled?: boolean; message?: string } | null = null;
+      for (const base of bases) {
+        try {
+          const res = await fetch(`${base}/api/local-pick-video`, { mode: 'cors' });
+          const body = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            // 서버는 응답했으나 거절(예: 비-Windows). 메시지 있으면 그대로 알림 후 종료.
+            if (body.message) { alert(body.message); return; }
+            continue;
+          }
+          data = body;
+          break;
+        } catch {
+          // 연결 실패(해당 포트에 로컬서버 없음) → 다음 후보 시도.
+        }
       }
+
+      if (!data) { alert(t('cf.judgesVideoBrowseFail')); return; }
       if (data.canceled) return;
       if (data.path) update('judges_video_url', data.path);
-    } catch {
-      alert(t('cf.judgesVideoBrowseFail'));
     } finally {
       setPickingVideo(false);
     }

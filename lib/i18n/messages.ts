@@ -191,7 +191,7 @@ export const MESSAGES_EN = {
   'cf.judgesVideoHint': 'Paste a video https link (mp4), OR the FULL local file path of a video on this PC (e.g. Z:\\projects\\jnj-dash-db_V1.2\\Video\\2026-jeju-jnj-ama\\Bachata Pro.mp4). The display screen streams local files automatically via /api/video. Only video files (mp4/webm/mov/m4v/mkv) are allowed. Leave empty to show a placeholder slide.',
   'cf.judgesVideoBrowse': 'Browse…',
   'cf.judgesVideoPicking': 'Opening…',
-  'cf.judgesVideoBrowseFail': 'Could not open the file dialog. This only works on the local server (localhost) running on this Windows PC.',
+  'cf.judgesVideoBrowseFail': 'Could not open the file dialog. Make sure the local server (npm run dev) is running on this Windows PC at localhost:3000 (or 3001), then try again. Allow the browser prompt to access the local network if asked.',
   // Tone & Manner (JOIN app theme)
   'cf.themeTitle': 'JOIN App Tone & Manner',
   'cf.themeMeta': 'Applies across the whole JOIN flow (landing / list / form / done)',
@@ -463,7 +463,7 @@ export const MESSAGES_KO: Record<MessageKey, string> = {
   'cf.judgesVideoHint': '영상 https 링크(mp4), 또는 이 PC에 있는 영상파일의 풀경로를 그대로 붙여넣으세요 (예: Z:\\projects\\jnj-dash-db_V1.2\\Video\\2026-jeju-jnj-ama\\Bachata Pro.mp4). 표출 화면이 /api/video 로 자동 변환해 로컬 파일을 재생합니다. 영상파일(mp4/webm/mov/m4v/mkv)만 허용됩니다. 비워두면 "영상 미설정" 안내 슬라이드가 표출됩니다.',
   'cf.judgesVideoBrowse': '파일 선택…',
   'cf.judgesVideoPicking': '여는 중…',
-  'cf.judgesVideoBrowseFail': '파일 선택 창을 열 수 없습니다. 이 기능은 이 PC에서 실행 중인 로컬 서버(localhost)에서만 동작합니다.',
+  'cf.judgesVideoBrowseFail': '파일 선택 창을 열 수 없습니다. 이 PC에서 로컬 서버(npm run dev)가 localhost:3000(또는 3001)에 떠 있어야 합니다. 서버를 켠 뒤 다시 시도하고, 브라우저가 "로컬 네트워크 접근" 허용을 물으면 허용하세요.',
   // Tone & Manner (JOIN app theme)
   'cf.themeTitle': 'JOIN 앱 톤앤매너',
   'cf.themeMeta': 'JOIN 전체(랜딩/목록/등록폼/완료)에 적용됩니다',
