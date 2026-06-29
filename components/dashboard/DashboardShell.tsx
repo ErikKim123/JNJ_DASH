@@ -53,24 +53,45 @@ export function DashboardShell({
   const [overlayUrl, setOverlayUrl] = useState<string | null>(null);
   const roundVideos = (meta.extraVideos?.[round] ?? []).map((u) => u.trim());
   const videoButtons = roundVideos
-    .map((url, i) => ({ url, label: `영상${i + 1}` }))
+    .map((url, i) => ({ url, n: i + 1 }))
     .filter((v) => v.url);
 
   const renderVideoButtons = (variant: 'normal' | 'fs') =>
     videoButtons.length ? (
-      <div className="flex items-center gap-1.5 flex-wrap justify-end">
+      <div className="flex items-center gap-2 flex-wrap justify-end">
         {videoButtons.map((v) => (
           <button
-            key={v.label}
+            key={v.n}
             type="button"
             onClick={() => setOverlayUrl(v.url)}
-            className={
-              variant === 'fs'
-                ? 'px-2 py-1 rounded border border-accent2 bg-panel text-[10px] font-mono tracking-widest text-accent hover:bg-accent2 hover:text-bg transition-colors'
-                : 'px-3 py-1.5 rounded border border-accent2 bg-panel text-xs font-mono tracking-widest text-accent hover:bg-accent2 hover:text-bg transition-colors'
-            }
+            title={`영상 ${v.n} / VIDEO ${v.n}`}
+            className={`group flex items-center rounded-lg border border-accent2/50 bg-panel/80 shadow-sm hover:bg-accent2 hover:border-accent2 transition-colors ${
+              variant === 'fs' ? 'gap-1.5 px-2.5 py-1' : 'gap-2 px-3 py-1.5'
+            }`}
           >
-            ▶ {v.label}
+            <span
+              className={`text-accent group-hover:text-bg transition-colors ${
+                variant === 'fs' ? 'text-[10px]' : 'text-xs'
+              }`}
+            >
+              ▶
+            </span>
+            <span className="flex flex-col items-start leading-none gap-0.5">
+              <span
+                className={`font-semibold text-ink group-hover:text-bg transition-colors ${
+                  variant === 'fs' ? 'text-[11px]' : 'text-xs'
+                }`}
+              >
+                영상 {v.n}
+              </span>
+              <span
+                className={`font-mono tracking-widest text-ink2 group-hover:text-bg/80 transition-colors ${
+                  variant === 'fs' ? 'text-[8px]' : 'text-[9px]'
+                }`}
+              >
+                VIDEO {v.n}
+              </span>
+            </span>
           </button>
         ))}
       </div>
