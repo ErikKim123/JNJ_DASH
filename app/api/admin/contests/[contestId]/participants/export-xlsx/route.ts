@@ -102,7 +102,7 @@ export async function GET(_req: Request, ctx: RouteCtx) {
 
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet('Participants');
-  const header = ['#', 'PHOTO', 'TEAM NAME', 'ROLE', 'COUNTRY', ...metaKeys, 'CREATED_AT'];
+  const header = ['#', 'PHOTO', 'FIRST NAME', 'LAST NAME', 'ROLE', 'COUNTRY', ...metaKeys, 'CREATED_AT'];
   ws.columns = header.map((h, i) => ({
     header: h,
     width: i === 0 ? 7 : i === 1 ? 14 : i === 2 ? 28 : i === 3 ? 16 : i === 4 ? 16 : i === header.length - 1 ? 22 : 18,
@@ -115,7 +115,8 @@ export async function GET(_req: Request, ctx: RouteCtx) {
     const row = [
       r.num,
       '', // PHOTO — 이미지로 덮음
-      r.team_name,
+      r.first_name ?? r.team_name ?? '',
+      r.last_name ?? '',
       ROLE_LABEL[r.role] ?? r.role,
       r.representative,
       ...metaKeys.map((k) => cellOf(meta[k])),

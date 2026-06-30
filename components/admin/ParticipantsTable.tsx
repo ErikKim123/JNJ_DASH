@@ -13,6 +13,7 @@ import {
   circledOrdinal,
 } from './participant-meta';
 import { resolveActiveDefs, type ScoringItemKey, type ScoringItemDef } from '@/lib/db/scoring';
+import { fullName } from '@/lib/participants/name';
 import { resolvePhotoUrl, normalizePhotoUrl } from './photo-url';
 import { useT } from '@/lib/i18n/LocaleContext';
 import type { MessageKey } from '@/lib/i18n/messages';
@@ -48,7 +49,8 @@ const ROLE_LABEL: Record<ParticipantRole, string> = {
 
 interface DraftRow {
   num: string;
-  team_name: string;
+  first_name: string;
+  last_name: string;
   representative: string;
   role: ParticipantRole;
   photo_url: string;
@@ -77,7 +79,8 @@ const FIELD_SELECT_OPTIONS: Record<string, readonly string[]> = {
 
 const EMPTY_DRAFT: DraftRow = {
   num: '',
-  team_name: '',
+  first_name: '',
+  last_name: '',
   representative: '',
   role: 'leader',
   photo_url: '',
@@ -108,7 +111,8 @@ export function ParticipantsTable({
     const q = filter.trim().toLowerCase();
     if (!q) return rows;
     return rows.filter((r) =>
-      [r.num, r.team_name, r.representative].some((v) => v.toLowerCase().includes(q))
+      [r.num, r.first_name, r.last_name, r.team_name, r.representative]
+        .some((v) => (v ?? '').toLowerCase().includes(q))
     );
   }, [rows, filter]);
 
@@ -158,8 +162,8 @@ export function ParticipantsTable({
 
   function addRow() {
     setError(null);
-    if (!newDraft.num || !newDraft.team_name) {
-      setError('Number and team name are required.');
+    if (!newDraft.num || !newDraft.first_name || !newDraft.last_name) {
+      setError('Number, first name and last name are required.');
       return;
     }
     // 빈 PROFILE 필드는 meta 에서 제외 (시트 import 와 동일한 sparse 정책)
@@ -170,7 +174,8 @@ export function ParticipantsTable({
     }
     const payload = {
       num: newDraft.num,
-      team_name: newDraft.team_name,
+      first_name: newDraft.first_name,
+      last_name: newDraft.last_name,
       representative: newDraft.representative,
       role: newDraft.role,
       photo_url: newDraft.photo_url,
@@ -281,7 +286,7 @@ export function ParticipantsTable({
               <th className="text-left px-3 py-2 w-12"></th>
               <th className="text-left px-3 py-2 w-20">Photo</th>
               <th className="text-left px-3 py-2 w-20">#</th>
-              <th className="text-left px-3 py-2">Team</th>
+              <th className="text-left px-3 py-2">Name</th>
               <th className="text-left px-3 py-2 w-32">Country</th>
               <th className="text-left px-3 py-2 w-32">Role</th>
               <th className="text-right px-3 py-2 w-32">Actions</th>
@@ -309,7 +314,9 @@ export function ParticipantsTable({
                       <PhotoThumb url={resolvePhotoUrl(r)} size={40} />
                     </td>
                     <td className="px-3 py-2 font-mono">{r.num}</td>
-                    <td className="px-3 py-2">{r.team_name || <span className="text-ink2">—</span>}</td>
+                    <td className="px-3 py-2">
+                      {fullName(r.first_name, r.last_name) || r.team_name || <span className="text-ink2">—</span>}
+                    </td>
                     <td className="px-3 py-2 text-ink2">{r.representative || '—'}</td>
                     <td className="px-3 py-2">
                       <Badge tone={r.role.startsWith('helper') ? 'warn' : 'neutral'}>
@@ -416,7 +423,8 @@ function ExpandedDetail({
 }) {
   // Basic fields
   const [num, setNum] = useState(row.num);
-  const [team, setTeam] = useState(row.team_name);
+  const [firstName, setFirstName] = useState(row.first_name ?? '');
+  const [lastName, setLastName] = useState(row.last_name ?? '');
   const [rep, setRep] = useState(row.representative);
   const [role, setRole] = useState<ParticipantRole>(row.role);
   const [photo, setPhoto] = useState(row.photo_url);
@@ -436,7 +444,8 @@ function ExpandedDetail({
   const totalMetaCount = useMemo(() => Object.keys(meta).length, [meta]);
 
   function commitBasic() {
-    onPatch({ num, team_name: team, representative: rep, role, photo_url: photo });
+    // team_name(표시명)은 서버가 first_name 으로 동기화한다.
+    onPatch({ num, first_name: firstName, last_name: lastName, representative: rep, role, photo_url: photo });
   }
 
   function commitMetaKey(key: string, value: string) {
@@ -494,8 +503,11 @@ function ExpandedDetail({
                 {Object.entries(ROLE_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
               </Select>
             </Field>
-            <Field label="Team Name">
-              <Input value={team} onChange={(e) => setTeam(e.target.value)} onBlur={commitBasic} />
+            <Field label="First Name">
+              <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} onBlur={commitBasic} />
+            </Field>
+            <Field label="Last Name">
+              <Input value={lastName} onChange={(e) => setLastName(e.target.value)} onBlur={commitBasic} />
             </Field>
             <Field label="Country">
               <Input value={rep} onChange={(e) => setRep(e.target.value)} onBlur={commitBasic} />
@@ -962,7 +974,8 @@ function NewParticipantCard({
   contestId: string;
   draft: {
     num: string;
-    team_name: string;
+    first_name: string;
+    last_name: string;
     representative: string;
     role: ParticipantRole;
     photo_url: string;
@@ -1029,18 +1042,25 @@ function NewParticipantCard({
                 {Object.entries(ROLE_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
               </Select>
             </Field>
-            <Field label="Team Name (required)">
+            <Field label="First Name (required)">
               <Input
-                value={draft.team_name}
-                onChange={(e) => setField('team_name', e.target.value)}
-                placeholder="팀명"
+                value={draft.first_name}
+                onChange={(e) => setField('first_name', e.target.value)}
+                placeholder="James"
+              />
+            </Field>
+            <Field label="Last Name (required)">
+              <Input
+                value={draft.last_name}
+                onChange={(e) => setField('last_name', e.target.value)}
+                placeholder="Kim"
               />
             </Field>
             <Field label="Country">
               <Input
                 value={draft.representative}
                 onChange={(e) => setField('representative', e.target.value)}
-                placeholder="대표자"
+                placeholder="Singapore"
               />
             </Field>
           </div>

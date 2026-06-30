@@ -12,7 +12,8 @@ export const runtime = 'nodejs';
 const RoleEnum = z.enum(['leader', 'follower', 'helper_leader', 'helper_follower']);
 const PatchSchema = z.object({
   num: z.string().min(1).max(32).regex(/^[A-Za-z0-9_-]+$/).optional(),
-  team_name: z.string().max(200).optional(),
+  first_name: z.string().max(200).optional(),
+  last_name: z.string().max(200).optional(),
   representative: z.string().max(200).optional(),
   role: RoleEnum.optional(),
   photo_url: z.string().max(2048).optional(),
@@ -34,10 +35,19 @@ export async function PATCH(req: Request, ctx: RouteCtx) {
   if (Object.keys(parsed.data).length === 0) {
     return NextResponse.json({ error: 'NO_FIELDS' }, { status: 400 });
   }
+  // 표시명(team_name)은 last_name 과 동기화 — last_name 이 패치에 포함될 때만 갱신.
+  const patch: Record<string, unknown> = { ...parsed.data };
+  if (typeof parsed.data.first_name === 'string') {
+    patch.first_name = parsed.data.first_name.trim();
+  }
+  if (typeof parsed.data.last_name === 'string') {
+    patch.last_name = parsed.data.last_name.trim();
+    patch.team_name = parsed.data.last_name.trim();
+  }
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
     .from('participants')
-    .update(parsed.data)
+    .update(patch)
     .eq('id', participantId)
     .eq('contest_id', contestId)
     .select('*')

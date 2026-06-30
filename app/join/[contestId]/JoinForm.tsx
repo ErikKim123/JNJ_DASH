@@ -268,13 +268,16 @@ const T = {
   noPhoto: { ko: '사진 없음', en: 'No photo' },
   numLabel: { ko: '참가 번호 (자동 부여)', en: 'Entry Number (auto)' },
   roleLabel: { ko: '역할 (Role)', en: 'Role' },
-  teamLabel: { ko: '이름 (필수)', en: 'Name (required)' },
-  teamPlaceholder: { ko: '이름', en: 'Name' },
+  firstNameLabel: { ko: '이름 (First name · 필수)', en: 'First name (required)' },
+  firstNamePlaceholder: { ko: '이름', en: 'First name' },
+  lastNameLabel: { ko: '성 (Last name · 필수)', en: 'Last name (required)' },
+  lastNamePlaceholder: { ko: '성', en: 'Last name' },
   repLabel: { ko: '국가 (필수)', en: 'Country (required)' },
   repPlaceholder: { ko: '국가 선택', en: 'Select country' },
   submit: { ko: '신청하기', en: 'Submit Entry' },
   submitting: { ko: '제출 중…', en: 'Submitting…' },
-  errTeam: { ko: '이름을 입력해주세요.', en: 'Please enter a name.' },
+  errTeam: { ko: '이름(First name)을 입력해주세요.', en: 'Please enter a first name.' },
+  errLastName: { ko: '성(Last name)을 입력해주세요.', en: 'Please enter a last name.' },
   errRep: { ko: '국가를 입력해주세요.', en: 'Please enter a country.' },
   errEmail: { ko: '이메일을 입력해주세요.', en: 'Please enter an email.' },
   errEmailFormat: { ko: '올바른 이메일 형식이 아닙니다.', en: 'Please enter a valid email.' },
@@ -295,7 +298,8 @@ function t(key: keyof typeof T, lang: Lang): string {
 }
 
 interface Draft {
-  team_name: string;
+  first_name: string;
+  last_name: string;
   representative: string;
   role: ParticipantRole;
   photo_url: string;
@@ -320,7 +324,8 @@ export function JoinForm({
   const fileRef = useRef<HTMLInputElement>(null);
   const [lang, setLang] = useState<Lang>('en');
   const [draft, setDraft] = useState<Draft>({
-    team_name: '',
+    first_name: '',
+    last_name: '',
     representative: '',
     role: 'leader',
     photo_url: '',
@@ -391,7 +396,8 @@ export function JoinForm({
 
   async function submit() {
     setError(null);
-    if (!draft.team_name.trim()) { setError(t('errTeam', lang)); return; }
+    if (!draft.first_name.trim()) { setError(t('errTeam', lang)); return; }
+    if (!draft.last_name.trim()) { setError(t('errLastName', lang)); return; }
     if (!draft.representative.trim()) { setError(t('errRep', lang)); return; }
     // 연락처(WhatsApp) 필수 — 국가코드 외에 숫자 5자리 이상 입력해야 통과.
     const phoneDigits = (draft.meta['연락처'] ?? '').replace(/\D/g, '');
@@ -405,7 +411,8 @@ export function JoinForm({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          team_name: draft.team_name.trim(),
+          first_name: draft.first_name.trim(),
+          last_name: draft.last_name.trim(),
           representative: draft.representative.trim(),
           role: draft.role,
           photo_url: draft.photo_url,
@@ -493,13 +500,24 @@ export function JoinForm({
             </select>
           </Field>
 
-          <Field label={t('teamLabel', lang)}>
+          <Field label={t('firstNameLabel', lang)}>
             <input
               type="text"
               className="jnj-input"
-              value={draft.team_name}
-              onChange={(e) => setField('team_name', e.target.value)}
-              placeholder={t('teamPlaceholder', lang)}
+              value={draft.first_name}
+              onChange={(e) => setField('first_name', e.target.value)}
+              placeholder={t('firstNamePlaceholder', lang)}
+              maxLength={200}
+            />
+          </Field>
+
+          <Field label={t('lastNameLabel', lang)}>
+            <input
+              type="text"
+              className="jnj-input"
+              value={draft.last_name}
+              onChange={(e) => setField('last_name', e.target.value)}
+              placeholder={t('lastNamePlaceholder', lang)}
               maxLength={200}
             />
           </Field>

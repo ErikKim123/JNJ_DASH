@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getSupabaseAdmin } from '@/lib/db/client';
 import { listParticipants } from '@/lib/db/queries';
+import { normalizeNameFields } from '@/lib/participants/name';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -13,12 +14,20 @@ const RoleEnum = z.enum(['leader', 'follower', 'helper_leader', 'helper_follower
 
 const ParticipantBase = z.object({
   num: z.string().min(1).max(32).regex(/^[A-Za-z0-9_-]+$/),
+  first_name: z.string().max(200).default(''),
+  last_name: z.string().max(200).default(''),
+  // legacy(엑셀 bulk import 등) 호환 — first_name 미지정 시 분해 폴백.
   team_name: z.string().max(200).default(''),
   representative: z.string().max(200).default(''),
   role: RoleEnum,
   photo_url: z.string().max(2048).default(''),
   meta: z.record(z.string(), z.unknown()).optional().default({}),
 });
+
+// first_name/last_name/team_name 정규화 — team_name 은 항상 first_name 으로 맞춘다.
+function withName<T extends { first_name?: string; last_name?: string; team_name?: string }>(p: T) {
+  return { ...p, ...normalizeNameFields(p) };
+}
 
 interface RouteCtx { params: Promise<{ contestId: string }> }
 
@@ -39,7 +48,7 @@ export async function POST(req: Request, ctx: RouteCtx) {
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
     .from('participants')
-    .insert({ ...parsed.data, contest_id: contestId })
+    .insert({ ...withName(parsed.data), contest_id: contestId })
     .select('*')
     .single();
   if (error) {
@@ -57,7 +66,7 @@ export async function PUT(req: Request, ctx: RouteCtx) {
   if (!parsed.success) {
     return NextResponse.json({ error: 'VALIDATION', issues: parsed.error.issues }, { status: 400 });
   }
-  const rows = parsed.data.map((p) => ({ ...p, contest_id: contestId }));
+  const rows = parsed.data.map((p) => ({ ...withName(p), contest_id: contestId }));
   const sb = getSupabaseAdmin();
   const { error } = await sb.from('participants').upsert(rows, { onConflict: 'contest_id,num' });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

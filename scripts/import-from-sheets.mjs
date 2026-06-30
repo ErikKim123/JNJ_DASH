@@ -122,6 +122,22 @@ function classifyRole(raw) {
   return null;
 }
 
+// 이름 분해 — 첫 공백 앞=first, 뒤=last. 공백 없는 한 단어면 first/last 둘 다 같은 값.
+//   "Heidi Wong" → { first:'Heidi', last:'Wong' }, "XY" → { first:'XY', last:'XY' }
+function splitName(full) {
+  const t = String(full ?? '').trim().replace(/\s+/g, ' ');
+  if (!t) return { first: '', last: '' };
+  const i = t.indexOf(' ');
+  if (i === -1) return { first: t, last: t };
+  return { first: t.slice(0, i), last: t.slice(i + 1).trim() };
+}
+// 표출 표시명(=last name). 헬퍼 sentinel('—')·빈 값은 그대로.
+function lastNameOf(full) {
+  const t = String(full ?? '').trim();
+  if (t === '—' || t === '') return t;
+  return splitName(t).last;
+}
+
 function normalizePhoto(raw) {
   if (!raw) return '';
   let v = raw.trim();
@@ -226,9 +242,12 @@ async function extractParticipants(contestId, spreadsheetId) {
       const v = cell(r, c);
       if (v !== '') meta[h] = v;
     }
+    // 이름을 first/last 로 분해. team_name(표시명)=last.
+    const { first: firstName, last: lastName } = splitName(teamName);
     out.push({
-      contest_id: contestId, num, team_name: teamName, representative: rep,
-      role, photo_url: photo, meta,
+      contest_id: contestId, num,
+      first_name: firstName, last_name: lastName, team_name: lastName,
+      representative: rep, role, photo_url: photo, meta,
     });
   }
   return out;
@@ -251,10 +270,11 @@ async function extractPairings(contestId, spreadsheetId, round) {
     const followerNum = cell(r, 4);
     const followerName = cell(r, 5);
     if (!leaderName && !followerName) continue;
+    // 표출 표시명은 last name 만 — 헬퍼 sentinel('—')·빈 값은 그대로.
     out.push({
       contest_id: contestId, round, pair_idx: pairIdx,
-      leader_num: leaderNum, leader_name: leaderName,
-      follower_num: followerNum, follower_name: followerName,
+      leader_num: leaderNum, leader_name: lastNameOf(leaderName),
+      follower_num: followerNum, follower_name: lastNameOf(followerName),
       // 시트에 있던 페어링은 이미 운영진이 확정한 것으로 간주.
       status: 'confirmed',
       confirmed_at: new Date().toISOString(),
@@ -281,9 +301,10 @@ async function extractQualifiers(contestId, spreadsheetId, round) {
     const role = classifyRole(roleRaw);
     if (!role) continue;
     const passed = (cell(r, 9) || '').toUpperCase() === 'TRUE';
+    // 표출 표시명은 last name 만.
     out.push({
       contest_id: contestId, round, participant_num: num,
-      team_name: team, representative: cell(r, 3),
+      team_name: lastNameOf(team), representative: cell(r, 3),
       role, photo_url: normalizePhoto(cell(r, 1)),
       passed, votes: 0, display_order: 0,
     });
@@ -384,9 +405,10 @@ async function extractFinalResults(contestId, spreadsheetId) {
     if (lm) { role = 'leader'; rank = safeInt(lm[1], null); }
     else if (fm) { role = 'follower'; rank = safeInt(fm[1], null); }
     else continue;
+    // 표출 표시명은 last name 만.
     out.push({
       contest_id: contestId, participant_num: num,
-      team_name: team, role, final_rank: rank,
+      team_name: lastNameOf(team), role, final_rank: rank,
       total_score: safeNum(cell(r, 8)),
       average: safeNum(cell(r, 9)),
       photo_url: normalizePhoto(cell(r, 1)),

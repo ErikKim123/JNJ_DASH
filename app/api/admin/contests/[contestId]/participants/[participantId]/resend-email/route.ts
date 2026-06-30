@@ -36,8 +36,8 @@ export async function POST(_req: Request, ctx: RouteCtx) {
 
   const period = [contest.period_start, contest.period_end].filter(Boolean).join(' ~ ');
   const result = await sendConfirmationEmail(to, {
-    // team_name = '이름(Name)', representative = '국가(Country)'. 인사엔 이름 우선.
-    displayName: row.team_name || row.representative || '참가자',
+    // 개인 인사이므로 first_name(이름)을 우선. 없으면 표시명(team_name=last)·국가 순.
+    displayName: row.first_name || row.team_name || row.representative || '참가자',
     num: row.num,
     contestName: contest.name,
     contestId: contest.id,

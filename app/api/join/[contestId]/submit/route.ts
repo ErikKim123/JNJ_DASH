@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { getSupabaseAdmin } from '@/lib/db/client';
 import { listParticipants, getContest } from '@/lib/db/queries';
 import { nextParticipantNum } from '@/lib/participants/next-num';
+import { normalizeNameFields } from '@/lib/participants/name';
 import { sendConfirmationEmail } from '@/lib/email/sendConfirmation';
 import type { ContestRow } from '@/lib/db/types';
 
@@ -30,7 +31,8 @@ const PROFILE_KEYS = new Set([
 ]);
 
 const SubmitSchema = z.object({
-  team_name: z.string().min(1).max(200),
+  first_name: z.string().min(1).max(200),
+  last_name: z.string().min(1).max(200),
   representative: z.string().min(1).max(200),
   role: RoleEnum,
   photo_url: z.string().max(2048).default(''),
@@ -106,6 +108,8 @@ export async function POST(req: Request, ctx: RouteCtx) {
   }
 
   const num = nextParticipantNum(existing);
+  // team_name(표시명) = first_name 으로 정규화.
+  const name = normalizeNameFields(parsed.data);
 
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
@@ -113,7 +117,9 @@ export async function POST(req: Request, ctx: RouteCtx) {
     .insert({
       contest_id: contestId,
       num,
-      team_name: parsed.data.team_name,
+      first_name: name.first_name,
+      last_name: name.last_name,
+      team_name: name.team_name,
       representative: parsed.data.representative,
       role: parsed.data.role,
       photo_url: parsed.data.photo_url,
@@ -132,7 +138,9 @@ export async function POST(req: Request, ctx: RouteCtx) {
         .insert({
           contest_id: contestId,
           num: retryNum,
-          team_name: parsed.data.team_name,
+          first_name: name.first_name,
+          last_name: name.last_name,
+          team_name: name.team_name,
           representative: parsed.data.representative,
           role: parsed.data.role,
           photo_url: parsed.data.photo_url,
@@ -163,16 +171,15 @@ function normalizePhone(raw: string): string {
 // 발송 실패는 전체 응답을 깨뜨리지 않고 결과만 응답에 포함시켜 운영자가 확인 가능.
 async function dispatchConfirmation(
   contest: ContestRow,
-  row: { num: string; representative: string; team_name: string },
+  row: { num: string; representative: string; team_name: string; first_name?: string },
   meta: Record<string, string>
 ) {
   const to = meta['이메일'];
   if (!to) return { sent: false, reason: 'NO_EMAIL' as const };
   const period = [contest.period_start, contest.period_end].filter(Boolean).join(' ~ ');
   return sendConfirmationEmail(to, {
-    // team_name = 폼의 '이름(Name)' 필드, representative = '국가(Country)'.
-    // 인사에는 사람 이름을 써야 하므로 team_name 을 우선한다.
-    displayName: row.team_name || row.representative || '참가자',
+    // 개인 인사이므로 first_name(이름)을 우선. 없으면 표시명(team_name=last)·국가 순.
+    displayName: row.first_name || row.team_name || row.representative || '참가자',
     num: row.num,
     contestName: contest.name,
     contestId: contest.id,

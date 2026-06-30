@@ -82,7 +82,12 @@ export interface ParticipantRow {
   id: string;
   contest_id: string;
   num: string;
+  /** 표시명 — 항상 last_name 과 동일하게 유지(표출/스냅샷에 쓰이는 이름). */
   team_name: string;
+  /** 이름(First name). 관리자 명단·엑셀 등 내부 식별용. */
+  first_name: string;
+  /** 성(Last name). 표출에 노출되는 이름은 이 값만 쓴다. 한 단어 이름이면 first 와 동일. */
+  last_name: string;
   representative: string;
   role: ParticipantRole;
   photo_url: string;
