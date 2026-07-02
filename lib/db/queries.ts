@@ -11,6 +11,8 @@ import type {
   FinalResultRow,
   JudgeRow,
   JudgeVoteRow,
+  OnlineJudgeRow,
+  OnlineJudgeVoteRow,
   PairingRoundDb,
   QualifierRoundDb,
   JudgingRound,
@@ -182,6 +184,77 @@ export async function listQualifiersWithLiveVotes(
       ? (voteCounts.get(r.participant_num) ?? 0)
       : r.votes,
   }));
+}
+
+/**
+ * 온라인 심사위원 목록 — 대회당 최대 ~1000명이라 페이지네이션(기본 50/page).
+ *   page 는 1-기반. total 은 필터된 전체 건수(페이지 계산용).
+ */
+export async function listOnlineJudges(
+  contestId: string,
+  page = 1,
+  pageSize = 50
+): Promise<{ rows: OnlineJudgeRow[]; total: number }> {
+  const sb = getSupabaseAdmin();
+  const safeSize = Math.max(1, Math.min(200, Math.floor(pageSize)));
+  const safePage = Math.max(1, Math.floor(page));
+  const from = (safePage - 1) * safeSize;
+  const to = from + safeSize - 1;
+  const { data, error, count } = await sb
+    .from('online_judges')
+    .select('*', { count: 'exact' })
+    .eq('contest_id', contestId)
+    .order('display_order', { ascending: true })
+    .range(from, to);
+  if (error) throw new Error(`listOnlineJudges: ${error.message}`);
+  return { rows: (data ?? []) as OnlineJudgeRow[], total: count ?? 0 };
+}
+
+/** 온라인 심사위원 전체(페이지 없이) — 결승 채점 매트릭스 컬럼용. 대회당 최대 ~1000명. */
+export async function listAllOnlineJudges(contestId: string): Promise<OnlineJudgeRow[]> {
+  const sb = getSupabaseAdmin();
+  const PAGE = 1000;
+  const all: OnlineJudgeRow[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await sb
+      .from('online_judges')
+      .select('*')
+      .eq('contest_id', contestId)
+      .order('display_order', { ascending: true })
+      .range(from, from + PAGE - 1);
+    if (error) throw new Error(`listAllOnlineJudges: ${error.message}`);
+    const rows = (data ?? []) as OnlineJudgeRow[];
+    all.push(...rows);
+    if (rows.length < PAGE) break;
+  }
+  return all;
+}
+
+/** 온라인 심사위원 결승 채점 votes 전체 — 대회의 online_judge id 들로 조회(1000행 페이지네이션). */
+export async function listOnlineJudgeVotes(contestId: string): Promise<OnlineJudgeVoteRow[]> {
+  const sb = getSupabaseAdmin();
+  const { data: judges, error: je } = await sb
+    .from('online_judges')
+    .select('id')
+    .eq('contest_id', contestId);
+  if (je) throw new Error(`listOnlineJudgeVotes(judges): ${je.message}`);
+  const ids = (judges ?? []).map((j) => j.id);
+  if (ids.length === 0) return [];
+  const PAGE = 1000;
+  const all: OnlineJudgeVoteRow[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await sb
+      .from('online_judge_votes')
+      .select('*')
+      .in('online_judge_id', ids)
+      .order('id', { ascending: true })
+      .range(from, from + PAGE - 1);
+    if (error) throw new Error(`listOnlineJudgeVotes: ${error.message}`);
+    const rows = (data ?? []) as OnlineJudgeVoteRow[];
+    all.push(...rows);
+    if (rows.length < PAGE) break;
+  }
+  return all;
 }
 
 /** 사이드바용 경량 목록 — id/name 만. */

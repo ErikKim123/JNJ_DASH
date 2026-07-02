@@ -30,6 +30,7 @@ export const MESSAGES_EN = {
   // ── Contest tabs ────────────────────────────────────────────────
   'tab.contestInfo': 'Contest Info',
   'tab.judges': 'Judges',
+  'tab.onlineJudges': 'Online Judges',
   'tab.participants': 'Participants',
   'tab.prelimPairing': 'Prelim Pairing',
   'tab.prelimJudging': 'Prelim Judging',
@@ -38,6 +39,7 @@ export const MESSAGES_EN = {
   'tab.semiJudging': 'Semi Judging',
   'tab.semiQualifiers': 'Semi Qualifiers',
   'tab.finalJudging': 'Final Judging',
+  'tab.onlineFinalJudging': 'Online Final Judging',
   'tab.finalResults': 'Final Results',
 
   // ── Round names ────────────────────────────────────────────────
@@ -198,6 +200,16 @@ export const MESSAGES_EN = {
   'cf.judgesVideoHint': 'Paste a YouTube link (e.g. https://youtu.be/xxxxxxxxxxx or https://www.youtube.com/watch?v=xxxxxxxxxxx). The video plays embedded on the display screen (needs internet). Leave empty to show a placeholder slide.',
   'cf.judgesVideoPreview': 'Preview',
   'cf.judgesVideoPreviewEmpty': 'Enter a video link first.',
+  // Judge usage & weighting
+  'cf.judgeUseTitle': 'Judges & Online Judges',
+  'cf.judgeUseMeta': 'Enable each judge type · set weights when both are used',
+  'cf.panelJudgesLabel': 'Use Judges (panel)',
+  'cf.onlineJudgesLabel': 'Use Online Judges',
+  'cf.panelWeightLabel': 'Judge weight',
+  'cf.onlineWeightLabel': 'Online judge weight',
+  'cf.onlineRoundsLabel': 'Rounds online judges participate in',
+  'cf.judgeWeightHint': 'Only applied when both types are used.',
+  'cf.judgeWeightFormula': 'Final = (judge average × judge weight + online average × online weight) ÷ (sum of weights). If only one type is used, its average is the final.',
   // Extra videos (per round)
   'cf.extraVideosTitle': 'Extra Videos (per round)',
   'cf.extraVideosMeta': '3 per round · shown as buttons at the top-right of the display',
@@ -316,6 +328,7 @@ export const MESSAGES_KO: Record<MessageKey, string> = {
   // ── Contest tabs ────────────────────────────────────────────────
   'tab.contestInfo': '대회 정보',
   'tab.judges': '심사위원',
+  'tab.onlineJudges': '온라인 심사위원',
   'tab.participants': '참가자',
   'tab.prelimPairing': '예선 페어링',
   'tab.prelimJudging': '예선 심사',
@@ -324,6 +337,7 @@ export const MESSAGES_KO: Record<MessageKey, string> = {
   'tab.semiJudging': '본선 심사',
   'tab.semiQualifiers': '본선 통과자',
   'tab.finalJudging': '결승 심사',
+  'tab.onlineFinalJudging': '온라인 결승 심사',
   'tab.finalResults': '결승 결과',
 
   // ── Round names ────────────────────────────────────────────────
@@ -484,6 +498,16 @@ export const MESSAGES_KO: Record<MessageKey, string> = {
   'cf.judgesVideoHint': 'YouTube 링크를 붙여넣으세요 (예: https://youtu.be/xxxxxxxxxxx 또는 https://www.youtube.com/watch?v=xxxxxxxxxxx). 표출 화면에 임베드되어 재생됩니다(인터넷 필요). 비워두면 "영상 미설정" 안내 슬라이드가 표출됩니다.',
   'cf.judgesVideoPreview': '미리보기',
   'cf.judgesVideoPreviewEmpty': '먼저 영상 링크를 입력하세요.',
+  // 심사위원 사용 여부 & 가중치
+  'cf.judgeUseTitle': '심사위원 · 온라인 심사위원',
+  'cf.judgeUseMeta': '각 심사위원 유형 사용 여부 · 함께 사용할 때 가중치 지정',
+  'cf.panelJudgesLabel': '심사위원(판정단) 사용',
+  'cf.onlineJudgesLabel': '온라인 심사위원 사용',
+  'cf.panelWeightLabel': '심사위원 가중치',
+  'cf.onlineWeightLabel': '온라인 심사위원 가중치',
+  'cf.onlineRoundsLabel': '온라인 심사위원 참여 라운드',
+  'cf.judgeWeightHint': '두 유형을 함께 사용할 때만 적용됩니다.',
+  'cf.judgeWeightFormula': '최종 = (심사위원 평균 × 심사위원 가중치 + 온라인 평균 × 온라인 가중치) ÷ 가중치 합. 한 유형만 사용하면 그 평균이 곧 최종입니다.',
   // Extra videos (per round)
   'cf.extraVideosTitle': '라운드별 추가 영상',
   'cf.extraVideosMeta': '라운드당 3개 · 표출 화면 오른쪽 위 버튼으로 표시',

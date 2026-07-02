@@ -74,6 +74,16 @@ export interface ContestRow {
   payment_url: string;
   /** 결제 버튼 노출 여부. false 면 done 화면·메일에서 버튼을 렌더하지 않음. */
   payment_enabled: boolean;
+  /** 기존 판정단(심사위원) 사용 여부. */
+  panel_judges_enabled: boolean;
+  /** 온라인 심사위원 사용 여부. */
+  online_judges_enabled: boolean;
+  /** 최종 결과에서 판정단 평균의 가중치(평균 가중 합산). */
+  panel_judge_weight: number;
+  /** 최종 결과에서 온라인 심사위원 평균의 가중치(평균 가중 합산). */
+  online_judge_weight: number;
+  /** 온라인 심사위원이 참여하는 라운드 목록('prelim'|'semi'|'final'). */
+  online_judge_rounds: JudgingRound[];
   created_at: string;
   updated_at: string;
 }
@@ -168,6 +178,47 @@ export interface JudgeRow {
   /** 이 라운드 채점 제출 완료 시각(ISO). null = 채점 중. 값 있으면 관리자 매트릭스에서 해당 컬럼 녹색 표시. */
   submitted_at: string | null;
   created_at: string;
+  updated_at: string;
+}
+
+/**
+ * 온라인 심사위원 — 대회별 셀프 등록 심사위원(판정단 judges 와 분리된 별도 개념).
+ * /ojudge 조인앱에서 본인이 등록. 대회당 최대 ~1000명, 관리자 목록은 페이지네이션.
+ */
+export interface OnlineJudgeRow {
+  id: string;
+  contest_id: string;
+  /** 대회 내 등록 순번(1,2,3…). 목록 정렬 키. */
+  display_order: number;
+  first_name: string;
+  last_name: string;
+  /** 표시명 — last_name 우선. */
+  name: string;
+  /** 국가. */
+  representative: string;
+  email: string;
+  phone: string;
+  photo_url: string;
+  /** 본인이 등록 시 정한 4자리 숫자 PIN. */
+  pin: string;
+  /** 결승 채점 제출 완료 시각(ISO). null = 채점 중. 값 있으면 잠금 + 관리자 매트릭스 녹색. */
+  final_submitted_at: string | null;
+  meta: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+/** 온라인 심사위원의 결승 채점 — judge_votes 의 결승 점수 컬럼과 동일 구조. */
+export interface OnlineJudgeVoteRow {
+  id: string;
+  online_judge_id: string;
+  participant_num: string;
+  basic_score: number | null;          // fundamentals
+  connectivity_score: number | null;   // connection
+  musicality_score: number | null;     // musicality
+  creativity_score: number | null;     // creativity
+  crowd_reaction_score: number | null; // crowd_reaction
+  showmanship_score: number | null;    // showmanship
   updated_at: string;
 }
 

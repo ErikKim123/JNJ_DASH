@@ -16,6 +16,7 @@ const STEP_LABEL: Record<StepKey, string> = {
   close: 'CLOSE',
   result: 'RESULT',
   ceremony: 'CEREMONY',
+  report: 'REPORT',
 };
 
 // pairingB/C가 같은 라운드에 있으면 첫 pairing을 'PAIRING A'로 표기.

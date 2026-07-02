@@ -14,6 +14,7 @@ export function ContestTabs({ contestId, current }: { contestId: string; current
       items={[
         { href: base,                       label: t('tab.contestInfo') },
         { href: `${base}/judges`,           label: t('tab.judges') },
+        { href: `${base}/online-judges`,    label: t('tab.onlineJudges') },
         { href: `${base}/participants`,     label: t('tab.participants') },
         { href: `${base}/pairings/prelim`,  label: t('tab.prelimPairing') },
         { href: `${base}/judging/prelim`,   label: t('tab.prelimJudging') },
@@ -22,6 +23,7 @@ export function ContestTabs({ contestId, current }: { contestId: string; current
         { href: `${base}/judging/semi`,     label: t('tab.semiJudging') },
         { href: `${base}/qualifiers/semi`,  label: t('tab.semiQualifiers') },
         { href: `${base}/judging/final`,    label: t('tab.finalJudging') },
+        { href: `${base}/online-final-judging`, label: t('tab.onlineFinalJudging') },
         { href: `${base}/finals`,           label: t('tab.finalResults') },
       ]}
     />

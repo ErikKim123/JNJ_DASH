@@ -15,6 +15,8 @@ import { closeSvg } from './svg/close';
 import { resultListSvg } from './svg/result';
 import { finalPrepSvg, finalWrapupSvg, finalResultSvg, finalPairingSvg } from './svg/final';
 import { ceremonySvg } from './svg/ceremony';
+import { shell, topHeader } from './svg/common';
+import { renderReportSvg } from '../shared/reportSvg';
 
 function selectSvg(round: RoundKey, _step: StepKey, data: StepDataPayload): string {
   if (round === 'final') {
@@ -27,6 +29,8 @@ function selectSvg(round: RoundKey, _step: StepKey, data: StepDataPayload): stri
         return finalResultSvg();
       case 'ceremony':
         return ceremonySvg();
+      case 'report':
+        return renderReportSvg(data.data, shell, topHeader);
       case 'pairing':
         return finalPairingSvg();
       case 'open':
@@ -67,6 +71,9 @@ function selectSvg(round: RoundKey, _step: StepKey, data: StepDataPayload): stri
     case 'ceremony':
       // 비결승 라운드에서는 일반적으로 도달 불가 (라우트 차단) — 안전한 폴백.
       return ceremonySvg();
+    case 'report':
+      // 보고서는 SVG 템플릿이 아닌 React 표(FinalReport)로 렌더 — 여기 도달하지 않음.
+      return '';
   }
 }
 

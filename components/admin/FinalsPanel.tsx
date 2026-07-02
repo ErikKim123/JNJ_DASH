@@ -8,6 +8,21 @@ import type { FinalResultRow, FinalRole, QualifierRow } from '@/lib/db/types';
 
 const ROLE_LABEL: Record<FinalRole, string> = { leader: 'Leader', follower: 'Follower' };
 
+/** 참가자별 판정단 / 온라인 / 최종(가중) 점수 — avg(0-10) + total(avg×항목수). */
+export interface ScoreBreakdown {
+  panelAvg: number | null;
+  onlineAvg: number | null;
+  finalAvg: number | null;
+  panelTotal: number | null;
+  onlineTotal: number | null;
+  finalTotal: number | null;
+}
+
+function fmt(n: number | null | undefined, dp = 2): string {
+  if (n == null) return '—';
+  return Number.isInteger(n) ? String(n) : Number(n).toFixed(dp);
+}
+
 interface DraftRow {
   participant_num: string;
   team_name: string;
@@ -32,10 +47,14 @@ export function FinalsPanel({
   contestId,
   initial,
   semiQualifiers,
+  breakdown,
+  weights,
 }: {
   contestId: string;
   initial: FinalResultRow[];
   semiQualifiers: QualifierRow[];
+  breakdown: Record<string, ScoreBreakdown>;
+  weights: { panel: number; online: number; usePanel: boolean; useOnline: boolean };
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -164,6 +183,21 @@ export function FinalsPanel({
         </div>
       </div>
 
+      {/* 점수 그룹 안내 — 판정단/온라인 사용 여부 + 가중치 */}
+      <div className="mb-3 flex flex-wrap items-center gap-2 text-xs">
+        <span className="text-ink2">점수 구성:</span>
+        <span className="inline-flex items-center gap-1 rounded border border-border px-2 py-0.5">
+          판정단 {weights.usePanel ? `가중치 ${fmt(weights.panel)}` : <span className="text-ink2/50">미사용</span>}
+        </span>
+        <span className="text-ink2">+</span>
+        <span className="inline-flex items-center gap-1 rounded border border-border px-2 py-0.5">
+          온라인 {weights.useOnline ? `가중치 ${fmt(weights.online)}` : <span className="text-ink2/50">미사용</span>}
+        </span>
+        <span className="text-ink2">→</span>
+        <span className="inline-flex items-center gap-1 rounded border border-ok/40 text-ok px-2 py-0.5">최종(가중 평균)</span>
+        <span className="text-ink2/60">· 각 점수는 항목 평균(0–10) 기준 · 총점 = 평균 × 항목수</span>
+      </div>
+
       {error && (
         <p className="text-sm text-danger mb-3" role="alert">{error}</p>
       )}
@@ -185,6 +219,7 @@ export function FinalsPanel({
       <RoleTable
         title="Leaders"
         rows={leaderRows}
+        breakdown={breakdown}
         pending={pending}
         onUpdate={updateRow}
         onDelete={deleteRow}
@@ -193,6 +228,7 @@ export function FinalsPanel({
       <RoleTable
         title="Followers"
         rows={followerRows}
+        breakdown={breakdown}
         pending={pending}
         onUpdate={updateRow}
         onDelete={deleteRow}
@@ -205,15 +241,26 @@ export function FinalsPanel({
   );
 }
 
+function ScoreCell({ total, avg, green = false }: { total: number | null; avg: number | null; green?: boolean }) {
+  return (
+    <div className={`flex flex-col items-end leading-tight font-mono ${green ? 'text-ok' : ''}`}>
+      <span className={green ? 'font-semibold text-base' : 'text-sm'}>{fmt(total)}</span>
+      <span className={`text-[11px] ${green ? 'text-ok/80' : 'text-ink2/70'}`}>{fmt(avg)} avg</span>
+    </div>
+  );
+}
+
 function RoleTable({
   title,
   rows,
+  breakdown,
   pending,
   onUpdate,
   onDelete,
 }: {
   title: string;
   rows: FinalResultRow[];
+  breakdown: Record<string, ScoreBreakdown>;
   pending: boolean;
   onUpdate: (id: string, patch: Partial<FinalResultRow>) => void;
   onDelete: (id: string, num: string) => void;
@@ -224,61 +271,52 @@ function RoleTable({
         <h3 className="text-sm font-semibold">{title}</h3>
         <Badge>{rows.length}</Badge>
       </div>
-      <div className="rounded border border-border bg-panel overflow-hidden">
+      <div className="rounded border border-border bg-panel overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-bg2 text-ink2 text-xs uppercase tracking-wider">
             <tr>
               <th className="text-left px-3 py-2 w-20">Rank</th>
               <th className="text-left px-3 py-2 w-20">#</th>
-              <th className="text-left px-3 py-2">Team</th>
-              <th className="text-left px-3 py-2 w-28">Total</th>
-              <th className="text-left px-3 py-2 w-28">Avg</th>
-              <th className="text-right px-3 py-2 w-24">Actions</th>
+              <th className="text-left px-3 py-2 min-w-[10rem]">Team</th>
+              <th className="text-right px-3 py-2 w-28">판정단</th>
+              <th className="text-right px-3 py-2 w-28">온라인</th>
+              <th className="text-right px-3 py-2 w-32 text-ok">최종(가중)</th>
+              <th className="text-right px-3 py-2 w-20">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
-              <tr key={r.id} className="border-t border-border">
-                <td className="px-2 py-1">
-                  <Input
-                    type="number" min={1} max={100}
-                    value={r.final_rank ?? ''}
-                    onChange={(e) => onUpdate(r.id, { final_rank: e.target.value === '' ? null : Number(e.target.value) })}
-                    className="w-full"
-                  />
-                </td>
-                <td className="px-3 py-2 font-mono">{r.participant_num}</td>
-                <td className="px-2 py-1">
-                  <Input
-                    value={r.team_name}
-                    onChange={(e) => onUpdate(r.id, { team_name: e.target.value })}
-                    className="w-full"
-                  />
-                </td>
-                <td className="px-2 py-1">
-                  <Input
-                    type="number" step="0.001"
-                    value={r.total_score ?? ''}
-                    onChange={(e) => onUpdate(r.id, { total_score: e.target.value === '' ? null : Number(e.target.value) })}
-                    className="w-full"
-                  />
-                </td>
-                <td className="px-2 py-1">
-                  <Input
-                    type="number" step="0.001"
-                    value={r.average ?? ''}
-                    onChange={(e) => onUpdate(r.id, { average: e.target.value === '' ? null : Number(e.target.value) })}
-                    className="w-full"
-                  />
-                </td>
-                <td className="px-3 py-2 text-right">
-                  <Button variant="danger" onClick={() => onDelete(r.id, r.participant_num)} disabled={pending}>Del</Button>
-                </td>
-              </tr>
-            ))}
+            {rows.map((r) => {
+              const b = breakdown[r.participant_num];
+              return (
+                <tr key={r.id} className="border-t border-border">
+                  <td className="px-2 py-1">
+                    <Input
+                      type="number" min={1} max={100}
+                      value={r.final_rank ?? ''}
+                      onChange={(e) => onUpdate(r.id, { final_rank: e.target.value === '' ? null : Number(e.target.value) })}
+                      className="w-full"
+                    />
+                  </td>
+                  <td className="px-3 py-2 font-mono">{r.participant_num}</td>
+                  <td className="px-2 py-1">
+                    <Input
+                      value={r.team_name}
+                      onChange={(e) => onUpdate(r.id, { team_name: e.target.value })}
+                      className="w-full"
+                    />
+                  </td>
+                  <td className="px-3 py-2"><ScoreCell total={b?.panelTotal ?? null} avg={b?.panelAvg ?? null} /></td>
+                  <td className="px-3 py-2"><ScoreCell total={b?.onlineTotal ?? null} avg={b?.onlineAvg ?? null} /></td>
+                  <td className="px-3 py-2 bg-ok/5"><ScoreCell total={b?.finalTotal ?? null} avg={b?.finalAvg ?? null} green /></td>
+                  <td className="px-3 py-2 text-right">
+                    <Button variant="danger" onClick={() => onDelete(r.id, r.participant_num)} disabled={pending}>Del</Button>
+                  </td>
+                </tr>
+              );
+            })}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={6} className="text-center text-ink2 py-6 text-sm">
+                <td colSpan={7} className="text-center text-ink2 py-6 text-sm">
                   No {title.toLowerCase()} entries yet.
                 </td>
               </tr>

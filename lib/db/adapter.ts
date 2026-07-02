@@ -34,6 +34,8 @@ import type {
   StepKey,
   StepDataPayload,
   CeremonyData,
+  ReportEntry,
+  ReportData,
 } from '@/lib/sheets/types';
 import { STEPS_BY_ROUND } from '@/lib/sheets/types';
 import { normalizeExtraVideos } from '@/lib/contest/extraVideos';
@@ -344,6 +346,48 @@ async function getFinalResults(
   leaders.sort((a, b) => a.idx - b.idx);
   followers.sort((a, b) => a.idx - b.idx);
   return { leaders, followers, rows };
+}
+
+// 결승 보고서 — 역할별 상위 N등의 총점/평균. final_rank 우선, 없으면 total_score 내림차순.
+async function getFinalReport(
+  contestId: string,
+  topN = 5
+): Promise<{ leaders: ReportEntry[]; followers: ReportEntry[] }> {
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
+    .from('final_results')
+    .select('role, team_name, participant_num, final_rank, total_score, average')
+    .eq('contest_id', contestId);
+  if (error) throw new Error(`getFinalReport: ${error.message}`);
+  const rows = (data ?? []) as Array<{
+    role: 'leader' | 'follower'; team_name: string; participant_num: string;
+    final_rank: number | null; total_score: number | null; average: number | null;
+  }>;
+  const fmt = (n: number | null) =>
+    n == null ? '' : (Number.isInteger(n) ? String(n) : Number(n).toFixed(2));
+
+  function build(role: 'leader' | 'follower'): ReportEntry[] {
+    const list = rows.filter((r) => r.role === role);
+    // 정렬: rank(있으면) 오름차순 → total_score 내림차순 → 번호.
+    list.sort((a, b) => {
+      const ra = a.final_rank ?? Number.POSITIVE_INFINITY;
+      const rb = b.final_rank ?? Number.POSITIVE_INFINITY;
+      if (ra !== rb) return ra - rb;
+      const ta = a.total_score ?? -Infinity;
+      const tb = b.total_score ?? -Infinity;
+      if (ta !== tb) return tb - ta;
+      return a.participant_num.localeCompare(b.participant_num, undefined, { numeric: true });
+    });
+    return list.slice(0, topN).map((r, i) => ({
+      rank: r.final_rank ?? i + 1,
+      num: r.participant_num,
+      name: r.team_name,
+      total: fmt(r.total_score),
+      avg: fmt(r.average),
+    }));
+  }
+
+  return { leaders: build('leader'), followers: build('follower') };
 }
 
 // ─── Overflow / Final Tie ────────────────────────────────────────────────
@@ -738,6 +782,22 @@ export async function getStepData(params: GetStepDataParams): Promise<StepDataPa
       sponsor_logo_opacities: Array.isArray(contest.sponsor_logo_opacities) ? contest.sponsor_logo_opacities : [],
     };
     return { kind: 'ceremony', data: out };
+  }
+
+  // ── Report (final 만) — 1~5등 총점/평균 표 ──
+  if (step === 'report') {
+    if (round !== 'final') throw new StepNotAvailableError(round, step);
+    const { leaders, followers } = await getFinalReport(contestId, 5);
+    const out: ReportData = {
+      festival_header: festivalHeader,
+      report_title: 'SCORE REPORT',
+      report_subtitle: 'GRAND FINAL · TOP 5',
+      label_leader: 'LEADER',
+      label_follower: 'FOLLOWER',
+      leaders,
+      followers,
+    };
+    return { kind: 'report', data: out };
   }
 
   // ── Judges Intro (prelim 만) ──

@@ -14,7 +14,8 @@ export type StepKey =
   | 'wrapup'
   | 'close'
   | 'result'
-  | 'ceremony';
+  | 'ceremony'
+  | 'report';
 
 export const ROUND_KEYS = ['prelim', 'semi', 'final'] as const;
 export const STEP_KEYS = [
@@ -30,6 +31,7 @@ export const STEP_KEYS = [
   'close',
   'result',
   'ceremony',
+  'report',
 ] as const;
 
 // 라운드별 프로세스:
@@ -54,7 +56,7 @@ export const STEPS_BY_ROUND: Record<RoundKey, ReadonlyArray<StepKey>> = {
     'result',
   ],
   semi: ['prep', 'pairing', 'pairingB', 'open', 'live', 'wrapup', 'close', 'result'],
-  final: ['prep', 'pairing', 'open', 'live', 'wrapup', 'close', 'result', 'ceremony'],
+  final: ['prep', 'pairing', 'open', 'live', 'wrapup', 'close', 'result', 'ceremony', 'report'],
 };
 
 export interface ContestSummary {
@@ -231,6 +233,29 @@ export interface CeremonyData {
   sponsor_logo_opacities?: number[];
 }
 
+// Report: 결승 보고서 — 참가자 1~5등의 총점/평균을 표로 표출(시상식 다음 스텝).
+export interface ReportEntry {
+  rank: number;
+  num: string;
+  name: string;
+  /** 총점 (표시용 문자열, 빈값이면 '—'). */
+  total: string;
+  /** 평균 (표시용 문자열, 빈값이면 '—'). */
+  avg: string;
+}
+
+export interface ReportData {
+  festival_header: string;
+  report_title: string;
+  report_subtitle: string;
+  label_leader: string;
+  label_follower: string;
+  /** 리더 상위 1~5등. */
+  leaders: ReportEntry[];
+  /** 팔로워 상위 1~5등. */
+  followers: ReportEntry[];
+}
+
 export type StepDataPayload =
   | { kind: 'prep'; data: PrepData }
   | { kind: 'judgesIntro'; data: JudgesIntroData }
@@ -241,7 +266,8 @@ export type StepDataPayload =
   | { kind: 'wrapup'; data: WrapupData }
   | { kind: 'close'; data: CloseData }
   | { kind: 'result'; data: ResultData }
-  | { kind: 'ceremony'; data: CeremonyData };
+  | { kind: 'ceremony'; data: CeremonyData }
+  | { kind: 'report'; data: ReportData };
 
 /**
  * 심사위원 소개 화면 — 예선 PREP 다음 스텝. 1~20명 적응형 그리드 레이아웃.

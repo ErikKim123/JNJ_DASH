@@ -102,7 +102,40 @@ export function ContestForm({
     sns_enabled: initial?.sns_enabled ?? false,
     payment_url: initial?.payment_url ?? '',
     payment_enabled: initial?.payment_enabled ?? true,
+    panel_judges_enabled: initial?.panel_judges_enabled ?? true,
+    online_judges_enabled: initial?.online_judges_enabled ?? false,
+    panel_judge_weight: ((): number => {
+      const v = Number(initial?.panel_judge_weight);
+      return Number.isFinite(v) && v >= 0 ? v : 1;
+    })(),
+    online_judge_weight: ((): number => {
+      const v = Number(initial?.online_judge_weight);
+      return Number.isFinite(v) && v >= 0 ? v : 1;
+    })(),
+    online_judge_rounds: ((): ('prelim' | 'semi' | 'final')[] => {
+      const valid = ['prelim', 'semi', 'final'] as const;
+      const src = Array.isArray(initial?.online_judge_rounds) ? initial!.online_judge_rounds : ['final'];
+      const picked = valid.filter((r) => src.includes(r));
+      return picked.length ? picked : ['final'];
+    })(),
   });
+
+  // 온라인 심사위원 라운드 체크박스 토글 (canonical 순서 유지).
+  // 현재 버전은 결승만 지원 — 예선/본선은 안내 후 무시.
+  function toggleOnlineRound(round: 'prelim' | 'semi' | 'final') {
+    if (round !== 'final') {
+      alert('현재 버전에는 결승만 체크 가능합니다.');
+      return;
+    }
+    setForm((s) => {
+      const order = ['prelim', 'semi', 'final'] as const;
+      const has = s.online_judge_rounds.includes(round);
+      const next = has
+        ? s.online_judge_rounds.filter((r) => r !== round)
+        : order.filter((r) => r === round || s.online_judge_rounds.includes(r));
+      return { ...s, online_judge_rounds: next };
+    });
+  }
 
   function updateBackgroundOpacity(value: number) {
     const v = Math.max(0, Math.min(100, Math.round(value)));
@@ -570,6 +603,80 @@ export function ContestForm({
 
       <section className="rounded border border-border bg-panel/40 p-4">
         <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+          <h3 className="text-sm font-semibold">{t('cf.judgeUseTitle')}</h3>
+          <span className="text-xs text-ink2">{t('cf.judgeUseMeta')}</span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* 심사위원(판정단) 사용 */}
+          <div className="rounded border border-border bg-panel/60 p-3 flex flex-col gap-3">
+            <ToggleRow
+              label={t('cf.panelJudgesLabel')}
+              on={form.panel_judges_enabled}
+              onToggle={() => update('panel_judges_enabled', !form.panel_judges_enabled)}
+            />
+            <Field label={t('cf.panelWeightLabel')} hint={t('cf.judgeWeightHint')}>
+              <Input
+                type="number"
+                min={0}
+                max={9999}
+                step="0.1"
+                value={form.panel_judge_weight}
+                onChange={(e) => update('panel_judge_weight', Math.max(0, Number(e.target.value) || 0))}
+                disabled={!form.panel_judges_enabled || !form.online_judges_enabled}
+                className="w-28 font-mono"
+              />
+            </Field>
+          </div>
+          {/* 온라인 심사위원 사용 */}
+          <div className="rounded border border-border bg-panel/60 p-3 flex flex-col gap-3">
+            <ToggleRow
+              label={t('cf.onlineJudgesLabel')}
+              on={form.online_judges_enabled}
+              onToggle={() => update('online_judges_enabled', !form.online_judges_enabled)}
+            />
+            <div className="flex flex-wrap items-end gap-4">
+              <Field label={t('cf.onlineWeightLabel')} hint={t('cf.judgeWeightHint')}>
+                <Input
+                  type="number"
+                  min={0}
+                  max={9999}
+                  step="0.1"
+                  value={form.online_judge_weight}
+                  onChange={(e) => update('online_judge_weight', Math.max(0, Number(e.target.value) || 0))}
+                  disabled={!form.panel_judges_enabled || !form.online_judges_enabled}
+                  className="w-28 font-mono"
+                />
+              </Field>
+              {/* 온라인 심사위원 참여 라운드 */}
+              <div className="flex flex-col gap-1.5">
+                <span className="text-xs text-ink2">{t('cf.onlineRoundsLabel')}</span>
+                <div className="flex items-center gap-3">
+                  {([
+                    ['prelim', t('cf.roundPrelim')],
+                    ['semi', t('cf.roundSemi')],
+                    ['final', t('cf.roundFinal')],
+                  ] as const).map(([roundKey, roundLabel]) => (
+                    <label key={roundKey} className="inline-flex items-center gap-1.5 text-sm cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={form.online_judge_rounds.includes(roundKey)}
+                        onChange={() => toggleOnlineRound(roundKey)}
+                        disabled={!form.online_judges_enabled}
+                        className="w-4 h-4 accent-accent"
+                      />
+                      <span className={form.online_judges_enabled ? '' : 'text-ink2/50'}>{roundLabel}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p className="text-xs text-ink2 mt-3">{t('cf.judgeWeightFormula')}</p>
+      </section>
+
+      <section className="rounded border border-border bg-panel/40 p-4">
+        <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
           <h3 className="text-sm font-semibold">{t('cf.extraVideosTitle')}</h3>
           <span className="text-xs text-ink2">{t('cf.extraVideosMeta')}</span>
         </div>
@@ -849,6 +956,27 @@ export function ContestForm({
         )}
       </div>
     </form>
+  );
+}
+
+// 심사위원 사용 여부 토글 한 줄 — 라벨 + 스위치.
+function ToggleRow({ label, on, onToggle }: { label: string; on: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      onClick={onToggle}
+      className="inline-flex items-center justify-between gap-3 w-full text-sm"
+    >
+      <span className="font-medium">{label}</span>
+      <span className={`relative w-9 h-5 rounded-full transition shrink-0 ${on ? 'bg-accent' : 'bg-border'}`}>
+        <span
+          className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition"
+          style={{ transform: on ? 'translateX(16px)' : 'translateX(0)' }}
+        />
+      </span>
+    </button>
   );
 }
 

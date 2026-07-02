@@ -85,6 +85,24 @@ function AdminShellInner({
           >
             Join App ↗
           </Link>
+          <Link
+            href="/ojudge"
+            target="_blank"
+            rel="noopener"
+            className="px-3 py-1 rounded border border-border text-ink2 hover:text-ink hover:border-ink transition font-mono text-xs uppercase tracking-widest"
+            title="온라인 심사위원 셀프 등록 페이지를 새 창으로 엽니다"
+          >
+            Online Judge App ↗
+          </Link>
+          <Link
+            href="/ovote"
+            target="_blank"
+            rel="noopener"
+            className="px-3 py-1 rounded border border-border text-ink2 hover:text-ink hover:border-ink transition font-mono text-xs uppercase tracking-widest"
+            title="온라인 심사위원 채점(VOTE) 페이지를 새 창으로 엽니다"
+          >
+            Online Vote ↗
+          </Link>
           <Link href="/" className="text-ink2 hover:text-ink transition">
             {t('header.display')}
           </Link>
