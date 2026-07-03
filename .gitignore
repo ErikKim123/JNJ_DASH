@@ -42,3 +42,6 @@ data/judges-legacy-backup.json
 
 # 심사위원 소개 영상 등 로컬 영상파일 — 대용량, /api/video 로 서빙
 Video/
+
+.vercel
+.env*
