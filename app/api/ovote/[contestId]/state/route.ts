@@ -5,7 +5,7 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/db/client';
 import { getContest } from '@/lib/db/queries';
-import { resolveActiveDefs } from '@/lib/db/scoring';
+import { resolveActiveOnlineDefs } from '@/lib/db/scoring';
 import { fullName } from '@/lib/participants/name';
 
 export const dynamic = 'force-dynamic';
@@ -79,8 +79,8 @@ export async function GET(req: Request, ctx: RouteCtx) {
     })
     .sort((a, b) => a.num.localeCompare(b.num, undefined, { numeric: true }));
 
-  // 이 심사위원의 기존 점수.
-  const defs = resolveActiveDefs(contest.scoring_items);
+  // 이 심사위원의 기존 점수. (온라인 심사위원 전용 채점 항목 사용)
+  const defs = resolveActiveOnlineDefs(contest.online_scoring_items);
   const myVotes: Record<string, Record<string, number | null>> = {};
   if (judgeId) {
     const { data: votes } = await sb

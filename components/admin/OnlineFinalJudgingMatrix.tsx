@@ -9,9 +9,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Badge, Button, Input } from './ui';
-import { resolveActiveDefs, type ScoringItemDef } from '@/lib/db/scoring';
+import { resolveActiveOnlineDefs, type OnlineScoringItemDef } from '@/lib/db/scoring';
 import { fullName } from '@/lib/participants/name';
-import type { OnlineJudgeRow, OnlineJudgeVoteRow, ScoringItemKey } from '@/lib/db/types';
+import type { OnlineJudgeRow, OnlineJudgeVoteRow, OnlineScoringItemKey } from '@/lib/db/types';
 
 type Finalist = { num: string; team_name: string; role: 'leader' | 'follower' };
 
@@ -41,7 +41,7 @@ export function OnlineFinalJudgingMatrix({
   finalists: Finalist[];
   judges: OnlineJudgeRow[];
   votes: OnlineJudgeVoteRow[];
-  scoringItems?: readonly ScoringItemKey[];
+  scoringItems?: readonly OnlineScoringItemKey[];
   onlineEnabled: boolean;
   finalStatus: string;
 }) {
@@ -59,7 +59,7 @@ export function OnlineFinalJudgingMatrix({
   const [tieModal, setTieModal] = useState<TieGroup[] | null>(null);
   const [tiePick, setTiePick] = useState<Record<string, boolean>>({});
 
-  const activeDefs: ScoringItemDef[] = useMemo(() => resolveActiveDefs(scoringItems), [scoringItems]);
+  const activeDefs: OnlineScoringItemDef[] = useMemo(() => resolveActiveOnlineDefs(scoringItems), [scoringItems]);
   const apiBase = `/api/admin/contests/${encodeURIComponent(contestId)}/online-final-judging`;
 
   // voteMap[`${judgeId}:${num}`] = row
@@ -111,7 +111,7 @@ export function OnlineFinalJudgingMatrix({
   const submittedCount = useMemo(() => judges.filter((j) => j.final_submitted_at).length, [judges]);
   const submitPct = judges.length > 0 ? Math.round((submittedCount / judges.length) * 100) : 0;
 
-  function saveCell(judgeId: string, num: string, column: ScoringItemDef['column'], raw: string) {
+  function saveCell(judgeId: string, num: string, column: OnlineScoringItemDef['column'], raw: string) {
     const value = raw.trim() === '' ? null : Number(raw);
     if (value != null && (!Number.isFinite(value) || value < 0 || value > 999)) {
       setError('점수는 0–999 사이 숫자여야 합니다.'); return;

@@ -11,7 +11,10 @@ import {
   type ExtraVideos,
 } from '@/lib/contest/extraVideos';
 import type { ContestRow } from '@/lib/db/types';
-import { SCORING_ITEMS, DEFAULT_SCORING_ITEMS, type ScoringItemKey } from '@/lib/db/scoring';
+import {
+  SCORING_ITEMS, DEFAULT_SCORING_ITEMS, type ScoringItemKey,
+  ONLINE_SCORING_ITEMS, DEFAULT_ONLINE_SCORING_ITEMS, type OnlineScoringItemKey,
+} from '@/lib/db/scoring';
 import { JOIN_PRESETS, JOIN_PRESET_MAP, resolveJoinPalette } from '@/lib/join/theme';
 import { useT } from '@/lib/i18n/LocaleContext';
 import type { MessageKey } from '@/lib/i18n/messages';
@@ -66,6 +69,10 @@ export function ContestForm({
       Array.isArray(initial?.scoring_items) && initial!.scoring_items.length > 0
         ? initial!.scoring_items
         : ([...DEFAULT_SCORING_ITEMS] as ScoringItemKey[]),
+    online_scoring_items:
+      Array.isArray(initial?.online_scoring_items) && initial!.online_scoring_items.length > 0
+        ? initial!.online_scoring_items
+        : ([...DEFAULT_ONLINE_SCORING_ITEMS] as OnlineScoringItemKey[]),
     sponsor_logos: ((): string[] => {
       const src = Array.isArray(initial?.sponsor_logos) ? initial!.sponsor_logos : [];
       const arr = [...src];
@@ -256,6 +263,15 @@ export function ContestForm({
       const next = has ? s.scoring_items.filter((k) => k !== key) : [...s.scoring_items, key];
       // 항상 최소 1개는 활성 유지
       return { ...s, scoring_items: next.length === 0 ? s.scoring_items : next };
+    });
+  }
+
+  function toggleOnlineScoringItem(key: OnlineScoringItemKey) {
+    setForm((s) => {
+      const has = s.online_scoring_items.includes(key);
+      const next = has ? s.online_scoring_items.filter((k) => k !== key) : [...s.online_scoring_items, key];
+      // 항상 최소 1개는 활성 유지
+      return { ...s, online_scoring_items: next.length === 0 ? s.online_scoring_items : next };
     });
   }
 
@@ -676,6 +692,84 @@ export function ContestForm({
       </section>
 
       <section className="rounded border border-border bg-panel/40 p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-semibold">{t('cf.scoringTitle')}</h3>
+            <span className="text-[11px] px-1.5 py-0.5 rounded border border-accent/50 text-accent whitespace-nowrap">
+              {t('cf.panelJudgesLabel')}
+            </span>
+          </div>
+          <span className="text-xs text-ink2">
+            {fmt(t('cf.scoringMeta'), { N: form.scoring_items.length })}
+          </span>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+          {SCORING_ITEMS.map((item) => {
+            const active = form.scoring_items.includes(item.key);
+            const labelKey = `cf.scoring.${item.key}` as MessageKey;
+            return (
+              <label
+                key={item.key}
+                className={`flex items-center gap-2 px-3 py-2 rounded border cursor-pointer transition ${
+                  active
+                    ? 'border-accent bg-accent/10 text-ink'
+                    : 'border-border bg-bg2 text-ink2 hover:border-accent/60'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={active}
+                  onChange={() => toggleScoringItem(item.key)}
+                  className="w-4 h-4 accent-accent"
+                />
+                <span className="text-sm">{t(labelKey)}</span>
+              </label>
+            );
+          })}
+        </div>
+        <p className="text-xs text-ink2 mt-3">{t('cf.scoringHint')}</p>
+      </section>
+
+      <section className="rounded border border-border bg-panel/40 p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-semibold">{t('cf.onlineScoringTitle')}</h3>
+            <span className="text-[11px] px-1.5 py-0.5 rounded border border-accent/50 text-accent whitespace-nowrap">
+              {t('cf.onlineJudgesLabel')}
+            </span>
+          </div>
+          <span className="text-xs text-ink2">
+            {fmt(t('cf.onlineScoringMeta'), { N: form.online_scoring_items.length })}
+          </span>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+          {ONLINE_SCORING_ITEMS.map((item) => {
+            const active = form.online_scoring_items.includes(item.key);
+            const labelKey = `cf.onlineScoring.${item.key}` as MessageKey;
+            return (
+              <label
+                key={item.key}
+                className={`flex items-center gap-2 px-3 py-2 rounded border cursor-pointer transition ${
+                  active
+                    ? 'border-accent bg-accent/10 text-ink'
+                    : 'border-border bg-bg2 text-ink2 hover:border-accent/60'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={active}
+                  onChange={() => toggleOnlineScoringItem(item.key)}
+                  className="w-4 h-4 accent-accent"
+                />
+                <span className="text-sm">{t(labelKey)}</span>
+              </label>
+            );
+          })}
+        </div>
+        <p className="text-xs text-ink2 mt-3">{t('cf.onlineScoringHint')}</p>
+      </section>
+
+      <section className="rounded border border-border bg-panel/40 p-4">
         <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
           <h3 className="text-sm font-semibold">{t('cf.extraVideosTitle')}</h3>
           <span className="text-xs text-ink2">{t('cf.extraVideosMeta')}</span>
@@ -894,40 +988,6 @@ export function ContestForm({
           className="text-xs text-ink2 mt-3"
           dangerouslySetInnerHTML={{ __html: t('cf.sponsorHint') }}
         />
-      </section>
-
-      <section className="rounded border border-border bg-panel/40 p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold">{t('cf.scoringTitle')}</h3>
-          <span className="text-xs text-ink2">
-            {fmt(t('cf.scoringMeta'), { N: form.scoring_items.length })}
-          </span>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-          {SCORING_ITEMS.map((item) => {
-            const active = form.scoring_items.includes(item.key);
-            const labelKey = `cf.scoring.${item.key}` as MessageKey;
-            return (
-              <label
-                key={item.key}
-                className={`flex items-center gap-2 px-3 py-2 rounded border cursor-pointer transition ${
-                  active
-                    ? 'border-accent bg-accent/10 text-ink'
-                    : 'border-border bg-bg2 text-ink2 hover:border-accent/60'
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={active}
-                  onChange={() => toggleScoringItem(item.key)}
-                  className="w-4 h-4 accent-accent"
-                />
-                <span className="text-sm">{t(labelKey)}</span>
-              </label>
-            );
-          })}
-        </div>
-        <p className="text-xs text-ink2 mt-3">{t('cf.scoringHint')}</p>
       </section>
 
       {error && (

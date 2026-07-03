@@ -4,8 +4,8 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/db/client';
 import { getContest, listAllOnlineJudges } from '@/lib/db/queries';
-import { resolveActiveDefs } from '@/lib/db/scoring';
-import type { ScoringItemKey } from '@/lib/db/types';
+import { resolveActiveOnlineDefs } from '@/lib/db/scoring';
+import type { OnlineScoringItemKey } from '@/lib/db/types';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -18,7 +18,7 @@ export async function POST(_req: Request, ctx: RouteCtx) {
   if (!contest) return NextResponse.json({ error: 'CONTEST_NOT_FOUND' }, { status: 404 });
 
   const sb = getSupabaseAdmin();
-  const activeCols = resolveActiveDefs((contest.scoring_items ?? []) as ScoringItemKey[]).map((d) => d.column);
+  const activeCols = resolveActiveOnlineDefs((contest.online_scoring_items ?? []) as OnlineScoringItemKey[]).map((d) => d.column);
   if (activeCols.length === 0) return NextResponse.json({ error: 'NO_SCORING_ITEMS' }, { status: 400 });
 
   const [judges, { data: qs, error: qe }] = await Promise.all([

@@ -57,6 +57,53 @@ export function getScoringDef(key: ScoringItemKey): ScoringItemDef {
   return d;
 }
 
+// ─────────────────────────────────────────────────────────────
+// 온라인 심사위원 전용 채점 항목.
+//   판정단(SCORING_ITEMS)과 라벨/의미가 다르지만, 저장은 online_judge_votes 의
+//   동일 6 컬럼을 재사용한다(온라인 투표는 별도 테이블이라 판정단과 충돌 없음).
+//   대회별 활성 항목은 contests.online_scoring_items 에 저장.
+// ─────────────────────────────────────────────────────────────
+export type OnlineScoringItemKey =
+  | 'wow_factor'
+  | 'stage_presence'
+  | 'visual_impact'
+  | 'crowd_connection'
+  | 'team_chemistry'
+  | 'musical_energy';
+
+export interface OnlineScoringItemDef {
+  key: OnlineScoringItemKey;
+  label: string;       // UI 영문 라벨
+  shortLabel: string;  // 매트릭스 셀 라벨
+  /** online_judge_votes 의 컬럼명 (판정단과 동일 스토리지 재사용). */
+  column: ScoringItemDef['column'];
+}
+
+export const ONLINE_SCORING_ITEMS: readonly OnlineScoringItemDef[] = [
+  { key: 'wow_factor',       label: 'WOW Factor',       shortLabel: 'WOW',    column: 'basic_score' },
+  { key: 'stage_presence',   label: 'Stage Presence',   shortLabel: 'Stage',  column: 'connectivity_score' },
+  { key: 'visual_impact',    label: 'Visual Impact',    shortLabel: 'Visual', column: 'musicality_score' },
+  { key: 'crowd_connection', label: 'Crowd Connection', shortLabel: 'Crowd',  column: 'creativity_score' },
+  { key: 'team_chemistry',   label: 'Team Chemistry',   shortLabel: 'Chem',   column: 'crowd_reaction_score' },
+  { key: 'musical_energy',   label: 'Musical Energy',   shortLabel: 'Energy', column: 'showmanship_score' },
+] as const;
+
+export const ONLINE_SCORING_KEYS: readonly OnlineScoringItemKey[] =
+  ONLINE_SCORING_ITEMS.map((s) => s.key);
+
+/** 기본 활성 온라인 항목 — 6개 전체. */
+export const DEFAULT_ONLINE_SCORING_ITEMS: readonly OnlineScoringItemKey[] =
+  ONLINE_SCORING_KEYS;
+
+/** 활성 온라인 항목 키 목록을 OnlineScoringItemDef[] 로 normalize (canonical 순서 유지). */
+export function resolveActiveOnlineDefs(
+  activeKeys: readonly OnlineScoringItemKey[] | null | undefined
+): OnlineScoringItemDef[] {
+  const src = activeKeys && activeKeys.length > 0 ? activeKeys : DEFAULT_ONLINE_SCORING_ITEMS;
+  const set = new Set(src);
+  return ONLINE_SCORING_ITEMS.filter((s) => set.has(s.key));
+}
+
 /** 활성 항목 키 목록에서 vote row 의 점수를 모아 sum/count 계산. */
 export function aggregateScores(
   v: JudgeVoteRow | undefined,

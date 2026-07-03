@@ -47,8 +47,10 @@ export default function OVoteFinalPage({
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(false);
   const [locked, setLocked] = useState(false);
+  const lockedRef = useRef(locked);
 
   useEffect(() => { draftRef.current = draft; }, [draft]);
+  useEffect(() => { lockedRef.current = locked; }, [locked]);
 
   const load = useCallback((judgeId: string) => {
     setLoading(true);
@@ -79,6 +81,25 @@ export default function OVoteFinalPage({
     setSession(s);
     load(s.judgeId);
   }, [contestId, router, load]);
+
+  // 리로드/뒤로가기로 페이지가 bfcache 에서 복원되면 컴포넌트가 remount 되지 않아
+  // 이전 잠금(제출) 상태가 그대로 남는다. pageshow(persisted) 에서 서버 상태를 다시 받아
+  // 관리자가 제출을 해제하면 리로드만으로 잠금이 풀리도록 한다.
+  // 또한 제출 잠금 상태에서 탭이 다시 활성화되면 재조회(편집 중 입력값은 보존하려고 잠금일 때만).
+  useEffect(() => {
+    if (!session) return;
+    const jid = session.judgeId;
+    const onPageShow = (e: PageTransitionEvent) => { if (e.persisted) load(jid); };
+    const onVisible = () => {
+      if (document.visibilityState === 'visible' && lockedRef.current) load(jid);
+    };
+    window.addEventListener('pageshow', onPageShow);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      window.removeEventListener('pageshow', onPageShow);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [session, load]);
 
   const roundOpen = useMemo(() => {
     if (!data) return false;

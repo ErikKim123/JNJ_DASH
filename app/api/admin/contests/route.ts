@@ -14,6 +14,11 @@ const ScoringItemEnum = z.enum([
   'creativity', 'crowd_reaction', 'showmanship',
 ]);
 
+const OnlineScoringItemEnum = z.enum([
+  'wow_factor', 'stage_presence', 'visual_impact',
+  'crowd_connection', 'team_chemistry', 'musical_energy',
+]);
+
 const CreateContestSchema = z.object({
   id: z
     .string()
@@ -37,6 +42,7 @@ const CreateContestSchema = z.object({
   // JOIN APP 그룹 폴더 키. 자유 텍스트 (예: 'JLCL', 'PSLF'). 빈 문자열 = 미분류.
   group_name: z.string().max(100).optional().default(''),
   scoring_items: z.array(ScoringItemEnum).min(1).optional(),
+  online_scoring_items: z.array(OnlineScoringItemEnum).min(1).optional(),
   sponsor_logos: z
     .array(z.union([z.literal(''), z.string().url().max(2000)]))
     .max(6)

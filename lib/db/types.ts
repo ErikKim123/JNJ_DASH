@@ -1,7 +1,7 @@
 // DB 테이블 타입. db/migrations/*.sql 와 일치.
 // 수동 작성 (supabase gen types 도 가능하지만 의존성 추가 없이 가볍게 유지).
-import type { ScoringItemKey } from './scoring';
-export type { ScoringItemKey };
+import type { ScoringItemKey, OnlineScoringItemKey } from './scoring';
+export type { ScoringItemKey, OnlineScoringItemKey };
 
 export type ParticipantRole =
   | 'leader'
@@ -50,6 +50,8 @@ export interface ContestRow {
   group_name: string;
   /** 결승 채점 활성 항목 키 배열. 기본값: ['fundamentals','connection','musicality']. */
   scoring_items: ScoringItemKey[];
+  /** 온라인 심사위원 전용 결승 채점 활성 항목 키 배열. 기본값: 6개 전체. */
+  online_scoring_items: OnlineScoringItemKey[];
   /** PREP 화면 하단 광고/스폰서 로고 (최대 6개 public URL). */
   sponsor_logos: string[];
   /** sponsor_logos 와 1:1 매칭되는 슬롯별 투명도 (0-100). 값 미설정 시 100. */

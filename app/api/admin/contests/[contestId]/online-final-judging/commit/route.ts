@@ -9,8 +9,8 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/db/client';
 import { selectJudgeVotesAll, listOnlineJudgeVotes } from '@/lib/db/queries';
-import { resolveActiveDefs } from '@/lib/db/scoring';
-import type { ScoringItemKey } from '@/lib/db/types';
+import { resolveActiveDefs, resolveActiveOnlineDefs } from '@/lib/db/scoring';
+import type { ScoringItemKey, OnlineScoringItemKey } from '@/lib/db/types';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -35,13 +35,15 @@ export async function POST(req: Request, ctx: RouteCtx) {
 
   const { data: contest, error: ce } = await sb
     .from('contests')
-    .select('scoring_items, panel_judges_enabled, online_judges_enabled, panel_judge_weight, online_judge_weight')
+    .select('scoring_items, online_scoring_items, panel_judges_enabled, online_judges_enabled, panel_judge_weight, online_judge_weight')
     .eq('id', contestId)
     .maybeSingle();
   if (ce) return NextResponse.json({ error: ce.message }, { status: 500 });
   if (!contest) return NextResponse.json({ error: 'CONTEST_NOT_FOUND' }, { status: 404 });
 
-  const activeCols = resolveActiveDefs((contest.scoring_items ?? []) as ScoringItemKey[]).map((d) => d.column);
+  // 판정단·온라인은 서로 다른 채점 항목(=컬럼)을 쓴다. 각 그룹 평균은 자기 활성 컬럼으로만 집계.
+  const panelCols = resolveActiveDefs((contest.scoring_items ?? []) as ScoringItemKey[]).map((d) => d.column);
+  const onlineCols = resolveActiveOnlineDefs((contest.online_scoring_items ?? []) as OnlineScoringItemKey[]).map((d) => d.column);
   const wp = Math.max(0, Number(contest.panel_judge_weight) || 0);
   const wo = Math.max(0, Number(contest.online_judge_weight) || 0);
   const usePanel = contest.panel_judges_enabled !== false;
@@ -61,28 +63,28 @@ export async function POST(req: Request, ctx: RouteCtx) {
 
   // 판정단 항목 평균 (num → {sum,cnt}).
   const panel = new Map<string, { sum: number; cnt: number }>();
-  if (usePanel && activeCols.length > 0) {
+  if (usePanel && panelCols.length > 0) {
     const { data: judges } = await sb.from('judges').select('id').eq('contest_id', contestId).eq('round', 'final');
     const ids = (judges ?? []).map((j) => j.id);
     if (ids.length > 0) {
-      const votes = await selectJudgeVotesAll(sb, ids, ['participant_num', ...activeCols].join(','));
+      const votes = await selectJudgeVotesAll(sb, ids, ['participant_num', ...panelCols].join(','));
       for (const v of votes as unknown as Array<Record<string, number | string | null>>) {
         const num = String(v.participant_num ?? ''); if (!num) continue;
         const cur = panel.get(num) ?? { sum: 0, cnt: 0 };
-        for (const c of activeCols) { const x = v[c]; if (x != null && x !== '') { cur.sum += Number(x); cur.cnt++; } }
+        for (const c of panelCols) { const x = v[c]; if (x != null && x !== '') { cur.sum += Number(x); cur.cnt++; } }
         panel.set(num, cur);
       }
     }
   }
 
-  // 온라인 항목 평균 (num → {sum,cnt}).
+  // 온라인 항목 평균 (num → {sum,cnt}) — 온라인 전용 활성 컬럼으로 집계.
   const online = new Map<string, { sum: number; cnt: number }>();
-  if (useOnline && activeCols.length > 0) {
+  if (useOnline && onlineCols.length > 0) {
     const votes = await listOnlineJudgeVotes(contestId);
     for (const v of votes) {
       const num = v.participant_num;
       const cur = online.get(num) ?? { sum: 0, cnt: 0 };
-      for (const c of activeCols) { const x = (v as unknown as Record<string, number | null>)[c]; if (x != null) { cur.sum += Number(x); cur.cnt++; } }
+      for (const c of onlineCols) { const x = (v as unknown as Record<string, number | null>)[c]; if (x != null) { cur.sum += Number(x); cur.cnt++; } }
       online.set(num, cur);
     }
   }
@@ -99,7 +101,8 @@ export async function POST(req: Request, ctx: RouteCtx) {
     return pAvg ?? oAvg;
   }
 
-  const activeCount = activeCols.length || 1;
+  // total_score = 평균 × 항목수 로 되돌린 표시용 값. 판정단 사용 시 판정단 항목수, 아니면 온라인 항목수.
+  const activeCount = (usePanel && panelCols.length ? panelCols.length : onlineCols.length) || 1;
   const isEx = (num: string) => (tieExclude.has(num) ? 1 : 0);
 
   // 역할별 순위 산정.

@@ -50,7 +50,7 @@ export default async function OnlineFinalJudgingPage({
         finalists={finalists}
         judges={judges}
         votes={votes}
-        scoringItems={contest.scoring_items}
+        scoringItems={contest.online_scoring_items}
         onlineEnabled={contest.online_judges_enabled}
         finalStatus={contest.final_status}
       />

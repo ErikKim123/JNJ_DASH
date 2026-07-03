@@ -15,6 +15,11 @@ const ScoringItemEnum = z.enum([
   'creativity', 'crowd_reaction', 'showmanship',
 ]);
 
+const OnlineScoringItemEnum = z.enum([
+  'wow_factor', 'stage_presence', 'visual_impact',
+  'crowd_connection', 'team_chemistry', 'musical_energy',
+]);
+
 const RoundStatusEnum = z.enum([
   'prep', 'pairing', 'open', 'live', 'calculate', 'close', 'result',
 ]);
@@ -44,6 +49,7 @@ const PatchSchema = z.object({
   status: z.enum(['ready', 'closed', 'live', 'done', 'archived']).optional(),
   group_name: z.string().max(100).optional(),
   scoring_items: z.array(ScoringItemEnum).min(1).optional(),
+  online_scoring_items: z.array(OnlineScoringItemEnum).min(1).optional(),
   sponsor_logos: z
     .array(z.union([z.literal(''), z.string().url().max(2000)]))
     .max(6)
