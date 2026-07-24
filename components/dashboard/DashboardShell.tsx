@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ContestMeta, RoundKey, StepKey } from '@/lib/sheets/types';
 import { ROUND_KEYS, STEP_KEYS } from '@/lib/sheets/types';
 import { useSheetPoll } from '@/hooks/useSheetPoll';
+import { useDisplayFollow } from '@/hooks/useDisplayFollow';
 import { TemplateRenderer } from '@/components/templates/TemplateRenderer';
 import { RoundNav } from './RoundNav';
 import { StepNav } from './StepNav';
@@ -48,6 +49,9 @@ export function DashboardShell({
 
   const round = parseRound(searchParams.get('round'));
   const requestedStep = parseStep(searchParams.get('step'));
+
+  // MC 따라가기 — ?follow=1 로 열면 기본 ON. 로컬 운영자가 토글로 끄면 수동 제어 복귀.
+  const [followMc, setFollowMc] = useState(searchParams.get('follow') === '1');
 
   // 라운드별 추가 영상 — 현재 라운드의 3칸 중 채워진 것만 버튼으로 노출. 클릭 시 오버레이.
   const [overlayUrl, setOverlayUrl] = useState<string | null>(null);
@@ -117,6 +121,15 @@ export function DashboardShell({
     },
     [updateParams]
   );
+
+  // MC 표출 포인터 폴링 → followMc 가 켜져 있으면 라운드/스텝을 MC 에 맞춰 이동.
+  const onMcPointer = useCallback(
+    (r: RoundKey, s: StepKey) => {
+      updateParams({ round: r, step: s });
+    },
+    [updateParams]
+  );
+  useDisplayFollow({ contestId: meta.contestId, enabled: followMc, onPointer: onMcPointer });
 
   const { result, loading, error, lastUpdated, refresh } = useSheetPoll({
     contestId: meta.contestId,
@@ -280,6 +293,16 @@ export function DashboardShell({
           >
             {loading || metaRefreshing ? 'LOADING…' : '↻ REFRESH'}
           </button>
+          <button
+            type="button"
+            onClick={() => setFollowMc((v) => !v)}
+            title="MC 따라가기"
+            className={`px-2 py-1 rounded border text-[10px] font-mono tracking-widest transition-colors ${
+              followMc ? 'border-ok bg-ok/15 text-ok' : 'border-border bg-panel text-ink2'
+            }`}
+          >
+            {followMc ? '● MC' : '○ MC'}
+          </button>
           <FullscreenToggle active={fullscreen} onToggle={() => setFullscreen(false)} />
         </div>
         {overlayUrl && <VideoOverlay url={overlayUrl} onClose={() => setOverlayUrl(null)} />}
@@ -333,6 +356,18 @@ export function DashboardShell({
             {loading || metaRefreshing ? 'LOADING…' : '↻ 조회 / Refresh'}
           </button>
           {step === 'live' ? <LiveIndicator loading={loading} lastUpdated={lastUpdated} /> : null}
+          <button
+            type="button"
+            onClick={() => setFollowMc((v) => !v)}
+            title="MC 모바일이 넘기는 화면을 자동으로 따라갑니다. 끄면 이 화면에서 수동 제어."
+            className={`px-3 py-1.5 rounded border text-xs font-mono tracking-widest transition-colors ${
+              followMc
+                ? 'border-ok bg-ok/15 text-ok'
+                : 'border-border bg-panel text-ink2 hover:text-ink'
+            }`}
+          >
+            {followMc ? '● MC 따라가기' : '○ MC 따라가기'}
+          </button>
           <FullscreenToggle active={fullscreen} onToggle={() => setFullscreen(true)} />
         </div>
       </header>

@@ -1,6 +1,7 @@
 // DB 테이블 타입. db/migrations/*.sql 와 일치.
 // 수동 작성 (supabase gen types 도 가능하지만 의존성 추가 없이 가볍게 유지).
 import type { ScoringItemKey, OnlineScoringItemKey } from './scoring';
+import type { RoundKey, StepKey } from '@/lib/sheets/types';
 export type { ScoringItemKey, OnlineScoringItemKey };
 
 export type ParticipantRole =
@@ -86,6 +87,12 @@ export interface ContestRow {
   online_judge_weight: number;
   /** 온라인 심사위원이 참여하는 라운드 목록('prelim'|'semi'|'final'). */
   online_judge_rounds: JudgingRound[];
+  /** MC 표출 포인터 — MC 폰이 기록, 프로젝터(대시보드)가 폴링해 따라감. null=미설정. */
+  display_round: RoundKey | null;
+  /** MC 표출 포인터 — 현재 스텝(StepKey). null=미설정. */
+  display_step: StepKey | null;
+  /** 표출 포인터 마지막 갱신 시각(ISO). 프로젝터가 변경 감지에 사용. */
+  display_updated_at: string | null;
   created_at: string;
   updated_at: string;
 }

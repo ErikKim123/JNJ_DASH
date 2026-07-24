@@ -8,7 +8,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { verifySession, getCookieName } from '@/lib/auth/admin';
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/admin/:path*'],
+  matcher: ['/admin/:path*', '/api/admin/:path*', '/mc/:path*'],
 };
 
 const LOGIN_PATH = '/admin/login';
