@@ -20,6 +20,7 @@ export default async function McConsolePage({
       contestName={contest.name}
       initialRound={contest.display_round}
       initialStep={contest.display_step}
+      initialFollow={contest.display_follow ?? false}
     />
   );
 }

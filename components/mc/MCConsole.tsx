@@ -7,6 +7,7 @@ import type { RoundKey, StepKey } from '@/lib/sheets/types';
 import { ScreenControl } from './ScreenControl';
 import { RoundControl } from './RoundControl';
 import { FinalControl } from './FinalControl';
+import { FollowToggle } from './FollowToggle';
 
 type Tab = 'screen' | 'prelim' | 'semi' | 'final';
 
@@ -22,11 +23,13 @@ export function MCConsole({
   contestName,
   initialRound,
   initialStep,
+  initialFollow,
 }: {
   contestId: string;
   contestName: string;
   initialRound: RoundKey | null;
   initialStep: StepKey | null;
+  initialFollow: boolean;
 }) {
   const [tab, setTab] = useState<Tab>('screen');
 
@@ -38,14 +41,17 @@ export function MCConsole({
           <Link href="/mc" className="text-[10px] text-ink2">← 대회목록</Link>
           <h1 className="text-sm font-semibold truncate">{contestName}</h1>
         </div>
-        <a
-          href={`/dashboard/${encodeURIComponent(contestId)}?follow=1`}
-          target="_blank"
-          rel="noopener"
-          className="shrink-0 rounded-lg border border-accent2 bg-panel px-3 py-2 text-[11px] font-mono tracking-widest text-accent active:bg-accent2 active:text-bg"
-        >
-          표출 ↗
-        </a>
+        <div className="shrink-0 flex items-center gap-2">
+          <FollowToggle contestId={contestId} initialFollow={initialFollow} />
+          <a
+            href={`/dashboard/${encodeURIComponent(contestId)}?follow=1`}
+            target="_blank"
+            rel="noopener"
+            className="shrink-0 rounded-lg border border-accent2 bg-panel px-3 py-2 text-[11px] font-mono tracking-widest text-accent active:bg-accent2 active:text-bg"
+          >
+            표출 ↗
+          </a>
+        </div>
       </header>
 
       {/* 본문 — 하단 탭바 높이만큼 패딩 */}

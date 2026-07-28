@@ -129,7 +129,14 @@ export function DashboardShell({
     },
     [updateParams]
   );
-  useDisplayFollow({ contestId: meta.contestId, enabled: followMc, onPointer: onMcPointer });
+  // MC 콘솔에서 "MC 따라가기"를 켜고 끄면 이 화면의 토글도 원격으로 따라 움직인다.
+  const onRemoteFollow = useCallback((f: boolean) => setFollowMc(f), []);
+  useDisplayFollow({
+    contestId: meta.contestId,
+    enabled: followMc,
+    onPointer: onMcPointer,
+    onRemoteFollow,
+  });
 
   const { result, loading, error, lastUpdated, refresh } = useSheetPoll({
     contestId: meta.contestId,

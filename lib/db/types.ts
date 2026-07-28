@@ -93,6 +93,10 @@ export interface ContestRow {
   display_step: StepKey | null;
   /** 표출 포인터 마지막 갱신 시각(ISO). 프로젝터가 변경 감지에 사용. */
   display_updated_at: string | null;
+  /** MC 따라가기 원격 스위치 — MC 콘솔에서 켜면 프로젝터가 MC 를 따라간다. */
+  display_follow: boolean;
+  /** 따라가기 스위치 마지막 토글 시각(ISO). 프로젝터가 원격 지시 감지에 사용. */
+  display_follow_at: string | null;
   created_at: string;
   updated_at: string;
 }
