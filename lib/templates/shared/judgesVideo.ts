@@ -104,11 +104,22 @@ export function parseYouTubeId(raw: string): string | null {
   return null;
 }
 
-/** YouTube 링크면 임베드 URL(iframe src) 반환, 아니면 null. */
+/**
+ * YouTube 링크면 임베드 URL(iframe src) 반환, 아니면 null.
+ * enablejsapi=1 — MC 콘솔 원격 재생/일시정지(postMessage 명령)를 받기 위해 필요.
+ */
 export function youTubeEmbedUrl(raw: string): string | null {
   const id = parseYouTubeId(raw);
   if (!id) return null;
-  return `https://www.youtube.com/embed/${id}?rel=0&modestbranding=1&playsinline=1`;
+  return `https://www.youtube.com/embed/${id}?rel=0&modestbranding=1&playsinline=1&enablejsapi=1`;
+}
+
+/** YouTube iframe 에 IFrame API 명령을 postMessage 로 보낸다(enablejsapi=1 필요). */
+export function postYouTubeCommand(iframe: HTMLIFrameElement | null, func: 'playVideo' | 'pauseVideo') {
+  iframe?.contentWindow?.postMessage(
+    JSON.stringify({ event: 'command', func, args: [] }),
+    'https://www.youtube.com'
+  );
 }
 
 /** 영상 플레이어 (foreignObject + HTML video). */

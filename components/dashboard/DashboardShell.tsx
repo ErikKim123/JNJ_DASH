@@ -8,7 +8,8 @@ import type { ContestMeta, RoundKey, StepKey } from '@/lib/sheets/types';
 import { ROUND_KEYS, STEP_KEYS } from '@/lib/sheets/types';
 import { useSheetPoll } from '@/hooks/useSheetPoll';
 import { useDisplayFollow } from '@/hooks/useDisplayFollow';
-import { TemplateRenderer } from '@/components/templates/TemplateRenderer';
+import { TemplateRenderer, type VideoCommand } from '@/components/templates/TemplateRenderer';
+import type { DisplayCommand } from '@/lib/display/commands';
 import { RoundNav } from './RoundNav';
 import { StepNav } from './StepNav';
 import { MiniNav } from './MiniNav';
@@ -131,12 +132,6 @@ export function DashboardShell({
   );
   // MC 콘솔에서 "MC 따라가기"를 켜고 끄면 이 화면의 토글도 원격으로 따라 움직인다.
   const onRemoteFollow = useCallback((f: boolean) => setFollowMc(f), []);
-  useDisplayFollow({
-    contestId: meta.contestId,
-    enabled: followMc,
-    onPointer: onMcPointer,
-    onRemoteFollow,
-  });
 
   const { result, loading, error, lastUpdated, refresh } = useSheetPoll({
     contestId: meta.contestId,
@@ -167,6 +162,29 @@ export function DashboardShell({
     void refresh();
     void refreshMeta();
   }, [refresh, refreshMeta]);
+
+  // MC 원격 명령 — 조회는 이 화면의 "조회 / Refresh" 와 동일 동작,
+  // 영상 재생/일시정지는 VIDEO 스텝 플레이어로 전달(seq 증가로 매번 재실행).
+  const [videoCommand, setVideoCommand] = useState<VideoCommand | null>(null);
+  const onMcCommand = useCallback(
+    (cmd: DisplayCommand) => {
+      if (cmd === 'refresh') {
+        onRefreshAll();
+        return;
+      }
+      const action = cmd === 'video:play' ? 'play' : 'pause';
+      setVideoCommand((prev) => ({ action, seq: (prev?.seq ?? 0) + 1 }));
+    },
+    [onRefreshAll]
+  );
+
+  useDisplayFollow({
+    contestId: meta.contestId,
+    enabled: followMc,
+    onPointer: onMcPointer,
+    onRemoteFollow,
+    onCommand: onMcCommand,
+  });
 
   const stepLabel = useMemo(() => {
     const steps = meta.rounds[round].steps;
@@ -266,6 +284,7 @@ export function DashboardShell({
             fit="viewport"
             backgroundOverride={meta.backgroundImage}
             backgroundOpacity={meta.backgroundOpacity}
+            videoCommand={videoCommand}
           />
         ) : (
           <div className="text-center text-sm text-ink2">로딩 중…</div>
@@ -440,6 +459,7 @@ export function DashboardShell({
             data={result.payload}
             backgroundOverride={meta.backgroundImage}
             backgroundOpacity={meta.backgroundOpacity}
+            videoCommand={videoCommand}
           />
         )}
       </section>

@@ -2,6 +2,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
+import type { DisplayCommand } from '@/lib/display/commands';
 
 type BtnVariant = 'primary' | 'ghost' | 'danger' | 'ok';
 
@@ -86,6 +87,15 @@ export function useMcAction() {
   }, []);
 
   return { pending, error, message, setMessage, run };
+}
+
+/** 표출(프로젝터)에 1회성 원격 명령 발행 — 조회 / 영상 재생·일시정지. */
+export async function sendDisplayCmd(contestId: string, cmd: DisplayCommand): Promise<void> {
+  await adminFetch(`/api/admin/contests/${encodeURIComponent(contestId)}/display-state`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ cmd }),
+  });
 }
 
 /** 관리자 API 호출 — 봉투({data}|{error}) 해제. 실패 시 throw. */

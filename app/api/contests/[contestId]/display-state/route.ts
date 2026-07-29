@@ -15,7 +15,7 @@ export async function GET(_req: Request, ctx: RouteCtx) {
     const sb = getSupabasePublicRead();
     const { data, error } = await sb
       .from('contests')
-      .select('display_round, display_step, display_updated_at, display_follow, display_follow_at')
+      .select('display_round, display_step, display_updated_at, display_follow, display_follow_at, display_cmd, display_cmd_at')
       .eq('id', contestId)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -25,6 +25,8 @@ export async function GET(_req: Request, ctx: RouteCtx) {
       updatedAt: data?.display_updated_at ?? null,
       follow: data?.display_follow ?? false,
       followAt: data?.display_follow_at ?? null,
+      cmd: data?.display_cmd ?? null,
+      cmdAt: data?.display_cmd_at ?? null,
     });
   } catch (e) {
     return mapError(e);

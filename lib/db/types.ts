@@ -97,6 +97,10 @@ export interface ContestRow {
   display_follow: boolean;
   /** 따라가기 스위치 마지막 토글 시각(ISO). 프로젝터가 원격 지시 감지에 사용. */
   display_follow_at: string | null;
+  /** MC 원격 명령 — 'refresh' | 'video:play' | 'video:pause'. null=없음. */
+  display_cmd: string | null;
+  /** 원격 명령 발행 시각(ISO). 같은 명령 재발행을 구분해 프로젝터가 다시 실행한다. */
+  display_cmd_at: string | null;
   created_at: string;
   updated_at: string;
 }

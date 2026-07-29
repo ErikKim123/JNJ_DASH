@@ -7,7 +7,13 @@ import { forwardRef, memo, useEffect, useLayoutEffect, useMemo, useRef, useState
 import type { RoundKey, StepKey, StepDataPayload } from '@/lib/sheets/types';
 import { getTemplate } from '@/lib/templates/registry';
 import { ScalingFrame } from '@/components/ui/ScalingFrame';
-import { resolveVideoSrc, youTubeEmbedUrl, VIDEO_RECT_PCT } from '@/lib/templates/shared/judgesVideo';
+import { resolveVideoSrc, youTubeEmbedUrl, postYouTubeCommand, VIDEO_RECT_PCT } from '@/lib/templates/shared/judgesVideo';
+
+/** MC 콘솔이 원격으로 보낸 영상 재생 명령. seq 가 바뀔 때마다 1회 실행된다. */
+export interface VideoCommand {
+  action: 'play' | 'pause';
+  seq: number;
+}
 
 export interface TemplateRendererProps {
   templateId: number;
@@ -19,6 +25,8 @@ export interface TemplateRendererProps {
   backgroundOverride?: string;
   /** 커스텀 배경 투명도 (0-100). 미지정 시 100. */
   backgroundOpacity?: number;
+  /** MC 원격 영상 명령 — VIDEO 스텝 플레이어를 재생/일시정지. */
+  videoCommand?: VideoCommand | null;
 }
 
 // 결승 Result 발표 순서: 팔로워 3 → 리더 3 → 팔로워 2 → 리더 2 → 팔로워 1 → 리더 1
@@ -40,7 +48,7 @@ const SvgHost = memo(
   })
 );
 
-export function TemplateRenderer({ templateId, round, step, data, fit = 'width', backgroundOverride, backgroundOpacity }: TemplateRendererProps) {
+export function TemplateRenderer({ templateId, round, step, data, fit = 'width', backgroundOverride, backgroundOpacity, videoCommand }: TemplateRendererProps) {
   const template = getTemplate(templateId);
   // svg 문자열을 메모이즈 — data/round/step/배경 override/opacity 가 같으면 이전 결과 재사용
   const svg = useMemo(
@@ -61,6 +69,8 @@ export function TemplateRenderer({ templateId, round, step, data, fit = 'width',
   const hasJudgesOverlay = Boolean(judgesYouTubeEmbed || judgesVideoSrc);
 
   const wrapRef = useRef<HTMLDivElement>(null);
+  const ytRef = useRef<HTMLIFrameElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   // 발표된 ID 집합 — monotonic
   const [revealed, setRevealed] = useState<Set<RevealId>>(() => new Set());
   // 이미 keyframe 애니메이션이 트리거된 ID — 다시 추가하지 않음(재재생 방지)
@@ -90,6 +100,30 @@ export function TemplateRenderer({ templateId, round, step, data, fit = 'width',
       inner.remove();
     }
   }, [hasJudgesOverlay, svg]);
+
+  // MC 원격 영상 명령 — seq 가 바뀔 때마다 현재 오버레이 플레이어에 재생/일시정지를 적용.
+  // YouTube 는 IFrame API postMessage, 직접 영상은 <video> 메서드.
+  const lastVideoSeq = useRef<number | null>(null);
+  useEffect(() => {
+    if (!videoCommand || videoCommand.seq === lastVideoSeq.current) return;
+    // 아직 플레이어가 없으면(스텝 전환 직후 데이터 로딩 중 등) 명령을 소비하지 않고 둔다.
+    // 오버레이가 뜨면 이 effect 가 다시 돌아 그때 적용된다.
+    if (!hasJudgesOverlay) return;
+    lastVideoSeq.current = videoCommand.seq;
+    const play = videoCommand.action === 'play';
+    const apply = () => {
+      if (ytRef.current) {
+        postYouTubeCommand(ytRef.current, play ? 'playVideo' : 'pauseVideo');
+      } else if (videoRef.current) {
+        if (play) void videoRef.current.play().catch(() => { /* 자동재생 차단 시 무시 */ });
+        else videoRef.current.pause();
+      }
+    };
+    apply();
+    // iframe 이 막 마운트된 직후엔 YouTube 플레이어가 아직 명령을 받지 못한다 — 한 번 더 시도.
+    const t = setTimeout(apply, 1200);
+    return () => clearTimeout(t);
+  }, [videoCommand, hasJudgesOverlay]);
 
   // Ceremony — .jnj-sakura 클래스에 active 토글 적용
   useLayoutEffect(() => {
@@ -184,6 +218,7 @@ export function TemplateRenderer({ templateId, round, step, data, fit = 'width',
           // YouTube 링크 — foreignObject 영상과 동일한 1280×720 좌표(비율)로 iframe 임베드.
           <iframe
             key={judgesYouTubeEmbed}
+            ref={ytRef}
             src={judgesYouTubeEmbed}
             title="Judge Introduction Video"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -202,6 +237,7 @@ export function TemplateRenderer({ templateId, round, step, data, fit = 'width',
           // 직접 영상 URL(mp4 등) — 소리가 나오는 실제 <video> 오버레이.
           <video
             key={judgesVideoSrc}
+            ref={videoRef}
             src={judgesVideoSrc}
             controls
             playsInline

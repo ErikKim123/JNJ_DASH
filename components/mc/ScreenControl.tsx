@@ -45,6 +45,35 @@ export function ScreenControl({
 
   const onRound = (r: RoundKey) => push(r, STEPS_BY_ROUND[r][0]);
 
+  const onVideoStep = round === 'prelim' && step === 'judgesVideo';
+
+  // 영상 재생/일시정지 — 표출이 VIDEO 스텝이 아니면 스텝 이동을 같은 요청에 실어 보낸다.
+  // 표출은 한 번의 폴링에서 포인터를 먼저 적용하고 명령을 실행하므로 한 탭으로 "띄우고 재생".
+  const video = async (action: 'play' | 'pause') => {
+    const play = action === 'play';
+    const jump = play && !onVideoStep;
+    if (jump) {
+      setRound('prelim');
+      setStep('judgesVideo');
+    }
+    setPending(true);
+    setError(null);
+    try {
+      await adminFetch(`/api/admin/contests/${encodeURIComponent(contestId)}/display-state`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cmd: play ? 'video:play' : 'video:pause',
+          ...(jump ? { round: 'prelim', step: 'judgesVideo' } : {}),
+        }),
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setPending(false);
+    }
+  };
+
   const idx = steps.indexOf(step);
   const goPrev = () => idx > 0 && push(round, steps[idx - 1]);
   const goNext = () => idx >= 0 && idx < steps.length - 1 && push(round, steps[idx + 1]);
@@ -107,9 +136,8 @@ export function ScreenControl({
           {steps.map((s) => {
             const active = s === step;
             const isLive = s === 'live';
-            return (
+            const stepBtn = (
               <button
-                key={s}
                 type="button"
                 onClick={() => push(round, s)}
                 className={`min-h-[46px] rounded-lg border px-2 text-[11px] font-semibold tracking-wide transition ${
@@ -118,13 +146,57 @@ export function ScreenControl({
                       ? 'bg-danger text-white border-danger'
                       : 'bg-accent text-[#1A1612] border-accent'
                     : 'bg-bg2 text-ink2 border-border active:text-ink'
-                }`}
+                } ${s === 'judgesVideo' ? 'flex-1 min-w-0' : 'w-full'}`}
               >
                 {stepLabel(s, steps)}
               </button>
             );
+            // VIDEO 스텝은 옆에 ▶ 재생 버튼 — 표출의 영상 플레이어를 원격으로 시작한다.
+            if (s === 'judgesVideo') {
+              return (
+                <div key={s} className="flex gap-1">
+                  {stepBtn}
+                  <button
+                    type="button"
+                    onClick={() => video('play')}
+                    disabled={pending}
+                    aria-label="표출 영상 재생"
+                    title="표출 영상 재생"
+                    className="min-h-[46px] w-11 shrink-0 rounded-lg border border-ok/50 bg-ok/15 text-ok text-sm active:bg-ok/30 disabled:opacity-40"
+                  >
+                    ▶
+                  </button>
+                </div>
+              );
+            }
+            return <div key={s} className="flex">{stepBtn}</div>;
           })}
         </div>
+
+        {/* VIDEO 스텝 표출 중 — 재생/일시정지 원격 제어 */}
+        {onVideoStep && (
+          <div className="mt-3 border-t border-border pt-3">
+            <p className="text-[10px] text-ink2 mb-2">표출 영상 / VIDEO</p>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => video('play')}
+                disabled={pending}
+                className="min-h-[48px] rounded-xl border border-ok/50 bg-ok/15 text-ok text-sm font-semibold active:bg-ok/30 disabled:opacity-40"
+              >
+                ▶ 재생
+              </button>
+              <button
+                type="button"
+                onClick={() => video('pause')}
+                disabled={pending}
+                className="min-h-[48px] rounded-xl border border-border bg-panel text-ink text-sm font-semibold active:bg-bg2 disabled:opacity-40"
+              >
+                ⏸ 일시정지
+              </button>
+            </div>
+          </div>
+        )}
       </Card>
     </>
   );
