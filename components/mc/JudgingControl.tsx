@@ -75,6 +75,13 @@ export function JudgingControl({ contestId, round }: { contestId: string; round:
       return '확정 취소 완료';
     });
 
+  // 조회 — 서버의 현재 순위·동점 후보를 다시 읽어 반영.
+  const refresh = () =>
+    run(async () => {
+      await load();
+      return '조회 완료 — 최신 순위를 불러왔습니다';
+    });
+
   if (!data) {
     return <Card title="심사 순위">{error ? <StatusLine tone="danger">{error}</StatusLine> : <p className="text-sm text-ink2">불러오는 중…</p>}</Card>;
   }
@@ -84,7 +91,7 @@ export function JudgingControl({ contestId, round }: { contestId: string; round:
       <Card
         title={`심사 순위 · 정원 역할별 ${data.maxPerRole}`}
         right={
-          <button type="button" onClick={() => load().catch(() => {})} className="text-[11px] text-accent font-mono active:opacity-60">
+          <button type="button" onClick={refresh} disabled={pending} className="text-[11px] text-accent font-mono active:opacity-60 disabled:opacity-40">
             ↻ 조회
           </button>
         }
@@ -143,6 +150,10 @@ export function JudgingControl({ contestId, round }: { contestId: string; round:
             확정 취소 (Uncommit)
           </Btn>
         )}
+        {/* 조회 — 순위·동점 후보 새로고침 */}
+        <Btn variant="ghost" onClick={refresh} disabled={pending}>
+          ↻ 조회하기 (순위 새로고침)
+        </Btn>
       </div>
 
       {pending && <StatusLine>처리 중…</StatusLine>}

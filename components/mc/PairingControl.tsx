@@ -31,10 +31,24 @@ export function PairingControl({ contestId, round }: { contestId: string; round:
       return doneMsg;
     });
 
+  // 조회 — 서버의 현재 패어링을 다시 읽어 목록에 반영.
+  const refresh = () =>
+    run(async () => {
+      await load();
+      return '조회 완료 — 최신 패어링을 불러왔습니다';
+    });
+
   return (
     <Card
       title={`패어링 · ${status === 'confirmed' ? '확정됨' : status === 'draft' ? '초안' : '없음'}`}
-      right={<span className="text-[10px] text-ink2">{rows ? `${rows.length}페어` : '…'}</span>}
+      right={
+        <span className="flex items-center gap-3">
+          <span className="text-[10px] text-ink2">{rows ? `${rows.length}페어` : '…'}</span>
+          <button type="button" onClick={refresh} disabled={pending} className="text-[11px] text-accent font-mono active:opacity-60 disabled:opacity-40">
+            ↻ 조회
+          </button>
+        </span>
+      }
     >
       <div className="grid grid-cols-1 gap-2">
         {status !== 'confirmed' ? (
@@ -58,6 +72,11 @@ export function PairingControl({ contestId, round }: { contestId: string; round:
       {pending && <StatusLine>처리 중…</StatusLine>}
       {message && !error && <StatusLine tone="ok">{message}</StatusLine>}
       {error && <StatusLine tone="danger">{error}</StatusLine>}
+
+      {/* 조회 — 패어링 목록 새로고침 */}
+      <Btn variant="ghost" onClick={refresh} disabled={pending} className="mt-2 w-full">
+        ↻ 조회하기 (패어링 새로고침)
+      </Btn>
 
       {/* 페어 미리보기 */}
       {rows && rows.length > 0 && (
