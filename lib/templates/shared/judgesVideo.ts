@@ -115,9 +115,13 @@ export function youTubeEmbedUrl(raw: string): string | null {
 }
 
 /** YouTube iframe 에 IFrame API 명령을 postMessage 로 보낸다(enablejsapi=1 필요). */
-export function postYouTubeCommand(iframe: HTMLIFrameElement | null, func: 'playVideo' | 'pauseVideo') {
+export function postYouTubeCommand(
+  iframe: HTMLIFrameElement | null,
+  func: 'playVideo' | 'pauseVideo' | 'seekTo',
+  args: unknown[] = []
+) {
   iframe?.contentWindow?.postMessage(
-    JSON.stringify({ event: 'command', func, args: [] }),
+    JSON.stringify({ event: 'command', func, args }),
     'https://www.youtube.com'
   );
 }

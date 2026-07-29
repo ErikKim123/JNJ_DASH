@@ -4,6 +4,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import type { RoundKey, StepKey } from '@/lib/sheets/types';
+import type { ExtraVideos } from '@/lib/contest/extraVideos';
 import { ScreenControl } from './ScreenControl';
 import { RoundControl } from './RoundControl';
 import { FinalControl } from './FinalControl';
@@ -24,12 +25,15 @@ export function MCConsole({
   initialRound,
   initialStep,
   initialFollow,
+  extraVideos,
 }: {
   contestId: string;
   contestName: string;
   initialRound: RoundKey | null;
   initialStep: StepKey | null;
   initialFollow: boolean;
+  /** 라운드별 추가 영상 3칸 — 표출 오버레이를 MC 가 원격으로 띄우는 데 사용. */
+  extraVideos: ExtraVideos;
 }) {
   const [tab, setTab] = useState<Tab>('screen');
 
@@ -57,7 +61,12 @@ export function MCConsole({
       {/* 본문 — 하단 탭바 높이만큼 패딩 */}
       <main className="px-4 py-4 pb-28 space-y-4 max-w-md mx-auto">
         {tab === 'screen' && (
-          <ScreenControl contestId={contestId} initialRound={initialRound} initialStep={initialStep} />
+          <ScreenControl
+            contestId={contestId}
+            initialRound={initialRound}
+            initialStep={initialStep}
+            extraVideos={extraVideos}
+          />
         )}
         {tab === 'prelim' && <RoundControl contestId={contestId} round="prelim" />}
         {tab === 'semi' && <RoundControl contestId={contestId} round="semi" />}

@@ -1,19 +1,23 @@
 // MC 화면전환 — 라운드/스텝을 탭하면 공유 표출 포인터를 기록하고 프로젝터가 따라감. (요구 0·1)
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ROUND_KEYS, STEPS_BY_ROUND, type RoundKey, type StepKey } from '@/lib/sheets/types';
+import type { ExtraVideos } from '@/lib/contest/extraVideos';
+import { FINAL_REVEAL_ORDER, REVEAL_LABEL } from '@/lib/display/reveal';
 import { ROUND_LABEL, stepLabel } from './labels';
-import { Card, StatusLine, adminFetch } from './ui';
+import { Card, StatusLine, adminFetch, sendDisplayCmd } from './ui';
 
 export function ScreenControl({
   contestId,
   initialRound,
   initialStep,
+  extraVideos,
 }: {
   contestId: string;
   initialRound: RoundKey | null;
   initialStep: StepKey | null;
+  extraVideos: ExtraVideos;
 }) {
   const [round, setRound] = useState<RoundKey>(initialRound ?? 'prelim');
   const [step, setStep] = useState<StepKey>(initialStep ?? 'prep');
@@ -47,11 +51,10 @@ export function ScreenControl({
 
   const onVideoStep = round === 'prelim' && step === 'judgesVideo';
 
-  // 영상 재생/일시정지 — 표출이 VIDEO 스텝이 아니면 스텝 이동을 같은 요청에 실어 보낸다.
+  // 영상 재생/일시정지/처음부터 — 표출이 VIDEO 스텝이 아니면 스텝 이동을 같은 요청에 실어 보낸다.
   // 표출은 한 번의 폴링에서 포인터를 먼저 적용하고 명령을 실행하므로 한 탭으로 "띄우고 재생".
-  const video = async (action: 'play' | 'pause') => {
-    const play = action === 'play';
-    const jump = play && !onVideoStep;
+  const video = async (action: 'play' | 'pause' | 'restart') => {
+    const jump = action !== 'pause' && !onVideoStep;
     if (jump) {
       setRound('prelim');
       setStep('judgesVideo');
@@ -63,12 +66,53 @@ export function ScreenControl({
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          cmd: play ? 'video:play' : 'video:pause',
+          cmd: `video:${action}`,
           ...(jump ? { round: 'prelim', step: 'judgesVideo' } : {}),
         }),
       });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setPending(false);
+    }
+  };
+
+  // 현재 라운드의 추가 영상(표출 오른쪽 위 VIDEO 1·2·3 오버레이) — 채워진 칸만 노출.
+  const overlaySlots = (extraVideos[round] ?? [])
+    .map((url, i) => ({ n: i + 1, filled: Boolean(url.trim()) }))
+    .filter((v) => v.filled);
+
+  const overlay = async (cmd: 'overlay:1' | 'overlay:2' | 'overlay:3' | 'overlay:close') => {
+    setPending(true);
+    setError(null);
+    try {
+      await sendDisplayCmd(contestId, cmd);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setPending(false);
+    }
+  };
+
+  // 결승 RESULT — 표출은 클릭할 때마다 한 자리씩 발표한다. MC 가 그 클릭을 원격으로 대신한다.
+  // 발표 수는 MC 쪽 로컬 카운터(표출 상태를 되읽지 않음) — 스텝을 벗어나면 0 으로 초기화.
+  const onFinalResult = round === 'final' && step === 'result';
+  const [revealCount, setRevealCount] = useState(0);
+  useEffect(() => {
+    if (!onFinalResult) setRevealCount(0);
+  }, [onFinalResult]);
+
+  const reveal = async (action: 'next' | 'reset') => {
+    if (action === 'next' && revealCount >= FINAL_REVEAL_ORDER.length) return;
+    setRevealCount((c) => (action === 'next' ? c + 1 : 0));
+    setPending(true);
+    setError(null);
+    try {
+      await sendDisplayCmd(contestId, action === 'next' ? 'reveal:next' : 'reveal:reset');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      // 실패했으면 카운터를 되돌린다.
+      setRevealCount((c) => (action === 'next' ? Math.max(0, c - 1) : c));
     } finally {
       setPending(false);
     }
@@ -177,12 +221,22 @@ export function ScreenControl({
         {onVideoStep && (
           <div className="mt-3 border-t border-border pt-3">
             <p className="text-[10px] text-ink2 mb-2">표출 영상 / VIDEO</p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => video('restart')}
+                disabled={pending}
+                aria-label="처음부터 재생"
+                title="처음부터 재생"
+                className="min-h-[48px] w-12 shrink-0 rounded-xl border border-border bg-panel text-ink text-sm font-semibold active:bg-bg2 disabled:opacity-40"
+              >
+                ⏮
+              </button>
               <button
                 type="button"
                 onClick={() => video('play')}
                 disabled={pending}
-                className="min-h-[48px] rounded-xl border border-ok/50 bg-ok/15 text-ok text-sm font-semibold active:bg-ok/30 disabled:opacity-40"
+                className="flex-1 min-h-[48px] rounded-xl border border-ok/50 bg-ok/15 text-ok text-sm font-semibold active:bg-ok/30 disabled:opacity-40"
               >
                 ▶ 재생
               </button>
@@ -190,7 +244,7 @@ export function ScreenControl({
                 type="button"
                 onClick={() => video('pause')}
                 disabled={pending}
-                className="min-h-[48px] rounded-xl border border-border bg-panel text-ink text-sm font-semibold active:bg-bg2 disabled:opacity-40"
+                className="flex-1 min-h-[48px] rounded-xl border border-border bg-panel text-ink text-sm font-semibold active:bg-bg2 disabled:opacity-40"
               >
                 ⏸ 일시정지
               </button>
@@ -198,6 +252,97 @@ export function ScreenControl({
           </div>
         )}
       </Card>
+
+      {/* 결승 RESULT 발표 — 표출 화면 클릭을 원격으로 대신한다. */}
+      {onFinalResult && (
+        <Card
+          title="결승 발표 / Reveal"
+          right={
+            <span className="text-[10px] font-mono text-ink2">
+              {revealCount} / {FINAL_REVEAL_ORDER.length}
+            </span>
+          }
+        >
+          <p className="text-center text-sm mb-3">
+            {revealCount < FINAL_REVEAL_ORDER.length ? (
+              <>
+                <span className="text-ink2 text-xs">다음 발표 · </span>
+                <span className="text-accent font-semibold">
+                  {REVEAL_LABEL[FINAL_REVEAL_ORDER[revealCount]]}
+                </span>
+              </>
+            ) : (
+              <span className="text-ok font-semibold">발표 완료</span>
+            )}
+          </p>
+          <div className="grid grid-cols-1 gap-2">
+            <button
+              type="button"
+              onClick={() => reveal('next')}
+              disabled={pending || revealCount >= FINAL_REVEAL_ORDER.length}
+              className="min-h-[56px] rounded-xl border border-accent bg-accent text-[#1A1612] text-sm font-semibold tracking-wide active:bg-accent2 disabled:opacity-40"
+            >
+              ▶ 다음 발표
+            </button>
+            <button
+              type="button"
+              onClick={() => reveal('reset')}
+              disabled={pending || revealCount === 0}
+              className="min-h-[48px] rounded-xl border border-danger/50 bg-danger/15 text-danger text-sm font-semibold active:bg-danger/25 disabled:opacity-40"
+            >
+              ↻ 처음부터 (발표 초기화)
+            </button>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {FINAL_REVEAL_ORDER.map((id, i) => (
+              <span
+                key={id}
+                className={`rounded px-2 py-1 text-[10px] font-semibold border ${
+                  i < revealCount
+                    ? 'bg-ok/15 text-ok border-ok/40'
+                    : 'bg-bg2 text-ink2 border-border'
+                }`}
+              >
+                {REVEAL_LABEL[id]}
+              </span>
+            ))}
+          </div>
+          <p className="text-[10px] text-ink2 mt-2">
+            잘못 눌렀으면 초기화 후 다시 진행하세요 · 표출에서 직접 클릭해도 동일하게 발표됩니다
+          </p>
+        </Card>
+      )}
+
+      {/* 라운드별 추가 영상 — 표출 오른쪽 위 VIDEO 1·2·3 오버레이를 원격으로 띄우고 닫는다. */}
+      {overlaySlots.length > 0 && (
+        <Card
+          title={`추가 영상 / Video · ${ROUND_LABEL[round].ko}`}
+          right={<span className="text-[10px] text-ink2">{overlaySlots.length}개</span>}
+        >
+          <div className="grid grid-cols-3 gap-2">
+            {overlaySlots.map((v) => (
+              <button
+                key={v.n}
+                type="button"
+                onClick={() => overlay(`overlay:${v.n}` as 'overlay:1' | 'overlay:2' | 'overlay:3')}
+                disabled={pending}
+                className="min-h-[52px] rounded-xl border border-accent2/60 bg-bg2 text-xs font-mono font-semibold tracking-widest text-accent active:bg-accent2 active:text-bg disabled:opacity-40"
+              >
+                ▶ VIDEO {v.n}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => overlay('overlay:close')}
+            disabled={pending}
+            className="mt-2 w-full min-h-[44px] rounded-xl border border-border bg-panel text-ink2 text-xs font-semibold active:bg-bg2 active:text-ink disabled:opacity-40"
+          >
+            ✕ 영상 닫기
+          </button>
+          <p className="text-[10px] text-ink2 mt-2">전체화면 오버레이로 재생됩니다 · 표출에서 Esc 로도 닫힘</p>
+        </Card>
+      )}
     </>
   );
 }

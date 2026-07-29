@@ -3,12 +3,12 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ContestMeta, RoundKey, StepKey } from '@/lib/sheets/types';
 import { ROUND_KEYS, STEP_KEYS } from '@/lib/sheets/types';
 import { useSheetPoll } from '@/hooks/useSheetPoll';
 import { useDisplayFollow } from '@/hooks/useDisplayFollow';
-import { TemplateRenderer, type VideoCommand } from '@/components/templates/TemplateRenderer';
+import { TemplateRenderer, type VideoCommand, type RevealCommand } from '@/components/templates/TemplateRenderer';
 import type { DisplayCommand } from '@/lib/display/commands';
 import { RoundNav } from './RoundNav';
 import { StepNav } from './StepNav';
@@ -60,6 +60,9 @@ export function DashboardShell({
   const videoButtons = roundVideos
     .map((url, i) => ({ url, n: i + 1 }))
     .filter((v) => v.url);
+  // MC 원격 명령 콜백에서 최신 목록을 참조하기 위한 ref (렌더마다 새 배열이라 deps 로 못 씀).
+  const roundVideosRef = useRef(roundVideos);
+  roundVideosRef.current = roundVideos;
 
   const renderVideoButtons = (variant: 'normal' | 'fs') =>
     videoButtons.length ? (
@@ -166,13 +169,29 @@ export function DashboardShell({
   // MC 원격 명령 — 조회는 이 화면의 "조회 / Refresh" 와 동일 동작,
   // 영상 재생/일시정지는 VIDEO 스텝 플레이어로 전달(seq 증가로 매번 재실행).
   const [videoCommand, setVideoCommand] = useState<VideoCommand | null>(null);
+  const [revealCommand, setRevealCommand] = useState<RevealCommand | null>(null);
   const onMcCommand = useCallback(
     (cmd: DisplayCommand) => {
       if (cmd === 'refresh') {
         onRefreshAll();
         return;
       }
-      const action = cmd === 'video:play' ? 'play' : 'pause';
+      if (cmd === 'overlay:close') {
+        setOverlayUrl(null);
+        return;
+      }
+      if (cmd === 'reveal:next' || cmd === 'reveal:reset') {
+        const action = cmd === 'reveal:next' ? 'next' : 'reset';
+        setRevealCommand((prev) => ({ action, seq: (prev?.seq ?? 0) + 1 }));
+        return;
+      }
+      if (cmd.startsWith('overlay:')) {
+        // 현재 라운드의 추가 영상 N번 — 비어 있으면 아무 것도 하지 않는다.
+        const url = roundVideosRef.current[Number(cmd.slice('overlay:'.length)) - 1];
+        if (url) setOverlayUrl(url);
+        return;
+      }
+      const action = cmd === 'video:play' ? 'play' : cmd === 'video:pause' ? 'pause' : 'restart';
       setVideoCommand((prev) => ({ action, seq: (prev?.seq ?? 0) + 1 }));
     },
     [onRefreshAll]
@@ -285,6 +304,7 @@ export function DashboardShell({
             backgroundOverride={meta.backgroundImage}
             backgroundOpacity={meta.backgroundOpacity}
             videoCommand={videoCommand}
+            revealCommand={revealCommand}
           />
         ) : (
           <div className="text-center text-sm text-ink2">로딩 중…</div>
@@ -460,6 +480,7 @@ export function DashboardShell({
             backgroundOverride={meta.backgroundImage}
             backgroundOpacity={meta.backgroundOpacity}
             videoCommand={videoCommand}
+            revealCommand={revealCommand}
           />
         )}
       </section>

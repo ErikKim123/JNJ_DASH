@@ -2,8 +2,8 @@
 // YouTube 링크면 iframe 임베드(autoplay), 그 외 URL 이면 <video> 로 재생.
 'use client';
 
-import { useEffect } from 'react';
-import { resolveVideoSrc, youTubeEmbedUrl } from '@/lib/templates/shared/judgesVideo';
+import { useEffect, useRef } from 'react';
+import { resolveVideoSrc, youTubeEmbedUrl, postYouTubeCommand } from '@/lib/templates/shared/judgesVideo';
 
 export function VideoOverlay({ url, onClose }: { url: string; onClose: () => void }) {
   // Esc 로 닫기.
@@ -21,6 +21,15 @@ export function VideoOverlay({ url, onClose }: { url: string; onClose: () => voi
   }, [onClose]);
 
   const embed = youTubeEmbedUrl(url);
+
+  // MC 원격으로 열린 경우엔 사용자 클릭이 없어 autoplay 파라미터만으로는 안 걸릴 수 있다.
+  // 플레이어가 준비될 즈음 재생 명령을 한 번 더 밀어 넣는다.
+  const ytRef = useRef<HTMLIFrameElement>(null);
+  useEffect(() => {
+    if (!embed) return;
+    const t = setTimeout(() => postYouTubeCommand(ytRef.current, 'playVideo'), 1200);
+    return () => clearTimeout(t);
+  }, [embed]);
 
   return (
     <div
@@ -43,6 +52,7 @@ export function VideoOverlay({ url, onClose }: { url: string; onClose: () => voi
         {embed ? (
           <iframe
             key={embed}
+            ref={ytRef}
             src={`${embed}&autoplay=1`}
             title="Video"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

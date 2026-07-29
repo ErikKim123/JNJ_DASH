@@ -2,6 +2,7 @@
 import { notFound } from 'next/navigation';
 import { getContest } from '@/lib/db/queries';
 import { MCConsole } from '@/components/mc/MCConsole';
+import { normalizeExtraVideos } from '@/lib/contest/extraVideos';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,6 +22,7 @@ export default async function McConsolePage({
       initialRound={contest.display_round}
       initialStep={contest.display_step}
       initialFollow={contest.display_follow ?? false}
+      extraVideos={normalizeExtraVideos(contest.extra_videos)}
     />
   );
 }

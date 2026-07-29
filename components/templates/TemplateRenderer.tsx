@@ -8,10 +8,17 @@ import type { RoundKey, StepKey, StepDataPayload } from '@/lib/sheets/types';
 import { getTemplate } from '@/lib/templates/registry';
 import { ScalingFrame } from '@/components/ui/ScalingFrame';
 import { resolveVideoSrc, youTubeEmbedUrl, postYouTubeCommand, VIDEO_RECT_PCT } from '@/lib/templates/shared/judgesVideo';
+import { FINAL_REVEAL_ORDER, type RevealId } from '@/lib/display/reveal';
+
+/** MC 콘솔이 원격으로 보낸 결승 발표 명령. seq 가 바뀔 때마다 1회 실행된다. */
+export interface RevealCommand {
+  action: 'next' | 'reset';
+  seq: number;
+}
 
 /** MC 콘솔이 원격으로 보낸 영상 재생 명령. seq 가 바뀔 때마다 1회 실행된다. */
 export interface VideoCommand {
-  action: 'play' | 'pause';
+  action: 'play' | 'pause' | 'restart';
   seq: number;
 }
 
@@ -27,11 +34,9 @@ export interface TemplateRendererProps {
   backgroundOpacity?: number;
   /** MC 원격 영상 명령 — VIDEO 스텝 플레이어를 재생/일시정지. */
   videoCommand?: VideoCommand | null;
+  /** MC 원격 발표 명령 — 결승 RESULT 다음 자리 발표 / 초기화. */
+  revealCommand?: RevealCommand | null;
 }
-
-// 결승 Result 발표 순서: 팔로워 3 → 리더 3 → 팔로워 2 → 리더 2 → 팔로워 1 → 리더 1
-const FINAL_REVEAL_ORDER = ['F-3', 'L-3', 'F-2', 'L-2', 'F-1', 'L-1'] as const;
-type RevealId = (typeof FINAL_REVEAL_ORDER)[number];
 
 // SVG host — svg 문자열이 바뀌지 않으면 절대 재렌더하지 않는다.
 // 이래야 클릭으로 reveal state만 변할 때 dangerouslySetInnerHTML이 DOM을 건드리지 않아
@@ -48,7 +53,7 @@ const SvgHost = memo(
   })
 );
 
-export function TemplateRenderer({ templateId, round, step, data, fit = 'width', backgroundOverride, backgroundOpacity, videoCommand }: TemplateRendererProps) {
+export function TemplateRenderer({ templateId, round, step, data, fit = 'width', backgroundOverride, backgroundOpacity, videoCommand, revealCommand }: TemplateRendererProps) {
   const template = getTemplate(templateId);
   // svg 문자열을 메모이즈 — data/round/step/배경 override/opacity 가 같으면 이전 결과 재사용
   const svg = useMemo(
@@ -110,13 +115,16 @@ export function TemplateRenderer({ templateId, round, step, data, fit = 'width',
     // 오버레이가 뜨면 이 effect 가 다시 돌아 그때 적용된다.
     if (!hasJudgesOverlay) return;
     lastVideoSeq.current = videoCommand.seq;
-    const play = videoCommand.action === 'play';
+    const { action } = videoCommand;
     const apply = () => {
       if (ytRef.current) {
-        postYouTubeCommand(ytRef.current, play ? 'playVideo' : 'pauseVideo');
+        // 처음으로: 0초로 되감고 이어서 재생.
+        if (action === 'restart') postYouTubeCommand(ytRef.current, 'seekTo', [0, true]);
+        postYouTubeCommand(ytRef.current, action === 'pause' ? 'pauseVideo' : 'playVideo');
       } else if (videoRef.current) {
-        if (play) void videoRef.current.play().catch(() => { /* 자동재생 차단 시 무시 */ });
-        else videoRef.current.pause();
+        if (action === 'restart') videoRef.current.currentTime = 0;
+        if (action === 'pause') videoRef.current.pause();
+        else void videoRef.current.play().catch(() => { /* 자동재생 차단 시 무시 */ });
       }
     };
     apply();
@@ -165,6 +173,28 @@ export function TemplateRenderer({ templateId, round, step, data, fit = 'width',
       return next;
     });
   };
+
+  // 발표 초기화 — 상태뿐 아니라 이미 DOM 에 붙은 revealed/reveal-anim 클래스와
+  // 인라인 opacity 도 걷어내야 화면이 실제로 처음 상태로 돌아간다.
+  const resetReveal = () => {
+    setRevealed(new Set());
+    animatedRef.current = new Set();
+    wrapRef.current?.querySelectorAll<SVGGElement>('[data-reveal-id]').forEach((el) => {
+      el.classList.remove('revealed', 'reveal-anim');
+      el.style.removeProperty('opacity');
+    });
+  };
+
+  // MC 원격 발표 명령 — 결승 RESULT 에서만 동작. seq 가 바뀔 때마다 1회 실행.
+  const lastRevealSeq = useRef<number | null>(null);
+  useEffect(() => {
+    if (!revealCommand || revealCommand.seq === lastRevealSeq.current) return;
+    if (!isFinalResult) return; // 아직 결승 RESULT 가 아니면 소비하지 않고 대기
+    lastRevealSeq.current = revealCommand.seq;
+    if (revealCommand.action === 'next') advanceReveal();
+    else resetReveal();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [revealCommand, isFinalResult]);
 
   // 키보드: Space / Enter 로 다음 자리 발표 (DashboardShell의 ←/→/1/2/3/F 와 충돌 안 함)
   useEffect(() => {
