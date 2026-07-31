@@ -4,6 +4,7 @@
 import { useRef, useState, useTransition, type ChangeEvent, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Field, Input, Select } from './ui';
+import { TemplatePicker } from './TemplatePicker';
 import { youTubeEmbedUrl } from '@/lib/templates/shared/judgesVideo';
 import {
   normalizeExtraVideos,
@@ -468,23 +469,16 @@ export function ContestForm({
           <Input type="date" value={form.period_end} onChange={(e) => update('period_end', e.target.value)} />
         </Field>
 
-        <Field label={t('cf.templateNumber')} hint={t('cf.templateNumberHint')}>
-          <Input
-            type="number"
-            min={1}
-            max={99}
-            value={form.design_template_number}
-            onChange={(e) => update('design_template_number', Number(e.target.value))}
-          />
-        </Field>
-        <Field label={t('cf.group')} hint={t('cf.groupHint')}>
-          <Input
-            value={form.group_name}
-            onChange={(e) => update('group_name', e.target.value)}
-            placeholder="JLCL"
-            maxLength={100}
-          />
-        </Field>
+        <div className="md:col-span-2">
+          <Field label={t('cf.group')} hint={t('cf.groupHint')}>
+            <Input
+              value={form.group_name}
+              onChange={(e) => update('group_name', e.target.value)}
+              placeholder="JLCL"
+              maxLength={100}
+            />
+          </Field>
+        </div>
 
         <Field label={t('cf.prelimQualifiers')}>
           <Input
@@ -512,6 +506,12 @@ export function ContestForm({
           <Input value={form.tagline} onChange={(e) => update('tagline', e.target.value)} />
         </Field>
       </div>
+
+      {/* 디자인 템플릿 — registry 등록 템플릿을 실시간 SVG 미리보기 카드로 선택 */}
+      <TemplatePicker
+        value={form.design_template_number}
+        onChange={(id) => update('design_template_number', id)}
+      />
 
       {/* 페어링 그룹(조) 설정 — 그룹당 커플 수. >0 이면 페어링 목록을 A·B·C 그룹으로 분할 표시 */}
       <section className="rounded border border-border bg-panel/40 p-4">

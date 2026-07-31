@@ -8,9 +8,42 @@
 // 헤더/타이틀/푸터 없이 영상만 거의 전체 화면(1280×720)으로 크게 표출.
 // video_url 이 비어있으면 점선 박스 + "영상 미설정" 안내를 표출.
 
+/** 프레임/안내 슬라이드 색·폰트 — 05/06 처럼 골드가 아닌 팔레트를 쓰는 템플릿용. */
+export interface JudgesVideoTheme {
+  /** 바깥 프레임 stroke (그라디언트 url 가능) */
+  frame: string;
+  /** 안쪽 얇은 보조 프레임 stroke */
+  frameSoft: string;
+  /** 안내 슬라이드 배경 */
+  emptyBg: string;
+  /** 안내 슬라이드 배경 불투명도 */
+  emptyBgOpacity: number;
+  /** 안내 문구(한글) fill */
+  emptyTitle: string;
+  /** 안내 문구(영문) fill */
+  emptyMeta: string;
+  titleFont: string;
+  metaFont: string;
+  italicMeta: boolean;
+}
+
+export const DEFAULT_JUDGES_VIDEO_THEME: JudgesVideoTheme = {
+  frame: 'url(#goldg)',
+  frameSoft: '#D4AF37',
+  emptyBg: '#0A0A0A',
+  emptyBgOpacity: 0.55,
+  emptyTitle: '#FFEBA0',
+  emptyMeta: '#D4AF37',
+  titleFont: "'Gulim', '굴림', 'Cormorant Garamond', Georgia, sans-serif",
+  metaFont: "'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif",
+  italicMeta: true,
+};
+
 export interface JudgesVideoLayoutOpts {
   /** 재생할 영상파일 URL. 빈 문자열이면 안내 슬라이드. */
   videoUrl: string;
+  /** 팔레트/폰트 덮어쓰기 — 지정한 키만 DEFAULT_JUDGES_VIDEO_THEME 를 대체. */
+  theme?: Partial<JudgesVideoTheme>;
 }
 
 /** 속성값(href/src)에 안전하게 인라인하기 위한 escape — xmlEscape 와 달리 따옴표까지 처리. */
@@ -29,34 +62,34 @@ const VIDEO_W = Math.round((VIDEO_H * 16) / 9); // 1067
 const VIDEO_X = Math.round((1280 - VIDEO_W) / 2); // 107
 const VIDEO_Y = Math.round((720 - VIDEO_H) / 2); // 60 (세로 중앙 유지)
 
-/** 골드 라운드 프레임 (영상/안내 박스 공통 테두리). */
-function goldFrame(): string {
+/** 라운드 프레임 (영상/안내 박스 공통 테두리). */
+function videoFrame(th: JudgesVideoTheme): string {
   return `
     <rect x="${VIDEO_X - 6}" y="${VIDEO_Y - 6}" width="${VIDEO_W + 12}" height="${VIDEO_H + 12}"
-          rx="14" fill="none" stroke="url(#goldg)" stroke-width="1.6" opacity="0.85"/>
+          rx="14" fill="none" stroke="${th.frame}" stroke-width="1.6" opacity="0.85"/>
     <rect x="${VIDEO_X - 2}" y="${VIDEO_Y - 2}" width="${VIDEO_W + 4}" height="${VIDEO_H + 4}"
-          rx="10" fill="none" stroke="#D4AF37" stroke-width="0.5" opacity="0.5"/>
+          rx="10" fill="none" stroke="${th.frameSoft}" stroke-width="0.5" opacity="0.5"/>
   `;
 }
 
 /** 영상 미설정 안내 슬라이드. */
-function emptyState(): string {
+function emptyState(th: JudgesVideoTheme): string {
   const cx = 640;
   const cy = VIDEO_Y + VIDEO_H / 2;
   return `
     <rect x="${VIDEO_X}" y="${VIDEO_Y}" width="${VIDEO_W}" height="${VIDEO_H}"
-          rx="10" fill="#0A0A0A" fill-opacity="0.55"
-          stroke="#D4AF37" stroke-width="1" stroke-dasharray="8 8" stroke-opacity="0.5"/>
-    <g transform="translate(${cx} ${cy - 40})" fill="none" stroke="url(#goldg)" stroke-width="2.4">
+          rx="10" fill="${th.emptyBg}" fill-opacity="${th.emptyBgOpacity}"
+          stroke="${th.frameSoft}" stroke-width="1" stroke-dasharray="8 8" stroke-opacity="0.5"/>
+    <g transform="translate(${cx} ${cy - 40})" fill="none" stroke="${th.frame}" stroke-width="2.4">
       <circle r="40" opacity="0.7"/>
-      <path d="M -13 -20 L 22 0 L -13 20 Z" fill="#D4AF37" stroke="none" opacity="0.85"/>
+      <path d="M -13 -20 L 22 0 L -13 20 Z" fill="${th.frameSoft}" stroke="none" opacity="0.85"/>
     </g>
     <text x="${cx}" y="${cy + 40}" text-anchor="middle"
-          font-family="'Gulim', '굴림', 'Cormorant Garamond', Georgia, sans-serif"
-          font-size="24" letter-spacing="2" fill="#FFEBA0" font-weight="700">영상이 설정되지 않았습니다</text>
+          font-family="${th.titleFont}"
+          font-size="24" letter-spacing="2" fill="${th.emptyTitle}" font-weight="700">영상이 설정되지 않았습니다</text>
     <text x="${cx}" y="${cy + 70}" text-anchor="middle"
-          font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif"
-          font-style="italic" font-size="16" fill="#D4AF37" opacity="0.8" letter-spacing="2">
+          font-family="${th.metaFont}"
+          ${th.italicMeta ? 'font-style="italic"' : ''} font-size="16" fill="${th.emptyMeta}" opacity="0.8" letter-spacing="2">
       Judge introduction video not set
     </text>
   `;
@@ -148,5 +181,6 @@ function videoPlayer(url: string): string {
  */
 export function judgesVideoContent(opts: JudgesVideoLayoutOpts): string {
   const url = (opts.videoUrl ?? '').trim();
-  return url ? `${goldFrame()}${videoPlayer(url)}` : emptyState();
+  const th: JudgesVideoTheme = { ...DEFAULT_JUDGES_VIDEO_THEME, ...(opts.theme ?? {}) };
+  return url ? `${videoFrame(th)}${videoPlayer(url)}` : emptyState(th);
 }

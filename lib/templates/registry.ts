@@ -4,11 +4,17 @@ import type { TemplateModule } from './types';
 import { Template01 } from './01';
 import { Template02 } from './02';
 import { Template03 } from './03';
+import { Template04 } from './04';
+import { Template05 } from './05';
+import { Template06 } from './06';
 
 export const TEMPLATES: Record<number, TemplateModule> = {
   1: Template01,
   2: Template02,
   3: Template03,
+  4: Template04,
+  5: Template05,
+  6: Template06,
 };
 
 export const DEFAULT_TEMPLATE_ID = 1;
