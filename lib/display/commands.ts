@@ -7,6 +7,8 @@
 //   overlay:close : 오버레이 닫기
 //   reveal:next   : 결승 RESULT 다음 자리 발표 (표출 클릭과 동일)
 //   reveal:reset  : 결승 RESULT 발표를 처음 상태로 되돌림
+//   pair:circle   : PAIRING 표출을 원형 배치로 전환 (표출의 "원형 배치" 버튼과 동일)
+//   pair:list     : PAIRING 표출을 목록 배치로 전환
 export const DISPLAY_COMMANDS = [
   'refresh',
   'video:play',
@@ -18,6 +20,8 @@ export const DISPLAY_COMMANDS = [
   'overlay:close',
   'reveal:next',
   'reveal:reset',
+  'pair:circle',
+  'pair:list',
 ] as const;
 
 export type DisplayCommand = (typeof DISPLAY_COMMANDS)[number];

@@ -118,6 +118,25 @@ export function ScreenControl({
     }
   };
 
+  // PAIRING 표출 레이아웃 — 표출의 "목록/원형 배치" 버튼을 원격으로 대신 누른다.
+  // 표출 상태를 되읽지 않으므로 MC 쪽 로컬 표시값만 갱신(마지막으로 보낸 명령 기준).
+  const onPairingStep = step === 'pairing' || step === 'pairingB' || step === 'pairingC';
+  const [pairCircle, setPairCircle] = useState(false);
+
+  const pairLayout = async (circle: boolean) => {
+    setPairCircle(circle);
+    setPending(true);
+    setError(null);
+    try {
+      await sendDisplayCmd(contestId, circle ? 'pair:circle' : 'pair:list');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      setPairCircle(!circle);
+    } finally {
+      setPending(false);
+    }
+  };
+
   const idx = steps.indexOf(step);
   const goPrev = () => idx > 0 && push(round, steps[idx - 1]);
   const goNext = () => idx >= 0 && idx < steps.length - 1 && push(round, steps[idx + 1]);
@@ -252,6 +271,41 @@ export function ScreenControl({
           </div>
         )}
       </Card>
+
+      {/* PAIRING 배치 — 표출의 목록/원형 배치 토글을 원격으로 전환한다. */}
+      {onPairingStep && (
+        <Card title={`페어링 배치 / Layout · ${stepLabel(step, steps)}`}>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => pairLayout(false)}
+              disabled={pending}
+              className={`min-h-[56px] rounded-xl border text-sm font-semibold tracking-wide transition disabled:opacity-40 ${
+                !pairCircle
+                  ? 'bg-accent text-[#1A1612] border-accent'
+                  : 'bg-bg2 text-ink2 border-border active:text-ink'
+              }`}
+            >
+              ▤ 목록 배치
+            </button>
+            <button
+              type="button"
+              onClick={() => pairLayout(true)}
+              disabled={pending}
+              className={`min-h-[56px] rounded-xl border text-sm font-semibold tracking-wide transition disabled:opacity-40 ${
+                pairCircle
+                  ? 'bg-accent text-[#1A1612] border-accent'
+                  : 'bg-bg2 text-ink2 border-border active:text-ink'
+              }`}
+            >
+              ◯ 원형 배치
+            </button>
+          </div>
+          <p className="text-[10px] text-ink2 mt-2">
+            표출 화면의 배치를 바꿉니다 · 표출에서 직접 눌러도 동일하게 전환됩니다
+          </p>
+        </Card>
+      )}
 
       {/* 결승 RESULT 발표 — 표출 화면 클릭을 원격으로 대신한다. */}
       {onFinalResult && (

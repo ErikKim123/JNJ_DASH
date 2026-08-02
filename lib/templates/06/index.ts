@@ -35,7 +35,7 @@ const REPORT_THEME = {
   italic: false,
 } as const;
 
-function selectSvg(round: RoundKey, _step: StepKey, data: StepDataPayload): string {
+function selectSvg(round: RoundKey, _step: StepKey, data: StepDataPayload, pairCircle = false): string {
   if (round === 'final') {
     switch (data.kind) {
       case 'prep':
@@ -69,7 +69,7 @@ function selectSvg(round: RoundKey, _step: StepKey, data: StepDataPayload): stri
     case 'judgesVideo':
       return judgesVideoSvg(data.data.video_url ?? '');
     case 'pairing':
-      return pickPairingSvg(data.data.pairs?.length ?? 0);
+      return pickPairingSvg(data.data.pairs?.length ?? 0, pairCircle);
     case 'open':
       return openSvg();
     case 'live':
@@ -106,7 +106,7 @@ export const Template06: TemplateModule = {
   id: 6,
   name: 'Ivory Gallery — 라이트 에디토리얼 (06)',
   render(round, step, data, opts) {
-    const svg = selectSvg(round, step, data);
+    const svg = selectSvg(round, step, data, opts?.pairCircle);
     const placeholders = flattenStepData(data);
     const filled = applyPlaceholders(svg, placeholders);
     return applyBackgroundOverride(filled, opts?.backgroundOverride, opts?.backgroundOpacity);

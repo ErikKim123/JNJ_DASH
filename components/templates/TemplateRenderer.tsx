@@ -36,6 +36,8 @@ export interface TemplateRendererProps {
   videoCommand?: VideoCommand | null;
   /** MC 원격 발표 명령 — 결승 RESULT 다음 자리 발표 / 초기화. */
   revealCommand?: RevealCommand | null;
+  /** PAIRING 스텝 — true 면 커플을 원(타원) 둘레에 배치. 미지정 시 목록 레이아웃. */
+  pairCircle?: boolean;
 }
 
 // SVG host — svg 문자열이 바뀌지 않으면 절대 재렌더하지 않는다.
@@ -53,12 +55,13 @@ const SvgHost = memo(
   })
 );
 
-export function TemplateRenderer({ templateId, round, step, data, fit = 'width', backgroundOverride, backgroundOpacity, videoCommand, revealCommand }: TemplateRendererProps) {
+export function TemplateRenderer({ templateId, round, step, data, fit = 'width', backgroundOverride, backgroundOpacity, videoCommand, revealCommand, pairCircle }: TemplateRendererProps) {
   const template = getTemplate(templateId);
-  // svg 문자열을 메모이즈 — data/round/step/배경 override/opacity 가 같으면 이전 결과 재사용
+  // svg 문자열을 메모이즈 — data/round/step/배경 override/opacity/페어 레이아웃이
+  // 같으면 이전 결과 재사용
   const svg = useMemo(
-    () => template.render(round, step, data, { backgroundOverride, backgroundOpacity }),
-    [template, round, step, data, backgroundOverride, backgroundOpacity]
+    () => template.render(round, step, data, { backgroundOverride, backgroundOpacity, pairCircle }),
+    [template, round, step, data, backgroundOverride, backgroundOpacity, pairCircle]
   );
 
   const isFinalResult = round === 'final' && step === 'result';

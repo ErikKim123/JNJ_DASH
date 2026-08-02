@@ -7,11 +7,63 @@ import {
   shell, topBar, footBar, hairline, metaLabel, panel,
   DISPLAY, MONO, INK, INK_SOFT, ACCENT, TEAL, LINE, CX, MX, RX,
 } from '../common';
+import { circlePairingLayout } from '../../shared/circlePairing';
 
 const TOP = 250;
 const BOTTOM = 574;
 
-export function pickPairingSvg(pairCount: number): string {
+/**
+ * 원형(타원) 배치 — 목록 대신 커플을 원 둘레에 놓는다.
+ * 06 도 번호만 쓰는 템플릿이라 원형에서도 L###/F### 코드만 표기한다.
+ */
+function renderCircle(pairCount: number): string {
+  const count = Math.max(1, Math.min(30, pairCount));
+  const L = circlePairingLayout(count, { band: [248, 580], withNames: false, ryScale: 1.3 });
+  const fs = L.fontSize;
+
+  const body = L.slots
+    .map(
+      (s) => `
+      <g opacity="0">
+        <animate attributeName="opacity" values="0;1" dur="0.4s" begin="${s.delay}s" fill="freeze"/>
+        <g transform="translate(${s.x} ${s.y})">
+          <text text-anchor="${s.anchor}" y="0" font-family="${MONO}" font-size="${fs}"
+            font-weight="700" letter-spacing="0.5" fill="${ACCENT}">L{{leader_num_${s.i}}}</text>
+          <text text-anchor="${s.anchor}" y="${L.lineH}" font-family="${MONO}" font-size="${fs}"
+            font-weight="700" letter-spacing="0.5" fill="${TEAL}">F{{follower_num_${s.i}}}</text>
+          <line x1="${s.flourishX1}" y1="${s.flourishY}" x2="${s.flourishX2}" y2="${s.flourishY}"
+            stroke="${LINE}" stroke-opacity="0.2" stroke-width="1"/>
+        </g>
+      </g>
+    `
+    )
+    .join('');
+
+  const centerMark = `
+    <g transform="translate(${L.cx} ${L.cy})" opacity="0">
+      <animate attributeName="opacity" values="0;1" dur="0.9s" begin="0s" fill="freeze"/>
+      <line x1="-28" y1="0" x2="28" y2="0" stroke="${ACCENT}" stroke-opacity="0.5" stroke-width="1"/>
+      ${metaLabel(0, 24, 'STAGE', { size: 12, tracking: 8, anchor: 'middle', fill: INK_SOFT })}
+    </g>
+  `;
+
+  return shell(`
+    ${topBar()}
+
+    ${metaLabel(CX, 166, '{{stage_label}}', { size: 13, tracking: 10 })}
+    <text x="${CX}" y="${212}" text-anchor="middle" font-family="${DISPLAY}" font-weight="700"
+      font-size="44" letter-spacing="4" fill="${INK}">{{round_title}}</text>
+    ${metaLabel(RX, 212, `${count} COUPLES`, { size: 12, tracking: 4, anchor: 'end', fill: INK_SOFT })}
+    ${hairline(232, MX, RX, 0.18)}
+
+    ${centerMark}
+    ${body}
+
+    ${footBar()}
+  `);
+}
+
+function renderList(pairCount: number): string {
   const count = Math.max(1, Math.min(25, pairCount));
   const cols = count <= 8 ? 1 : count <= 16 ? 2 : 3;
   const gap = 44;
@@ -60,4 +112,8 @@ export function pickPairingSvg(pairCount: number): string {
 
     ${footBar()}
   `);
+}
+
+export function pickPairingSvg(pairCount: number, pairCircle = false): string {
+  return pairCircle ? renderCircle(pairCount) : renderList(pairCount);
 }

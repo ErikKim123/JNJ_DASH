@@ -19,7 +19,7 @@ import { shell, topHeader } from './svg/common';
 import { renderReportSvg } from '../shared/reportSvg';
 
 // step 파라미터는 디버그/로깅 용도로만 유지 (선택)
-function selectSvg(round: RoundKey, _step: StepKey, data: StepDataPayload): string {
+function selectSvg(round: RoundKey, _step: StepKey, data: StepDataPayload, pairCircle = false): string {
   // Final round 전용 SVG (kind 기반 분기 — 데이터 형태와 일치)
   if (round === 'final') {
     switch (data.kind) {
@@ -56,7 +56,7 @@ function selectSvg(round: RoundKey, _step: StepKey, data: StepDataPayload): stri
     case 'judgesVideo':
       return judgesVideoSvg(data.data.video_url ?? '');
     case 'pairing':
-      return pickPairingSvg(data.data.pairs?.length ?? 0);
+      return pickPairingSvg(data.data.pairs?.length ?? 0, pairCircle);
     case 'open':
       return openSvg();
     case 'live':
@@ -95,7 +95,7 @@ export const Template01: TemplateModule = {
   id: 1,
   name: 'Jeju Bachata Art Deco',
   render(round, step, data, opts) {
-    const svg = selectSvg(round, step, data);
+    const svg = selectSvg(round, step, data, opts?.pairCircle);
     const placeholders = flattenStepData(data);
     const filled = applyPlaceholders(svg, placeholders);
     return applyBackgroundOverride(filled, opts?.backgroundOverride, opts?.backgroundOpacity);

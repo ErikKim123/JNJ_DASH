@@ -30,6 +30,11 @@ function parseStep(v: string | null): StepKey {
   return 'prep';
 }
 
+/** PAIRING 원형 배치 토글의 localStorage 키 — 브라우저(표출 PC) 단위로 유지. */
+const PAIR_CIRCLE_KEY = 'jnj:pairCircle';
+
+const PAIRING_STEPS: readonly StepKey[] = ['pairing', 'pairingB', 'pairingC'];
+
 export function DashboardShell({
   meta: initialMeta,
   templateId,
@@ -53,6 +58,37 @@ export function DashboardShell({
 
   // MC 따라가기 — ?follow=1 로 열면 기본 ON. 로컬 운영자가 토글로 끄면 수동 제어 복귀.
   const [followMc, setFollowMc] = useState(searchParams.get('follow') === '1');
+
+  // PAIRING 표출 레이아웃 — 목록(기본) ↔ 원형 배치 토글.
+  // 운영자 취향이라 브라우저에 기억시킨다(SSR/CSR 불일치 방지를 위해 마운트 후 로드).
+  const [pairCircle, setPairCircle] = useState(false);
+  useEffect(() => {
+    try {
+      setPairCircle(window.localStorage.getItem(PAIR_CIRCLE_KEY) === '1');
+    } catch {
+      // 스토리지 차단 환경 — 기본값(목록) 유지
+    }
+  }, []);
+  // MC 원격 명령은 값을 직접 지정하므로(pair:circle / pair:list) setter 를 분리해 둔다.
+  const applyPairCircle = useCallback((next: boolean) => {
+    setPairCircle(next);
+    try {
+      window.localStorage.setItem(PAIR_CIRCLE_KEY, next ? '1' : '0');
+    } catch {
+      // best-effort: 저장 실패해도 이번 세션에는 반영
+    }
+  }, []);
+  const togglePairCircle = useCallback(() => {
+    setPairCircle((v) => {
+      const next = !v;
+      try {
+        window.localStorage.setItem(PAIR_CIRCLE_KEY, next ? '1' : '0');
+      } catch {
+        // best-effort: 저장 실패해도 이번 세션에는 반영
+      }
+      return next;
+    });
+  }, []);
 
   // 라운드별 추가 영상 — 현재 라운드의 3칸 중 채워진 것만 버튼으로 노출. 클릭 시 오버레이.
   const [overlayUrl, setOverlayUrl] = useState<string | null>(null);
@@ -100,6 +136,8 @@ export function DashboardShell({
   const allowedSteps = meta.rounds[round].steps;
   const step: StepKey = allowedSteps.includes(requestedStep) ? requestedStep : allowedSteps[0];
   const isStepInvalidForRound = !allowedSteps.includes(requestedStep);
+  // 레이아웃 토글은 PAIRING 스텝에서만 의미가 있으므로 그때만 버튼을 노출.
+  const isPairingStep = PAIRING_STEPS.includes(step);
 
   const updateParams = useCallback(
     (next: { round?: RoundKey; step?: StepKey }) => {
@@ -180,6 +218,10 @@ export function DashboardShell({
         setOverlayUrl(null);
         return;
       }
+      if (cmd === 'pair:circle' || cmd === 'pair:list') {
+        applyPairCircle(cmd === 'pair:circle');
+        return;
+      }
       if (cmd === 'reveal:next' || cmd === 'reveal:reset') {
         const action = cmd === 'reveal:next' ? 'next' : 'reset';
         setRevealCommand((prev) => ({ action, seq: (prev?.seq ?? 0) + 1 }));
@@ -194,7 +236,7 @@ export function DashboardShell({
       const action = cmd === 'video:play' ? 'play' : cmd === 'video:pause' ? 'pause' : 'restart';
       setVideoCommand((prev) => ({ action, seq: (prev?.seq ?? 0) + 1 }));
     },
-    [onRefreshAll]
+    [onRefreshAll, applyPairCircle]
   );
 
   useDisplayFollow({
@@ -305,6 +347,7 @@ export function DashboardShell({
             backgroundOpacity={meta.backgroundOpacity}
             videoCommand={videoCommand}
             revealCommand={revealCommand}
+            pairCircle={pairCircle}
           />
         ) : (
           <div className="text-center text-sm text-ink2">로딩 중…</div>
@@ -330,6 +373,18 @@ export function DashboardShell({
           }`}
         >
           {renderVideoButtons('fs')}
+          {isPairingStep ? (
+            <button
+              type="button"
+              onClick={togglePairCircle}
+              title="원형 배치 ↔ 목록"
+              className={`px-2 py-1 rounded border text-[10px] font-mono tracking-widest transition-colors ${
+                pairCircle ? 'border-accent2 bg-accent2/20 text-accent' : 'border-border bg-panel text-ink2'
+              }`}
+            >
+              {pairCircle ? '◯ 원형' : '▤ 목록'}
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={onRefreshAll}
@@ -392,6 +447,20 @@ export function DashboardShell({
           </p>
         </div>
         <div className="flex items-center gap-3">
+          {isPairingStep ? (
+            <button
+              type="button"
+              onClick={togglePairCircle}
+              title="페어링 표출을 원형 배치 ↔ 목록으로 전환합니다. 이 브라우저에 설정이 기억됩니다."
+              className={`px-3 py-1.5 rounded border text-xs font-mono tracking-widest transition-colors ${
+                pairCircle
+                  ? 'border-accent2 bg-accent2/20 text-accent'
+                  : 'border-border bg-panel text-ink2 hover:text-ink'
+              }`}
+            >
+              {pairCircle ? '◯ 원형 배치' : '▤ 목록 배치'}
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={onRefreshAll}
@@ -481,6 +550,7 @@ export function DashboardShell({
             backgroundOpacity={meta.backgroundOpacity}
             videoCommand={videoCommand}
             revealCommand={revealCommand}
+            pairCircle={pairCircle}
           />
         )}
       </section>

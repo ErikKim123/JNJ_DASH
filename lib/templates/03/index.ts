@@ -18,7 +18,7 @@ import { ceremonySvg } from './svg/ceremony';
 import { shell, topHeader } from './svg/common';
 import { renderReportSvg } from '../shared/reportSvg';
 
-function selectSvg(round: RoundKey, _step: StepKey, data: StepDataPayload): string {
+function selectSvg(round: RoundKey, _step: StepKey, data: StepDataPayload, pairCircle = false): string {
   if (round === 'final') {
     switch (data.kind) {
       case 'prep':
@@ -52,7 +52,7 @@ function selectSvg(round: RoundKey, _step: StepKey, data: StepDataPayload): stri
     case 'judgesVideo':
       return judgesVideoSvg(data.data.video_url ?? '');
     case 'pairing':
-      return pickPairingSvg(data.data.pairs?.length ?? 0);
+      return pickPairingSvg(data.data.pairs?.length ?? 0, pairCircle);
     case 'open':
       return openSvg();
     case 'live':
@@ -95,7 +95,7 @@ export const Template03: TemplateModule = {
   id: 3,
   name: 'Jeju Latin Culture Festival (03)',
   render(round, step, data, opts) {
-    const svg = selectSvg(round, step, data);
+    const svg = selectSvg(round, step, data, opts?.pairCircle);
     const placeholders = flattenStepData(data);
     const filled = applyPlaceholders(svg, placeholders);
     return applyBackgroundOverride(filled, opts?.backgroundOverride, opts?.backgroundOpacity);

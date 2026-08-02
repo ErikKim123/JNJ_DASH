@@ -1,6 +1,63 @@
 // Design Ref: §11.1 #6 — Pairing 스크린 (예선 ≤25 / 본선 10 / 폴백 5)
 // 페어 수에 따라 레이아웃이 달라지므로 변형별 함수 분리
 import { shell, topHeader, citiesFooter } from './common';
+import { circlePairingLayout } from '../../shared/circlePairing';
+
+/**
+ * 원형(타원) 배치 PAIRING — 커플을 원 둘레에 늘어놓는 레이아웃.
+ * 대시보드의 "원형 / 목록" 토글이 켜졌을 때 목록 대신 이 화면을 그린다.
+ * 커플이 적으면(≤14) 번호+이름, 많으면 번호만 표기해 라벨이 겹치지 않게 한다.
+ */
+export function circlePairingSvg(pairCount: number): string {
+  const L = circlePairingLayout(pairCount, { band: [200, 636], ryScale: 1.3 });
+  const { fontSize: fs, lineH, withNames } = L;
+  const NAME_FONT = "'Gulim', '굴림', sans-serif";
+  const CODE_FONT = 'ui-monospace, monospace';
+
+  // 역할 코드(L119/F006) + 이름. 이름이 빠지는 밀도에서는 코드만 크게 남긴다.
+  function label(role: 'L' | 'F', i: number, color: string, nameColor: string): string {
+    const code = `<tspan font-family="${CODE_FONT}" font-size="${withNames ? (fs * 0.82).toFixed(1) : fs}" font-weight="700" letter-spacing="0.5" fill="${color}">${role}{{${role === 'L' ? 'leader' : 'follower'}_num_${i}}}</tspan>`;
+    if (!withNames) return code;
+    return `${code}<tspan dx="${(fs * 0.45).toFixed(1)}" font-family="${NAME_FONT}" font-size="${fs}" font-weight="700" fill="${nameColor}">{{${role === 'L' ? 'leader' : 'follower'}_${i}}}</tspan>`;
+  }
+
+  const body = L.slots
+    .map(
+      (s) => `
+      <g opacity="0">
+        <animate attributeName="opacity" values="0;1" dur="0.5s" begin="${s.delay}s" fill="freeze"/>
+        <g transform="translate(${s.x} ${s.y})">
+          <text text-anchor="${s.anchor}" y="0">${label('L', s.i, '#FFD56B', '#FFEBA0')}</text>
+          <text text-anchor="${s.anchor}" y="${lineH}">${label('F', s.i, '#D8DCE2', '#E8E6DA')}</text>
+          <line x1="${s.flourishX1}" y1="${s.flourishY}" x2="${s.flourishX2}" y2="${s.flourishY}" stroke="url(#goldgh)" stroke-width="0.7" opacity="0.75"/>
+        </g>
+      </g>
+    `
+    )
+    .join('');
+
+  // 가운데 워드마크 — 원 안쪽을 비워 두되 완전히 허전하지 않게.
+  const centerMark = `
+    <g transform="translate(${L.cx} ${L.cy})" opacity="0">
+      <animate attributeName="opacity" values="0;1" dur="0.9s" begin="0s" fill="freeze"/>
+      <text text-anchor="middle" y="-8" font-family="'Cormorant Garamond', Georgia, serif" font-size="22" letter-spacing="6" fill="#D4AF37" opacity="0.55">✦</text>
+      <line x1="-34" y1="10" x2="34" y2="10" stroke="url(#goldgh)" stroke-width="0.7" opacity="0.65"/>
+      <text text-anchor="middle" y="28" font-family="'Cormorant Garamond', Georgia, serif" font-style="italic" font-size="11" letter-spacing="5" fill="#D4AF37" opacity="0.55">stage</text>
+    </g>
+  `;
+
+  return shell(`
+    ${topHeader()}
+    <text x="640" y="146" text-anchor="middle" font-family="'Cinzel', 'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-weight="bold" font-size="36" letter-spacing="10" fill="url(#goldg)">{{round_title}}</text>
+    <text x="640" y="176" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Gulim', '굴림', serif" font-style="italic" font-size="15" letter-spacing="6" fill="#E8E6DA" opacity="0.85">{{stage_label}}</text>
+
+    ${centerMark}
+    ${body}
+
+    ${citiesFooter()}
+  `);
+}
+
 
 // 예선 — 2 columns × ceil(count/2) rows. 최대 30페어 지원(그룹당 ≤30 표출).
 // 중앙 PAIR 번호 배지는 제거(좌우 번호 배지로 충분), 행 높이는 페어 수에 맞춰 자동 축소.
@@ -193,7 +250,8 @@ export function pairingSvg5(): string {
  *   prelim = 11~25 pairs, semi = 10 pairs.
  *   그 외(예: 12) — 가장 가까운 변형으로 폴백 (≥11 → 예선 2열, 6~10 → 10, ≤5 → 5)
  */
-export function pickPairingSvg(pairCount: number): string {
+export function pickPairingSvg(pairCount: number, pairCircle = false): string {
+  if (pairCircle) return circlePairingSvg(pairCount);
   if (pairCount >= 11) return pairingSvg20(pairCount);
   if (pairCount >= 6) return pairingSvg10();
   return pairingSvg5();
