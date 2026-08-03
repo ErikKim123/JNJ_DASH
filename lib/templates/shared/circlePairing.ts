@@ -6,9 +6,8 @@
 //   • 12시 방향부터 시계방향으로 균등 분할.
 //   • 정타원이 아니라 슈퍼타원(squircle) — 좌우 극단이 곧게 서서 라벨의 좌/우 모서리가
 //     한 줄로 정렬되고, 상/하단 호는 넓게 퍼져 세로 공간을 더 쓴다.
-//   • 짝수 번째 커플은 반지름을 stagger 만큼 밀어(zig-zag) 인접 라벨이 붙지 않게 한다.
-//     단 stagger 는 |dy| 로 가중 — 좌/우 극단에서는 0 이 되어 모서리가 들쭉날쭉해지지 않는다.
-//     (좌우에서는 이웃 슬롯이 이미 세로로 충분히 벌어져 있어 stagger 가 필요 없다.)
+//   • zig-zag 는 두지 않는다 — 둘레 균등 분할이라 슬롯 간격이 어디서나 일정해 겹치지 않고,
+//     밀어내면 상/하단 행의 높이만 들쭉날쭉해진다.
 //   • 좌/우측은 바깥쪽 정렬(end/start), 상/하단은 가운데 정렬 — 라벨이 원 안쪽으로 넘어오지 않는다.
 //   • 상단은 블록을 위로, 하단은 아래로 살짝 밀어 상/하 호가 붐비지 않게 한다.
 
@@ -47,22 +46,21 @@ interface Tier {
   rx: number;
   ry: number;
   fs: number;
-  stagger: number;
 }
 
 // 번호+이름 라벨(넓음) — 라벨이 길어 반지름을 키우고 폰트를 줄인다.
 const TIERS_WIDE: readonly Tier[] = [
-  { max: 6, rx: 265, ry: 148, fs: 24, stagger: 14 },
-  { max: 10, rx: 330, ry: 164, fs: 20, stagger: 26 },
-  { max: 14, rx: 392, ry: 174, fs: 17, stagger: 36 },
+  { max: 6, rx: 265, ry: 148, fs: 24 },
+  { max: 10, rx: 330, ry: 164, fs: 20 },
+  { max: 14, rx: 392, ry: 174, fs: 17 },
 ];
 
 // 번호만(좁음) — 03/04 에서 5~25 페어 비중첩이 확인된 값.
 const TIERS_NARROW: readonly Tier[] = [
-  { max: 8, rx: 235, ry: 150, fs: 30, stagger: 12 },
-  { max: 14, rx: 335, ry: 165, fs: 22, stagger: 26 },
-  { max: 20, rx: 405, ry: 172, fs: 18, stagger: 36 },
-  { max: 999, rx: 434, ry: 178, fs: 15, stagger: 46 },
+  { max: 8, rx: 235, ry: 150, fs: 30 },
+  { max: 14, rx: 335, ry: 165, fs: 22 },
+  { max: 20, rx: 405, ry: 172, fs: 18 },
+  { max: 999, rx: 434, ry: 178, fs: 15 },
 ];
 
 /** 이름까지 넣어도 겹치지 않는 최대 커플 수. 이보다 많으면 번호만 표기. */
@@ -122,10 +120,9 @@ export function circlePairingLayout(pairCount: number, opts: CircleLayoutOpts = 
   }
   // 상단(ny<0)은 블록을 위로, 하단(ny>0)은 아래로 밀되 블록 높이의 1/4 만큼만.
   // (예전엔 블록 전체를 밖으로 밀어냈는데, 그만큼 위아래 여백을 잡아먹어 타원을 키울 수 없었다.)
+  // ny 에 대해 연속 — 구간 분기로 두면 경계를 넘는 이웃 슬롯끼리 높이가 툭 튄다.
   function yShiftFor(ny: number): number {
-    if (ny < -0.4) return -blockH * 0.75 + lineH * 0.5;
-    if (ny > 0.4) return -blockH * 0.25 + lineH * 0.5;
-    return -blockH / 2 + lineH * 0.5;
+    return -blockH * 0.5 + lineH * 0.5 + ny * blockH * 0.25;
   }
   function flourishRange(anchor: SlotAnchor): { x1: number; x2: number } {
     if (anchor === 'start') return { x1: 0, x2: flourishHalf * 2 };
@@ -171,18 +168,18 @@ export function circlePairingLayout(pairCount: number, opts: CircleLayoutOpts = 
       const f = seg > 0 ? (target - cum[lo - 1]) / seg : 0;
       const ox = sx[lo - 1] + (sx[lo] - sx[lo - 1]) * f;
       const oy = sy[lo - 1] + (sy[lo] - sy[lo - 1]) * f;
-      // 정규화 좌표 — 앵커/세로 시프트/stagger 판정에 쓴다.
+      // 정규화 좌표 — 앵커/세로 시프트 판정에 쓴다.
       const nx = ox / rx;
       const ny = ryTry > 0 ? oy / ryTry : 0;
-      // 짝수 커플은 바깥으로 한 칸. |ny| 가중이라 좌/우 극단(|ny|≈0)에서는 밀지 않는다.
-      // → 좌우 모서리에서 x 가 들쭉날쭉해지지 않고 한 줄로 정렬된다.
-      const push = i % 2 === 0 ? (base.stagger / rx) * Math.abs(ny) : 0;
+      // zig-zag stagger 는 두지 않는다. 각도 균등 분할이던 시절엔 모서리에서 점이 몰려
+      // 필요했지만, 둘레 길이 균등 분할로 바꾼 뒤로는 슬롯 간격이 어디서나 일정해
+      // 겹치지 않는다. 오히려 상/하단 행의 높이를 들쭉날쭉하게 만든다.
       const anchor = anchorFor(nx);
       const { x1, x2 } = flourishRange(anchor);
       out.push({
         i,
-        x: ox * (1 + push),
-        y: oy * (1 + push) + yShiftFor(ny),
+        x: ox,
+        y: oy + yShiftFor(ny),
         anchor,
         delay: (baseDelay + i * 0.045).toFixed(2),
         flourishX1: x1,
@@ -205,7 +202,7 @@ export function circlePairingLayout(pairCount: number, opts: CircleLayoutOpts = 
   }
 
   // ry 결정 — band 가 주어지면 그 안에 딱 들어가는 최대 ry 를 이분탐색으로 찾는다.
-  // stagger(바깥으로 미는 양)와 둘레 균등 분할 때문에 세로 범위를 식으로 못 푸는 대신,
+  // 둘레 균등 분할·세로 시프트 때문에 세로 범위를 식으로 못 푸는 대신,
   // 실제 슬롯을 만들어 재보는 쪽이 커플 수·폰트가 어떻게 바뀌어도 어긋나지 않는다.
   let ry = base.ry * (opts.ryScale ?? 1);
   let cy = opts.cy ?? 430;
