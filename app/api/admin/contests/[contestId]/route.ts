@@ -13,6 +13,7 @@ export const runtime = 'nodejs';
 const ScoringItemEnum = z.enum([
   'fundamentals', 'connection', 'musicality',
   'creativity', 'crowd_reaction', 'showmanship',
+  'audience_impact', 'techniques',
 ]);
 
 const OnlineScoringItemEnum = z.enum([

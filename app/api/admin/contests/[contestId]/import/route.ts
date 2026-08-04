@@ -47,6 +47,7 @@ const NULLABLE_BY_TABLE: Record<string, readonly string[]> = {
     'vote_mark',
     'basic_score', 'connectivity_score', 'musicality_score',
     'creativity_score', 'crowd_reaction_score', 'showmanship_score',
+    'audience_impact_score', 'techniques_score',
   ],
   pairings: ['shuffled_at', 'confirmed_at'],
   final_results: ['final_rank', 'total_score', 'average'],

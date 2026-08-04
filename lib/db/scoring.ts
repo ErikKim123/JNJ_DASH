@@ -1,4 +1,4 @@
-// 결승 채점 6 항목의 canonical 정의.
+// 결승 채점 8 항목의 canonical 정의.
 // UI · API · DB 변환을 한 곳에서 관리. 새 항목 추가 시 이 파일과 0003+ 마이그레이션만 손대면 됨.
 import type { JudgeVoteRow } from './types';
 
@@ -8,7 +8,15 @@ export type ScoringItemKey =
   | 'musicality'
   | 'creativity'
   | 'crowd_reaction'
-  | 'showmanship';
+  | 'showmanship'
+  | 'audience_impact'
+  | 'techniques';
+
+/** judge_votes 의 점수 컬럼명 (historical 명명 보존). */
+export type ScoringColumn =
+  | 'basic_score' | 'connectivity_score' | 'musicality_score'
+  | 'creativity_score' | 'crowd_reaction_score' | 'showmanship_score'
+  | 'audience_impact_score' | 'techniques_score';
 
 export interface ScoringItemDef {
   key: ScoringItemKey;
@@ -16,18 +24,19 @@ export interface ScoringItemDef {
   shortLabel: string;  // 매트릭스 셀 input placeholder 등에서 사용
   /** participants.meta 의 한글 suffix — 시트에서 import 된 키 끝부분과 매칭. */
   korLabel: string;
-  /** judge_votes 테이블의 컬럼명 (historical 명명 보존). */
-  column: 'basic_score' | 'connectivity_score' | 'musicality_score'
-        | 'creativity_score' | 'crowd_reaction_score' | 'showmanship_score';
+  /** judge_votes 테이블의 컬럼명. */
+  column: ScoringColumn;
 }
 
 export const SCORING_ITEMS: readonly ScoringItemDef[] = [
-  { key: 'fundamentals',   label: 'Fundamentals',   shortLabel: 'Fund',  korLabel: '기본기',  column: 'basic_score' },
-  { key: 'connection',     label: 'Connection',     shortLabel: 'Conn',  korLabel: '연결성',  column: 'connectivity_score' },
-  { key: 'musicality',     label: 'Musicality',     shortLabel: 'Mus',   korLabel: '음악성',  column: 'musicality_score' },
-  { key: 'creativity',     label: 'Creativity',     shortLabel: 'Crea',  korLabel: '창의성',  column: 'creativity_score' },
-  { key: 'crowd_reaction', label: 'Crowd Reaction', shortLabel: 'Crowd', korLabel: '호응도',  column: 'crowd_reaction_score' },
-  { key: 'showmanship',    label: 'Showmanship',    shortLabel: 'Show',  korLabel: '쇼맨십',  column: 'showmanship_score' },
+  { key: 'fundamentals',    label: 'Fundamentals',    shortLabel: 'Fund',  korLabel: '기본기',    column: 'basic_score' },
+  { key: 'connection',      label: 'Connection',      shortLabel: 'Conn',  korLabel: '연결성',    column: 'connectivity_score' },
+  { key: 'musicality',      label: 'Musicality',      shortLabel: 'Mus',   korLabel: '음악성',    column: 'musicality_score' },
+  { key: 'creativity',      label: 'Creativity',      shortLabel: 'Crea',  korLabel: '창의성',    column: 'creativity_score' },
+  { key: 'crowd_reaction',  label: 'Crowd Reaction',  shortLabel: 'Crowd', korLabel: '호응도',    column: 'crowd_reaction_score' },
+  { key: 'showmanship',     label: 'Showmanship',     shortLabel: 'Show',  korLabel: '쇼맨십',    column: 'showmanship_score' },
+  { key: 'audience_impact', label: 'Audience Impact', shortLabel: 'Aud',   korLabel: '관객임팩트', column: 'audience_impact_score' },
+  { key: 'techniques',      label: 'Techniques',      shortLabel: 'Tech',  korLabel: '테크닉',    column: 'techniques_score' },
 ] as const;
 
 /** 한글 suffix → ScoringItemKey 역매핑 (시트 import 키 분류용). */
@@ -71,12 +80,16 @@ export type OnlineScoringItemKey =
   | 'team_chemistry'
   | 'musical_energy';
 
+/** online_judge_votes 는 판정단 기본 6 컬럼만 재사용한다(판정단 확장 컬럼은 미사용). */
+export type OnlineScoringColumn =
+  Exclude<ScoringColumn, 'audience_impact_score' | 'techniques_score'>;
+
 export interface OnlineScoringItemDef {
   key: OnlineScoringItemKey;
   label: string;       // UI 영문 라벨
   shortLabel: string;  // 매트릭스 셀 라벨
   /** online_judge_votes 의 컬럼명 (판정단과 동일 스토리지 재사용). */
-  column: ScoringItemDef['column'];
+  column: OnlineScoringColumn;
 }
 
 export const ONLINE_SCORING_ITEMS: readonly OnlineScoringItemDef[] = [

@@ -92,6 +92,8 @@ type VoteRow = {
   creativity_score?: number | null;
   crowd_reaction_score?: number | null;
   showmanship_score?: number | null;
+  audience_impact_score?: number | null;
+  techniques_score?: number | null;
 };
 
 function buildJudgeIndex(judges: JudgeRow[]): {
@@ -153,7 +155,7 @@ function voteToMarkSheetRow(
   };
 }
 
-/** final 가독성 행 — 6 항목 점수 시트. 컬럼은 SCORING_ITEMS 의 key 명 사용. */
+/** final 가독성 행 — 채점 항목 점수 시트. 컬럼은 SCORING_ITEMS 의 key 명 사용. */
 function voteToScoreSheetRow(
   v: VoteRow,
   judge: JudgeRow,

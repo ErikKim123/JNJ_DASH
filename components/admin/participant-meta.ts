@@ -18,7 +18,7 @@ const PROFILE_KEYS = new Set<string>([
   'X', // 생일/생년월일이 시트 첫 칸에 X 라벨로 들어있음
 ]);
 
-// 한글 채점 항목 6개 alternation. SCORING_ITEMS 에서 동적으로 빌드 — 항목 추가 시 자동 반영.
+// 한글 채점 항목 alternation. SCORING_ITEMS 에서 동적으로 빌드 — 항목 추가 시 자동 반영.
 const KOR_ITEM_ALT = SCORING_ITEMS.map((s) => s.korLabel).join('|');
 const FINAL_ITEM_SUFFIX_RE = new RegExp(`(${KOR_ITEM_ALT})\\s*$`);
 const SCORE_AGG_RE = new RegExp(`(${KOR_ITEM_ALT}) 합계|결승 총점|결승 평균`);

@@ -104,6 +104,8 @@ export const FINAL_CRITERIA = [
   'creativity',
   'crowd_reaction',
   'showmanship',
+  'audience_impact',
+  'techniques',
 ] as const;
 export type FinalCriterion = typeof FINAL_CRITERIA[number];
 
@@ -114,6 +116,8 @@ export const FINAL_CRITERION_LABEL: Record<FinalCriterion, string> = {
   creativity: 'Creativity',
   crowd_reaction: 'Crowd Reaction',
   showmanship: 'Showmanship',
+  audience_impact: 'Audience Impact',
+  techniques: 'Techniques',
 };
 
 // scoring_items key → judge_votes column name. The column names in the DB
@@ -126,6 +130,8 @@ export const CRITERION_COLUMN: Record<FinalCriterion, string> = {
   creativity: 'creativity_score',
   crowd_reaction: 'crowd_reaction_score',
   showmanship: 'showmanship_score',
+  audience_impact: 'audience_impact_score',
+  techniques: 'techniques_score',
 };
 
 export const DEFAULT_FINAL_CRITERIA: readonly FinalCriterion[] = [

@@ -600,6 +600,8 @@ export function JudgingMatrix({
       creativity_score: 'creativity_score' in patch ? (patch.creativity_score ?? null) : current?.creativity_score ?? null,
       crowd_reaction_score: 'crowd_reaction_score' in patch ? (patch.crowd_reaction_score ?? null) : current?.crowd_reaction_score ?? null,
       showmanship_score: 'showmanship_score' in patch ? (patch.showmanship_score ?? null) : current?.showmanship_score ?? null,
+      audience_impact_score: 'audience_impact_score' in patch ? (patch.audience_impact_score ?? null) : current?.audience_impact_score ?? null,
+      techniques_score: 'techniques_score' in patch ? (patch.techniques_score ?? null) : current?.techniques_score ?? null,
       updated_at: new Date().toISOString(),
     };
     setVotes((s) => {

@@ -19,6 +19,8 @@ const Body = z.object({
   creativity_score: z.number().min(0).max(999).nullable().optional(),
   crowd_reaction_score: z.number().min(0).max(999).nullable().optional(),
   showmanship_score: z.number().min(0).max(999).nullable().optional(),
+  audience_impact_score: z.number().min(0).max(999).nullable().optional(),
+  techniques_score: z.number().min(0).max(999).nullable().optional(),
 });
 
 interface RouteCtx { params: Promise<{ contestId: string; round: string; judgeId: string }> }
@@ -60,6 +62,8 @@ export async function PUT(req: Request, ctx: RouteCtx) {
     creativity_score: 'creativity_score' in parsed.data ? parsed.data.creativity_score ?? null : existing?.creativity_score ?? null,
     crowd_reaction_score: 'crowd_reaction_score' in parsed.data ? parsed.data.crowd_reaction_score ?? null : existing?.crowd_reaction_score ?? null,
     showmanship_score: 'showmanship_score' in parsed.data ? parsed.data.showmanship_score ?? null : existing?.showmanship_score ?? null,
+    audience_impact_score: 'audience_impact_score' in parsed.data ? parsed.data.audience_impact_score ?? null : existing?.audience_impact_score ?? null,
+    techniques_score: 'techniques_score' in parsed.data ? parsed.data.techniques_score ?? null : existing?.techniques_score ?? null,
   };
 
   const { data, error } = await sb

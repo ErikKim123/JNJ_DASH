@@ -27,6 +27,8 @@ const EMPTY_VOTE = (judgeId: string, num: string): JudgeVoteRow => ({
   creativity_score: null,
   crowd_reaction_score: null,
   showmanship_score: null,
+  audience_impact_score: null,
+  techniques_score: null,
   updated_at: '',
 });
 

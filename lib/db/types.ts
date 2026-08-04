@@ -229,7 +229,7 @@ export interface OnlineJudgeRow {
   updated_at: string;
 }
 
-/** 온라인 심사위원의 결승 채점 — judge_votes 의 결승 점수 컬럼과 동일 구조. */
+/** 온라인 심사위원의 결승 채점 — judge_votes 의 기본 6 점수 컬럼과 동일 구조. */
 export interface OnlineJudgeVoteRow {
   id: string;
   online_judge_id: string;
@@ -248,12 +248,14 @@ export interface JudgeVoteRow {
   judge_id: string;
   participant_num: string;
   vote_mark: VoteMark | null;
-  // 결승 채점 6 항목 — DB 컬럼은 historical 명명.
-  basic_score: number | null;          // fundamentals
-  connectivity_score: number | null;   // connection
-  musicality_score: number | null;     // musicality
-  creativity_score: number | null;     // creativity
-  crowd_reaction_score: number | null; // crowd_reaction
-  showmanship_score: number | null;    // showmanship
+  // 결승 채점 8 항목 — DB 컬럼은 historical 명명.
+  basic_score: number | null;            // fundamentals
+  connectivity_score: number | null;     // connection
+  musicality_score: number | null;       // musicality
+  creativity_score: number | null;       // creativity
+  crowd_reaction_score: number | null;   // crowd_reaction
+  showmanship_score: number | null;      // showmanship
+  audience_impact_score: number | null;  // audience_impact
+  techniques_score: number | null;       // techniques
   updated_at: string;
 }
