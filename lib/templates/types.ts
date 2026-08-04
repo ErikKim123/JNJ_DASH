@@ -16,6 +16,10 @@ export interface TemplateModule {
       backgroundOverride?: string;
       /** 0-100. backgroundOverride 가 설정된 경우에만 적용. 미지정 시 100 (불투명). */
       backgroundOpacity?: number;
+      /** 대회 아이콘(로고) URL — 각 템플릿 상단 중앙 아이콘 슬롯에 그린다. 비면 미표시. */
+      iconOverride?: string;
+      /** 0-100. iconOverride 가 설정된 경우에만 적용. 미지정 시 100 (불투명). */
+      iconOpacity?: number;
       /**
        * PAIRING 스텝 레이아웃 — true 면 커플을 원(타원) 둘레에 배치.
        * 미지정/false 면 각 템플릿 기본(목록/격자) 레이아웃.

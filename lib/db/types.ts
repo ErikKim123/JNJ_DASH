@@ -61,6 +61,10 @@ export interface ContestRow {
   background_image: string;
   /** 커스텀 배경 투명도 (0-100). 100 불투명 기본. */
   background_opacity: number;
+  /** 대회 아이콘(로고) public URL — 표출 화면 상단 중앙에 표시. 비어있으면 미표시. */
+  icon_image: string;
+  /** 아이콘 투명도 (0-100). 100 불투명 기본. */
+  icon_opacity: number;
   /** 심사위원 영상소개 스텝(예선 JUDGES 다음)에서 표출 화면이 직접 재생하는 영상파일(mp4 등) URL. 비어있으면 안내 슬라이드. */
   judges_video_url: string;
   /** 라운드별 추가 영상(예선/본선/결승 각 3개) — 표출 오른쪽 위 버튼으로 오버레이 재생. jsonb. 미설정 시 {}. */

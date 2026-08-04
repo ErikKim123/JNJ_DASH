@@ -1,3 +1,4 @@
+import { svgId } from '@/lib/templates/shared/svgId';
 // Template 06 — "IVORY GALLERY"
 //
 // 05 와 정반대 전략으로 "배경 무관 가독성"을 푼다.
@@ -12,13 +13,20 @@
 export const BG_IMAGE = '/templates/02/background.jpg';
 
 // ── 팔레트 ──────────────────────────────────────────────────────────────────
-export const PAPER = '#FBF8F1';      // 지면
-export const INK = '#17140F';        // 주 텍스트
-export const INK_SOFT = '#655C4F';   // 보조 텍스트
-export const LINE = '#17140F';       // 헤어라인 (낮은 opacity 로 사용)
-export const ACCENT = '#A8792B';     // 앤티크 골드 — 리더 / 강조
-export const TEAL = '#2E5B55';       // 딥 틸 — 팔로워
-export const ROSE = '#9C4A3C';       // 테라코타 — LIVE / 3위
+//
+// 06 은 "화이트 모드" 템플릿 — 배경으로 밝은 이미지(또는 흰 배경)를 깐다는 전제.
+// 그래서 글자는 전부 어두운 계열이고, 대비는 TEXT_STYLE 의 밝은 halo 가 보강한다.
+// 강조색도 흰 배경에서 눈부시지 않도록 노란기를 뺀 진한 톤을 쓴다
+// (밝은 골드/노랑은 흰 배경에서 대비가 급락하고 눈이 쉽게 피로해진다).
+export const PAPER = '#FBF8F1';      // 어두운 칩 위에 얹는 글자 / 밝은 면
+export const INK = '#141110';        // 주 텍스트
+export const INK_SOFT = '#544C40';   // 보조 텍스트
+export const INK_DEEP = '#0E0C09';   // 최상위 대비가 필요한 글자
+export const LINE = '#141110';       // 헤어라인 (낮은 opacity 로 사용)
+export const PLATE = '#E9E1D1';      // 반투명 밝은 판 — 정보 밀도 높은 블록 배경
+export const ACCENT = '#6E5119';     // 딥 브론즈 — 리더 / 강조 (노란기 뺀 진한 금)
+export const TEAL = '#1E4A44';       // 딥 틸 — 팔로워
+export const ROSE = '#7E3A2D';       // 딥 테라코타 — LIVE / 3위
 
 // ── 폰트 스택 ───────────────────────────────────────────────────────────────
 export const DISPLAY = "'Playfair Display', 'Cormorant Garamond', Georgia, 'Batang', '바탕', serif";
@@ -34,7 +42,10 @@ export const MX = 120;               // 지면 안쪽 좌측 기준선
 export const RX = 1160;              // 지면 안쪽 우측 기준선
 export const CX = 640;
 export const HEAD_Y = 104;
-export const FOOT_RULE_Y = 592;
+// 하단 러너 라인 — 지면 하단(CARD_Y + CARD_H = 676) 바로 위.
+// 상단 러너(124)와 짝을 이뤄 화면 위·아래를 잡아주는 경계선이라, 예전 위치(592)처럼
+// 중간에 떠 있으면 아래쪽에 빈 띠가 남는다. 태그라인·스폰서는 이 선 위쪽에 배치.
+export const FOOT_RULE_Y = 664;
 
 export const COMMON_DEFS = `
   <linearGradient id="washV" x1="0" y1="0" x2="0" y2="1">
@@ -43,8 +54,8 @@ export const COMMON_DEFS = `
     <stop offset="1" stop-color="#EFE7D8" stop-opacity="0.78"/>
   </linearGradient>
   <linearGradient id="goldg" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0" stop-color="#C89A45"/>
-    <stop offset="1" stop-color="#8A5F1B"/>
+    <stop offset="0" stop-color="#8A6725"/>
+    <stop offset="1" stop-color="#4E3A12"/>
   </linearGradient>
   <linearGradient id="goldgh" x1="0" y1="0" x2="1" y2="0">
     <stop offset="0" stop-color="${ACCENT}" stop-opacity="0"/>
@@ -67,34 +78,43 @@ export const BG_LAYER = `
   </svg>
 `;
 
-/** 배경 위 밝은 워시 — 지면 바깥 여백까지 톤을 정돈해 사진이 튀지 않게 한다. */
+/**
+ * 기본 배경 사진 위 밝은 워시 — 커스텀 배경이 없을 때만 쓴다.
+ * 06 은 어두운 글자를 쓰므로 기본 사진도 밝게 눌러 화이트 모드 톤을 맞춘다.
+ * 커스텀 배경을 올리면 운영자가 고른 이미지를 그대로 보여야 하므로 렌더하지 않는다.
+ */
 export const WASH_LAYER = `<rect x="0" y="0" width="1280" height="720" fill="url(#washV)"/>`;
 
-/** 아이보리 지면 — 06 의 가독성 보증 장치. 0.94 불투명도로 사실상 배경을 가린다. */
-export const CARD_LAYER = `
-  <g>
-    <rect x="${CARD_X + 3}" y="${CARD_Y + 4}" width="${CARD_W}" height="${CARD_H}" rx="2" fill="#2A2318" opacity="0.14"/>
-    <rect x="${CARD_X}" y="${CARD_Y}" width="${CARD_W}" height="${CARD_H}" rx="2" fill="${PAPER}" fill-opacity="0.94"/>
-    <rect x="${CARD_X}" y="${CARD_Y}" width="${CARD_W}" height="${CARD_H}" rx="2" fill="none" stroke="${LINE}" stroke-opacity="0.24" stroke-width="1"/>
-    <rect x="${CARD_X + 12}" y="${CARD_Y + 12}" width="${CARD_W - 24}" height="${CARD_H - 24}" rx="1" fill="none" stroke="${ACCENT}" stroke-opacity="0.3" stroke-width="0.8"/>
-  </g>
-`;
+/**
+ * 지면(card) — 완전 제거.
+ * 원래는 아이보리 판(0.94) + 이중 테두리 프레임이었지만,
+ *   1) 운영자가 올린 배경 이미지가 그대로 보여야 해서 면(fill)을 없앴고,
+ *   2) 남아 있던 바깥 테두리 라인도 배경 위에 액자처럼 걸려 보여 함께 걷어냈다.
+ * CARD_X/Y/W/H 는 여전히 콘텐츠 배치 기준(안전 영역)으로 쓰이므로 상수는 유지한다.
+ * 가독성은 TEXT_STYLE 의 halo 가 담당한다.
+ */
+export const CARD_LAYER = '';
 
 /**
- * 06 의 가독성 규칙.
- *  · 본문은 거의 불투명한 지면 위에 있으므로 halo 가 필요 없다 — 세리프의 가는 획을
- *    외곽선으로 덧그리면 오히려 뭉개진다. 기본값은 stroke 없음.
- *  · 지면 밖(사진 위)에 놓이는 텍스트만 .on-photo 로 밝은 halo 를 준다.
+ * 06 의 가독성 규칙 (화이트 모드).
+ *  · 지면(card)이 투명하므로 어두운 글자가 배경 이미지 위에 바로 놓인다 — 사진의 어두운
+ *    부분에서 글자가 묻히지 않도록 밝은 halo 를 얇게 깐다. 세리프의 가는 획이 뭉개지지
+ *    않을 만큼만(0.04em) 쓴다.
+ *  · .on-photo 는 배경 대비가 특히 나쁜 자리(큰 제목 등)에 쓰는 강한 halo.
  */
 export const TEXT_STYLE = `
   <style>
-    svg.t06 text { paint-order: stroke fill; stroke: none; }
-    svg.t06 text.on-photo {
+    svg.t06 text {
+      paint-order: stroke fill;
       stroke: #FFFDF6;
-      stroke-opacity: 0.75;
-      stroke-width: max(1.6px, 0.06em);
+      stroke-opacity: 0.62;
+      stroke-width: max(1.1px, 0.04em);
       stroke-linejoin: round;
-      filter: drop-shadow(0 1px 2px rgba(255,255,255,0.6));
+    }
+    svg.t06 text.on-photo {
+      stroke-opacity: 0.85;
+      stroke-width: max(1.8px, 0.07em);
+      filter: drop-shadow(0 1px 2px rgba(255,255,255,0.7));
     }
   </style>
 `;
@@ -103,11 +123,11 @@ export function shell(content: string): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" class="t06" viewBox="0 0 1280 720" preserveAspectRatio="xMidYMid meet">
   <defs>${COMMON_DEFS}</defs>
   ${TEXT_STYLE}
-  ${BG_LAYER}
+  <!--BG_DEFAULT_SLOT-->
   <!--BG_OVERRIDE_SLOT-->
-  ${WASH_LAYER}
   ${CARD_LAYER}
   ${content}
+  <!--ICON_SLOT-->
 </svg>`;
 }
 
@@ -137,21 +157,25 @@ export function topBar(): string {
   `;
 }
 
-/** 하단 러너 — 헤어라인 + 태그라인 + 스폰서 로고 6슬롯. */
+/**
+ * 하단 러너 — 태그라인 + 스폰서 로고 6슬롯 + 헤어라인.
+ * 헤어라인이 화면 하단 경계 역할을 하므로 태그라인·스폰서를 그 "위"에 쌓는다
+ * (태그라인 596 → 스폰서 608~648 → 라인 664).
+ */
 export function footBar(): string {
   return `
-    ${hairline(FOOT_RULE_Y, MX, RX, 0.14)}
-    <text x="${CX}" y="${FOOT_RULE_Y + 26}" text-anchor="middle" font-family="${BODY}" font-weight="300"
+    <text x="${CX}" y="${FOOT_RULE_Y - 68}" text-anchor="middle" font-family="${BODY}" font-weight="300"
       font-size="13" letter-spacing="4" fill="${INK_SOFT}">{{tagline}}</text>
     ${sponsorRow()}
+    ${hairline(FOOT_RULE_Y, MX, RX, 0.14)}
   `;
 }
 
 /**
- * 스폰서 로고 6슬롯 — 지면 하단 중앙 정렬.
+ * 스폰서 로고 6슬롯 — 하단 러너 라인 바로 위 중앙 정렬.
  * 박스 130×40, 간격 26 → 총 폭 910, 지면(1152) 안에 여유 있게 들어간다.
  */
-export function sponsorRow(cy = 650, boxW = 130, boxH = 40, gap = 26): string {
+export function sponsorRow(cy = FOOT_RULE_Y - 36, boxW = 130, boxH = 40, gap = 26): string {
   const total = 6 * boxW + 5 * gap;
   const startX = CX - total / 2;
   let body = '';
@@ -173,17 +197,19 @@ export function metaLabel(
   return `<text x="${x}" y="${y}" text-anchor="${anchor}" font-family="${MONO}" font-size="${size}" letter-spacing="${tracking}" fill="${fill}">${text}</text>`;
 }
 
-/** 지면 위에 한 겹 더 얹는 옅은 구획 — 표/명단 블록의 배경. */
+/**
+ * 배경 위에 얹는 구획 판 — 표/명단처럼 정보 밀도가 높은 블록의 배경.
+ * 어두운 글자를 쓰므로 판은 밝게(따뜻한 아이보리) 깔아 명단 영역만 명도를 고정한다.
+ */
 export function panel(x: number, y: number, w: number, h: number, opacity = 0.5): string {
-  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2" fill="#EFE8D9" fill-opacity="${opacity}" stroke="${LINE}" stroke-opacity="0.1" stroke-width="1"/>`;
+  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2" fill="${PLATE}" fill-opacity="${opacity}" stroke="${LINE}" stroke-opacity="0.1" stroke-width="1"/>`;
 }
 
-// clipPath id 충돌 방지 카운터.
-let portraitCounter = 0;
+// clipPath id 는 초상 좌표/반지름에서 결정론적으로 생성 (SSR/CSR 동일).
 
 /** 인물 초상 — 원형 + 얇은 두 겹 링(도록의 인물 사진 규칙). */
 export function portrait(cx: number, cy: number, r: number, photoKey: string, ring = ACCENT): string {
-  const id = `t06p-${++portraitCounter}`;
+  const id = svgId('t06p', cx, cy, r);
   return `
     <g>
       <defs><clipPath id="${id}"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath></defs>
@@ -206,7 +232,7 @@ export function numBadge(cx: number, cy: number, r: number, text: string, ring =
   const by = cy + r * 0.72;
   return `
     <g>
-      <circle cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="${br.toFixed(1)}" fill="${PAPER}" stroke="${ring}" stroke-width="1"/>
+      <circle cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="${br.toFixed(1)}" fill="${PAPER}" fill-opacity="0.92" stroke="${ring}" stroke-width="1"/>
       <text x="${bx.toFixed(1)}" y="${(by + br * 0.34).toFixed(1)}" text-anchor="middle" font-family="${MONO}"
         font-size="${(br * 0.86).toFixed(1)}" font-weight="700" fill="${ring}">${text}</text>
     </g>

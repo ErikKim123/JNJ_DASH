@@ -96,6 +96,12 @@ export function ContestForm({
       if (typeof v !== 'number' || !Number.isFinite(v)) return 100;
       return Math.max(0, Math.min(100, Math.round(v)));
     })(),
+    icon_image: initial?.icon_image ?? '',
+    icon_opacity: ((): number => {
+      const v = initial?.icon_opacity;
+      if (typeof v !== 'number' || !Number.isFinite(v)) return 100;
+      return Math.max(0, Math.min(100, Math.round(v)));
+    })(),
     join_theme: ((): string => {
       const k = initial?.join_theme ?? '';
       return JOIN_PRESET_MAP[k] ? k : 'dark';
@@ -192,6 +198,54 @@ export function ContestForm({
   function clearBackground() {
     setForm((s) => ({ ...s, background_image: '' }));
     setBgErr(null);
+  }
+
+  function updateIconOpacity(value: number) {
+    const v = Math.max(0, Math.min(100, Math.round(value)));
+    setForm((s) => ({ ...s, icon_opacity: v }));
+  }
+
+  // 대회 아이콘(로고) 업로드 상태 — 배경과 동일한 흐름, 버킷/컬럼만 다르다.
+  const [iconBusy, setIconBusy] = useState(false);
+  const [iconErr, setIconErr] = useState<string | null>(null);
+  const iconInputRef = useRef<HTMLInputElement | null>(null);
+
+  async function onIconPick(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (mode === 'create' && !form.id.trim()) {
+      setIconErr(t('cf.bgIdRequired'));
+      return;
+    }
+    setIconErr(null);
+    setIconBusy(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const cid = form.id || initial?.id || '';
+      const res = await fetch(`/api/admin/contests/${encodeURIComponent(cid)}/icon-upload`, {
+        method: 'POST',
+        body: fd,
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j.error || `upload failed (${res.status})`);
+      }
+      const { url } = await res.json();
+      setForm((s) => ({ ...s, icon_image: url }));
+      // 업로드 라우트가 contests.icon_image 를 이미 DB 에 기록함 — SSR 캐시만 갱신.
+      router.refresh();
+    } catch (err) {
+      setIconErr(err instanceof Error ? err.message : t('cf.bgUploadFailed'));
+    } finally {
+      setIconBusy(false);
+    }
+  }
+
+  function clearIcon() {
+    setForm((s) => ({ ...s, icon_image: '' }));
+    setIconErr(null);
   }
 
   function updateSponsorOpacity(slot: number, value: number) {
@@ -895,6 +949,82 @@ export function ContestForm({
         </div>
       </section>
 
+      {/* 대회 아이콘(로고) — 모든 표출 화면 상단 중앙에 얹힌다. */}
+      <section className="rounded border border-border bg-panel/40 p-4">
+        <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+          <h3 className="text-sm font-semibold">{t('cf.iconTitle')}</h3>
+          <span className="text-xs text-ink2">{t('cf.iconMeta')}</span>
+        </div>
+        <div className="flex flex-col md:flex-row gap-3 items-start">
+          {/* 미리보기 — 실제 표출과 같은 가로 긴 박스 안에서 비율 유지 축소(contain) */}
+          <div className="w-full md:w-80 h-24 rounded border border-dashed border-border bg-panel/60 flex items-center justify-center overflow-hidden shrink-0">
+            {form.icon_image ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={form.icon_image}
+                alt="contest icon"
+                className="w-full h-full object-contain"
+                style={{ opacity: form.icon_opacity / 100 }}
+              />
+            ) : (
+              <span className="text-xs text-ink2 px-3 text-center">{t('cf.iconNotSet')}</span>
+            )}
+          </div>
+          <div className="flex flex-col gap-2 flex-1 w-full">
+            <input
+              ref={iconInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/svg+xml"
+              onChange={onIconPick}
+              className="hidden"
+            />
+            <Button
+              type="button"
+              variant="primary"
+              onClick={() => iconInputRef.current?.click()}
+              disabled={iconBusy}
+            >
+              {iconBusy ? t('cf.bgUploading') : form.icon_image ? t('cf.iconReplace') : t('cf.iconUpload')}
+            </Button>
+            <div className="flex items-center gap-2 px-1">
+              <label className="text-xs text-ink2 uppercase tracking-wide shrink-0">
+                {t('cf.bgOpacity')}
+              </label>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={form.icon_opacity}
+                onChange={(e) => updateIconOpacity(Number(e.target.value))}
+                className="flex-1 h-1 accent-accent"
+                aria-label={t('cf.iconOpacityAria')}
+                disabled={!form.icon_image}
+              />
+              <input
+                type="number"
+                min={0}
+                max={100}
+                value={form.icon_opacity}
+                onChange={(e) => updateIconOpacity(Number(e.target.value))}
+                className="w-14 h-6 px-1 text-xs rounded border border-border bg-panel text-ink text-right tabular-nums"
+                disabled={!form.icon_image}
+              />
+              <span className="text-ink2 text-xs">%</span>
+            </div>
+            {form.icon_image && (
+              <Button type="button" variant="danger" onClick={clearIcon} disabled={iconBusy}>
+                {t('cf.iconRemove')}
+              </Button>
+            )}
+            {iconErr && (
+              <p className="text-xs text-danger" role="alert">
+                {iconErr}
+              </p>
+            )}
+          </div>
+        </div>
+      </section>
+
       <section className="rounded border border-border bg-panel/40 p-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold">{t('cf.sponsorTitle')}</h3>
@@ -1000,7 +1130,7 @@ export function ContestForm({
         <Button
           type="submit"
           variant="primary"
-          disabled={pending || bgBusy || sponsorBusy.some(Boolean)}
+          disabled={pending || bgBusy || iconBusy || sponsorBusy.some(Boolean)}
         >
           {pending ? t('cf.saving') : mode === 'create' ? t('cf.create') : t('cf.save')}
         </Button>
@@ -1009,7 +1139,7 @@ export function ContestForm({
             type="button"
             variant="danger"
             onClick={onDelete}
-            disabled={pending || bgBusy || sponsorBusy.some(Boolean)}
+            disabled={pending || bgBusy || iconBusy || sponsorBusy.some(Boolean)}
           >
             {t('cf.delete')}
           </Button>

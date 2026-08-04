@@ -1,3 +1,4 @@
+import { svgId } from '@/lib/templates/shared/svgId';
 // Template 05 — "MIDNIGHT EDITORIAL"
 //
 // 설계 의도 (04 의 한계 → 05 의 해법)
@@ -131,6 +132,7 @@ export function shell(content: string): string {
   <!--BG_OVERRIDE_SLOT-->
   ${SCRIM_LAYER}
   ${content}
+  <!--ICON_SLOT-->
 </svg>`;
 }
 
@@ -207,8 +209,7 @@ export function metaLabel(
   return `<text x="${x}" y="${y}" text-anchor="${anchor}" font-family="${MONO}" font-size="${size}" letter-spacing="${tracking}" fill="${fill}">${text}</text>`;
 }
 
-// clipPath id 충돌 방지 카운터 (한 문서에 여러 05 SVG 가 놓일 수 있음).
-let tileCounter = 0;
+// clipPath id 는 타일 좌표/크기에서 결정론적으로 생성 (SSR/CSR 동일).
 
 /**
  * 인물 타일 — 04 의 육각형 대신 라운드 사각형(에디토리얼 그리드와 같은 리듬).
@@ -244,7 +245,7 @@ export function photoTile(
   photoKey: string,
   accent = ACCENT
 ): string {
-  const id = `t05tile-${++tileCounter}`;
+  const id = svgId('t05tile', cx, cy, size);
   const x = cx - size / 2;
   const y = cy - size / 2;
   const r = Math.max(3, size * 0.06);

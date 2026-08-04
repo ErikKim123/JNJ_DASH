@@ -1,3 +1,4 @@
+import { svgId } from './svgId';
 // Design Ref: 설명.txt — Prep 화면의 모래시계 자리에 돌하르방 3개 애니메이션 표출.
 // 원본: DashDesignTemplates/ani/three_dol_animated.svg
 // 색상: 부모 SVG의 url(#goldg) 골드 그라디언트로 채움 (CSS가 path의 presentation attribute보다 우선).
@@ -16,8 +17,7 @@ export interface DolharubangOpts {
   width?: number;
 }
 
-// 다중 인스턴스 시 use href / CSS class id 충돌 방지용 카운터.
-let dolInstanceCounter = 0;
+// use href / CSS class id 는 배치 좌표/크기에서 결정론적으로 생성 (SSR/CSR 동일).
 
 /**
  * 골드 그라디언트로 채워진 돌하르방 3개 + pulse 애니메이션 SVG 스니펫.
@@ -34,7 +34,7 @@ export function dolharubangSvg(opts: DolharubangOpts = {}): string {
   const height = (width * 544) / 1008;
   const x = cx - width / 2;
   const y = cy - height / 2;
-  const id = `dol-${++dolInstanceCounter}`;
+  const id = svgId('dol', cx, cy, width);
 
   return `
     <svg x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${width}" height="${height.toFixed(1)}" viewBox="0 0 1008 544" preserveAspectRatio="xMidYMid meet" overflow="visible">

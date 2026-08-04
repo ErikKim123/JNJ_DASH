@@ -1,3 +1,4 @@
+import { svgId } from '@/lib/templates/shared/svgId';
 // Design Ref: Template 02 (JLCF — Jeju Latin Culture Festival).
 // 구조는 Template 01과 동일하고 배경 이미지만 고객 제공 PDF에서 추출한 JPEG로 교체.
 // 원본: DashDesignTemplates/02/2026배경2.pdf → public/templates/02/background.jpg
@@ -110,6 +111,7 @@ export function shell(content: string): string {
   <!--BG_OVERRIDE_SLOT-->
   ${FRAME_LAYER}
   ${content}
+  <!--ICON_SLOT-->
 </svg>`;
 }
 
@@ -158,7 +160,6 @@ export function sunburstTop(cx = 640, cy = 110, scale = 1): string {
 }
 
 // 같은 SVG 안에서 여러 hexagonFrame이 호출될 때 clipPath id가 충돌하지 않도록 고유 카운터.
-let hexClipCounter = 0;
 
 export function hexagonFrame(
   cx: number,
@@ -195,7 +196,7 @@ export function hexagonFrame(
 
   let photoEl = '';
   if (photoKey) {
-    const clipId = `hxclip-t02-${++hexClipCounter}`;
+    const clipId = svgId('hxclip-t02', cx, cy, size);
     const ix = cx - size;
     const iy = cy - size;
     const iw = size * 2;

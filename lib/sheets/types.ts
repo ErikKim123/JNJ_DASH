@@ -15,7 +15,9 @@ export type StepKey =
   | 'close'
   | 'result'
   | 'ceremony'
-  | 'report';
+  | 'report'
+  /** 온라인 심사위원 점수만으로 뽑은 보고서 — REPORT 와 화면 구성은 동일. */
+  | 'reportOnline';
 
 export const ROUND_KEYS = ['prelim', 'semi', 'final'] as const;
 export const STEP_KEYS = [
@@ -32,6 +34,7 @@ export const STEP_KEYS = [
   'result',
   'ceremony',
   'report',
+  'reportOnline',
 ] as const;
 
 // 라운드별 프로세스:
@@ -56,7 +59,7 @@ export const STEPS_BY_ROUND: Record<RoundKey, ReadonlyArray<StepKey>> = {
     'result',
   ],
   semi: ['prep', 'pairing', 'pairingB', 'open', 'live', 'wrapup', 'close', 'result'],
-  final: ['prep', 'pairing', 'open', 'live', 'wrapup', 'close', 'result', 'ceremony', 'report'],
+  final: ['prep', 'pairing', 'open', 'live', 'wrapup', 'close', 'result', 'ceremony', 'report', 'reportOnline'],
 };
 
 export interface ContestSummary {
@@ -356,6 +359,10 @@ export interface ContestMeta {
   backgroundImage?: string;
   /** 커스텀 배경 투명도 (0-100). 미지정 시 100. */
   backgroundOpacity?: number;
+  /** 대회 아이콘(로고) URL. 설정 시 표출 화면 상단 중앙에 표시. */
+  iconImage?: string;
+  /** 아이콘 투명도 (0-100). 미지정 시 100. */
+  iconOpacity?: number;
   /** 라운드별 추가 영상(예선/본선/결승 각 3개). 표출 오른쪽 위 버튼 → 전체화면 오버레이 재생. */
   extraVideos: import('@/lib/contest/extraVideos').ExtraVideos;
 }

@@ -17,6 +17,7 @@ import { finalPrepSvg, finalWrapupSvg, finalResultSvg, finalPairingSvg } from '.
 import { ceremonySvg } from './svg/ceremony';
 import { shell, topHeader } from './svg/common';
 import { renderReportSvg } from '../shared/reportSvg';
+import { applyContestIcon, type IconRect } from '../shared/contestIcon';
 
 function selectSvg(round: RoundKey, _step: StepKey, data: StepDataPayload, pairCircle = false): string {
   if (round === 'final') {
@@ -87,6 +88,9 @@ function applyBackgroundOverride(svg: string, override?: string, opacityPct?: nu
   return svg.replace(marker, img);
 }
 
+/** 대회 아이콘 박스 — 상단 중앙(대회명 y=78 위). 로고는 이 안에서 비율 유지로 축소된다. */
+const ICON_RECT: IconRect = { x: 510, y: 16, w: 260, h: 44 };
+
 export const Template02: TemplateModule = {
   id: 2,
   name: 'Jeju Latin Culture Festival',
@@ -94,6 +98,9 @@ export const Template02: TemplateModule = {
     const svg = selectSvg(round, step, data, opts?.pairCircle);
     const placeholders = flattenStepData(data);
     const filled = applyPlaceholders(svg, placeholders);
-    return applyBackgroundOverride(filled, opts?.backgroundOverride, opts?.backgroundOpacity);
+    const withBg = applyBackgroundOverride(filled, opts?.backgroundOverride, opts?.backgroundOpacity);
+    // VIDEO(심사위원 소개 영상) 스텝은 플레이어가 화면을 꽉 채워서 아이콘이 영상 위에 걸린다 — 표출하지 않는다.
+    const icon = data.kind === 'judgesVideo' ? undefined : opts?.iconOverride;
+    return applyContestIcon(withBg, ICON_RECT, icon, opts?.iconOpacity);
   },
 };

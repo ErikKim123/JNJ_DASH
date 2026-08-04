@@ -267,6 +267,45 @@ export const MESSAGES_EN = {
   'cf.bgIdRequired': 'Enter Contest ID before uploading',
   'cf.bgOpacity': 'Opacity',
   'cf.bgOpacityAria': 'Background opacity',
+  'cf.iconTitle': 'Contest Icon (Logo)',
+  'cf.iconMeta': 'Top center of every screen · 4MB · jpg/png/webp/svg · hidden when unset',
+  'cf.iconUpload': 'Upload icon',
+  'cf.iconReplace': 'Replace icon',
+  'cf.iconRemove': 'Remove icon',
+  'cf.iconNotSet': 'No icon set',
+  'cf.iconOpacityAria': 'Icon opacity',
+  // ── Backup & Restore (ContestBackupBar) ──
+  'cb.title': 'Backup & Restore',
+  'cb.desc':
+    'Downloads a snapshot of this contest as <strong>JSON</strong> or <strong>XLSX</strong> (Excel). ' +
+    'XLSX includes <strong>contest · participants · judges · pairings · qualifiers · final_results</strong> ' +
+    'plus per-round score sheets <strong>prelim_votes · semi_votes · final_scores</strong> ' +
+    '(with judge name &amp; team name columns for readability) — edit in Excel and upload back. ' +
+    'Existing votes are matched by (judge, participant) and overwritten. ' +
+    'Uploading a backup from a different contest copies <strong>participants &amp; judges only</strong> ' +
+    '(after confirmation) — useful for seeding a new contest.',
+  'cb.working': 'working…',
+  'cb.jsonStarted': 'JSON backup download started.',
+  'cb.xlsxDone': 'XLSX backup downloaded.',
+  'cb.xlsxFailed': 'Failed to build XLSX',
+  'cb.exportFailed': 'Export failed ({STATUS})',
+  'cb.badFile': 'Unsupported file — choose .json or .xlsx.',
+  'cb.parseFailed': 'Parse failed: {MSG}',
+  'cb.parseUnknown': 'unknown',
+  'cb.importFailed': 'Import failed ({STATUS})',
+  'cb.confirmOther':
+    'This backup is for "{SRC}", not "{DEST}".\n\n' +
+    'Copy participants & judges only into "{DEST}"?\n' +
+    '· participants: {P}\n' +
+    '· judges: {J}\n\n' +
+    'Existing rows in "{DEST}" with matching id will be overwritten. ' +
+    'Other tables (votes, pairings, qualifiers, finals) and contest meta are NOT copied. Continue?',
+  'cb.confirmApply':
+    'Apply {FMT} backup to "{DEST}"?\n\n{SUMMARY}\n\nRows with matching id will be overwritten. Continue?',
+  'cb.restoredNames':
+    'Names-only restore from "{SRC}" → "{DEST}" — participants {P}, judges {J}.',
+  'cb.restored':
+    'Restored — contests {C}, participants {P}, judges {J}, judge_votes {V}, pairings {PR}, qualifiers {Q}, finals {F}.',
   // Sponsor logos
   'cf.sponsorTitle': 'PREP Footer Ads (Sponsor Logos)',
   'cf.sponsorMeta': 'Up to {N} · PREP step only · 3MB · jpg/png/webp/gif/svg',
@@ -590,6 +629,45 @@ export const MESSAGES_KO: Record<MessageKey, string> = {
   'cf.bgIdRequired': '대회 ID 입력 후 업로드 가능',
   'cf.bgOpacity': '투명도',
   'cf.bgOpacityAria': '배경 투명도',
+  'cf.iconTitle': '대회 아이콘 (로고)',
+  'cf.iconMeta': '모든 화면 상단 중앙 · 4MB · jpg/png/webp/svg · 미설정 시 미표시',
+  'cf.iconUpload': '아이콘 업로드',
+  'cf.iconReplace': '아이콘 교체',
+  'cf.iconRemove': '아이콘 삭제',
+  'cf.iconNotSet': '아이콘 미설정',
+  'cf.iconOpacityAria': '아이콘 투명도',
+  // ── 백업 & 복원 (ContestBackupBar) ──
+  'cb.title': '백업 & 복원',
+  'cb.desc':
+    '이 대회의 스냅샷을 <strong>JSON</strong> 또는 <strong>XLSX</strong>(엑셀) 로 내려받습니다. ' +
+    'XLSX 에는 <strong>대회 · 참가자 · 심사위원 · 페어링 · 통과자 · 결승결과</strong> 와 ' +
+    '라운드별 점수 시트 <strong>예선점수 · 본선점수 · 결승점수</strong> 가 들어갑니다 ' +
+    '(가독성을 위해 심사위원명 · 팀명 컬럼 포함). 엑셀에서 수정한 뒤 다시 업로드하면 됩니다. ' +
+    '기존 점수는 (심사위원, 참가자) 기준으로 매칭되어 덮어써집니다. ' +
+    '다른 대회의 백업을 올리면 확인 후 <strong>참가자 · 심사위원 명단만</strong> 복사됩니다 — ' +
+    '새 대회를 세팅할 때 유용합니다.',
+  'cb.working': '처리 중…',
+  'cb.jsonStarted': 'JSON 백업 다운로드를 시작했습니다.',
+  'cb.xlsxDone': 'XLSX 백업을 내려받았습니다.',
+  'cb.xlsxFailed': 'XLSX 생성 실패',
+  'cb.exportFailed': '내보내기 실패 ({STATUS})',
+  'cb.badFile': '지원하지 않는 파일 — .json 또는 .xlsx 를 선택하세요.',
+  'cb.parseFailed': '파일 해석 실패: {MSG}',
+  'cb.parseUnknown': '알 수 없는 오류',
+  'cb.importFailed': '가져오기 실패 ({STATUS})',
+  'cb.confirmOther':
+    '이 백업은 "{DEST}" 가 아니라 "{SRC}" 의 백업입니다.\n\n' +
+    '"{DEST}" 에 참가자 · 심사위원 명단만 복사할까요?\n' +
+    '· 참가자: {P}\n' +
+    '· 심사위원: {J}\n\n' +
+    '"{DEST}" 의 같은 id 행은 덮어써집니다. ' +
+    '나머지 데이터(점수, 페어링, 통과자, 결승결과)와 대회 설정은 복사되지 않습니다. 계속할까요?',
+  'cb.confirmApply':
+    '"{DEST}" 에 {FMT} 백업을 적용할까요?\n\n{SUMMARY}\n\n같은 id 행은 덮어써집니다. 계속할까요?',
+  'cb.restoredNames':
+    '명단만 복원 — "{SRC}" → "{DEST}" · 참가자 {P}명, 심사위원 {J}명.',
+  'cb.restored':
+    '복원 완료 — 대회 {C}, 참가자 {P}, 심사위원 {J}, 점수 {V}, 페어링 {PR}, 통과자 {Q}, 결승결과 {F}.',
   // Sponsor logos
   'cf.sponsorTitle': 'PREP 화면 하단 광고 (Sponsor Logos)',
   'cf.sponsorMeta': '최대 {N}개 · PREP 단계에서만 표출 · 3MB · jpg/png/webp/gif/svg',

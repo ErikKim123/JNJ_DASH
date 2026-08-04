@@ -45,3 +45,25 @@ Video/
 
 .vercel
 .env*
+
+# AI Judge — 워커
+# 위 `.env*` 규칙이 예시 파일까지 잡으므로 되살린다 (실제 worker/.env 는 계속 무시).
+!worker/.env.example
+# 검증용 영상 원본 (대용량, 개인 데이터). README 만 추적.
+worker/samples/*
+!worker/samples/README.md
+worker/.venv/
+# C: 드라이브 여유 부족 회피용 pip 임시/캐시 경로
+worker/.pip-tmp/
+worker/.pip-cache/
+# CLI 산출 JSON/중간 파일
+worker/out/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# AI Judge — 다운로드 캐시 모델 (MediaPipe .task)
+worker/models/
+
+# AI Judge — 브라우저 자산 (39MB). npm run ajudge:assets 로 생성.
+public/ajudge/mediapipe/

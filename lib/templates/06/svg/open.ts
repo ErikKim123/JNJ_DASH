@@ -1,7 +1,7 @@
 // Template 06 — OPEN.
 // 원형 배지(04) 대신 초대장의 "내부 액자" — 이중 헤어라인 사각 프레임 안에 NOW / OPEN.
 // 프레임 네 모서리의 짧은 골드 코너 마크가 인쇄물 재단선처럼 격식을 만든다.
-import { shell, topBar, footBar, ornament, metaLabel, DISPLAY, BODY, INK, INK_SOFT, ACCENT, CX } from '../common';
+import { shell, topBar, footBar, ornament, metaLabel, DISPLAY, BODY, INK, INK_SOFT, ACCENT, PLATE, CX } from '../common';
 
 function innerFrame(x: number, y: number, w: number, h: number): string {
   const c = 22; // 코너 마크 길이
@@ -10,7 +10,7 @@ function innerFrame(x: number, y: number, w: number, h: number): string {
       stroke="${ACCENT}" stroke-width="1.6"/>`;
   return `
     <g>
-      <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#FFFDF7" fill-opacity="0.6"
+      <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${PLATE}" fill-opacity="0.58"
         stroke="${ACCENT}" stroke-opacity="0.45" stroke-width="1"/>
       <rect x="${x + 7}" y="${y + 7}" width="${w - 14}" height="${h - 14}" fill="none"
         stroke="${ACCENT}" stroke-opacity="0.22" stroke-width="0.7"/>

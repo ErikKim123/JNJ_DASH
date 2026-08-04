@@ -77,19 +77,17 @@ interface GridSpec {
 }
 
 function chooseGrid(n: number): GridSpec {
-  // 한 행 최대 5명. 더 보기 좋은 비율을 고르도록 분기.
+  // 카드가 가로형([사진][이름/나라])이라 세로형보다 폭을 많이 먹는다.
+  // 열을 적게 잡을수록 셀이 넓어져 사진 반경 상한(cellW 기준)이 풀리므로,
+  // 같은 인원이라도 세로형 시절보다 열을 줄이고 행을 늘리는 쪽이 사진이 커진다.
   if (n <= 1) return { cols: 1, rows: 1 };
   if (n === 2) return { cols: 2, rows: 1 };
   if (n === 3) return { cols: 3, rows: 1 };
-  if (n === 4) return { cols: 4, rows: 1 };
-  if (n === 5) return { cols: 5, rows: 1 };
-  if (n === 6) return { cols: 3, rows: 2 };
-  if (n === 7) return { cols: 4, rows: 2 };
-  if (n === 8) return { cols: 4, rows: 2 };
-  if (n === 9) return { cols: 5, rows: 2 };
-  if (n === 10) return { cols: 5, rows: 2 };
+  if (n === 4) return { cols: 2, rows: 2 };
+  if (n <= 6) return { cols: 3, rows: 2 };
+  if (n <= 9) return { cols: 3, rows: 3 };
   if (n <= 12) return { cols: 4, rows: 3 };
-  if (n <= 15) return { cols: 5, rows: 3 };
+  if (n <= 16) return { cols: 4, rows: 4 };
   return { cols: 5, rows: 4 };
 }
 
@@ -102,77 +100,75 @@ function fitTextLength(maxFont: number, approxCharWidth: number, boxWidth: numbe
 }
 
 /**
- * 단일 심사위원 카드 — 원형 photo + name + specialty.
- * photo 가 비어있으면 골드 ring 안에 이니셜 같은 fallback 도형(작은 별/점) 노출.
+ * 단일 심사위원 카드 — 가로형: [원형 photo] + [이름 / 나라] 를 좌→우로 배치.
+ *
+ * 세로 스택([사진]↑[이름]↑[나라]) 이었을 때는 행이 많아질수록 사진 지름이 행 높이의
+ * 절반 이하로 눌려(20명 그리드에서 R≈17) 얼굴이 거의 보이지 않았다.
+ * 가로형은 사진과 글자가 세로 예산을 나눠 갖지 않으므로 같은 셀에서 사진을 두 배 이상
+ * 키울 수 있다. photo 가 비어있으면 ring 안 cardBg 만 보인다.
  */
 function judgeCard(
   idx: number,
-  cx: number,
+  cellX: number,
   cy: number,
+  cellW: number,
   photoR: number,
   nameFont: number,
   metaFont: number,
-  uid: number,
   th: JudgesIntroTheme,
 ): string {
-  // 카드 = [photo(원형)] + gap1 + [name] + gap2 + [alias] 를 하나의 세로 스택으로 보고
-  // cy 를 스택 '전체'의 수직 중앙에 정렬한다.
-  //   (이전엔 photo 를 cy 위로 올리고 사진↔이름 간격을 고정 22px 로 줘서
-  //    3행(11~12명)·4행(16~20명)처럼 행이 많아지면 카드 높이가 행 높이에 육박해
-  //    아래 행 사진과 윗 행 글씨가 맞붙는 문제가 있었다.)
-  // 간격을 고정값 대신 photoR/metaFont 비례로 잡아 행이 많을수록 자동으로 좁아지고,
-  // 메인 빌더가 photoR 를 cellH 예산 안에 맞추므로 항상 행간 여백이 남는다.
-  const gap1 = Math.max(9, photoR * 0.4); // 사진 ↔ 이름
-  const gap2 = Math.max(6, metaFont * 0.6); // 이름 ↔ 별칭
-  const stackH = photoR * 2 + gap1 + nameFont + gap2 + metaFont;
-  const top = cy - stackH / 2;
-  const photoCY = top + photoR;
-  const nameY = photoCY + photoR + gap1 + nameFont;
-  const metaY = nameY + gap2 + metaFont;
+  const padX = Math.max(6, cellW * 0.03);
+  const gapX = Math.max(8, photoR * 0.34);   // 사진 ↔ 글자
+  const photoCX = cellX + padX + photoR;
+  const textX = photoCX + photoR + gapX;
+  const textBoxW = Math.max(40, cellX + cellW - padX - textX);
+
+  // 이름/나라 두 줄 스택을 사진 중심선(cy)에 맞춰 수직 중앙 정렬.
+  const gapY = Math.max(4, metaFont * 0.45);
+  const stackH = nameFont + gapY + metaFont;
+  const nameY = cy - stackH / 2 + nameFont;
+  const metaY = nameY + gapY + metaFont;
 
   const photoKey = `{{judge_photo_${idx}}}`;
   const nameKey = `{{judge_name_${idx}}}`;
-  // 이전엔 specialty 를 노출했으나, 더 짧고 캐주얼한 'alias' 가 카드에 적합.
+  // 이전엔 specialty 를 노출했으나, 더 짧고 캐주얼한 'alias'(국가 표기) 가 카드에 적합.
   const metaKey = `{{judge_alias_${idx}}}`;
-  const clipId = `judgeClip-${uid}-${idx}`;
+  // id 는 카드 인덱스에서 결정론적으로 — 한 SVG 안에서 idx 는 유일하다.
+  const clipId = `judgeClip-${idx}`;
 
-  // 가용 텍스트 폭은 카드 폭 ≈ photoR * 2.4 — 글자수에 맞춰 축소.
-  const textBoxW = photoR * 2.4;
   const nameSize = fitTextLength(nameFont, 0.55, textBoxW);
   const metaSize = fitTextLength(metaFont, 0.5, textBoxW);
 
   return `
     <g>
       <defs>
-        <clipPath id="${clipId}"><circle cx="${cx}" cy="${photoCY}" r="${photoR - 2}"/></clipPath>
+        <clipPath id="${clipId}"><circle cx="${photoCX.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(photoR - 2).toFixed(1)}"/></clipPath>
       </defs>
       <!-- outer gold ring (subtle glow) -->
-      <circle cx="${cx}" cy="${photoCY}" r="${photoR + 4}" fill="none" stroke="${th.ring}" stroke-width="0.7" opacity="0.45"/>
+      <circle cx="${photoCX.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(photoR + 4).toFixed(1)}" fill="none" stroke="${th.ring}" stroke-width="0.7" opacity="0.45"/>
       <!-- card backdrop circle (dark hex bg gradient) -->
-      <circle cx="${cx}" cy="${photoCY}" r="${photoR}" fill="${th.cardBg}"/>
+      <circle cx="${photoCX.toFixed(1)}" cy="${cy.toFixed(1)}" r="${photoR.toFixed(1)}" fill="${th.cardBg}"/>
       <!-- photo (only renders if URL set; empty href silently skips in browsers) -->
-      <image href="${photoKey}" x="${cx - photoR}" y="${photoCY - photoR}"
-             width="${photoR * 2}" height="${photoR * 2}"
+      <image href="${photoKey}" x="${(photoCX - photoR).toFixed(1)}" y="${(cy - photoR).toFixed(1)}"
+             width="${(photoR * 2).toFixed(1)}" height="${(photoR * 2).toFixed(1)}"
              preserveAspectRatio="xMidYMid slice" clip-path="url(#${clipId})"/>
       <!-- ring on top so the circle stays crisp over the photo -->
-      <circle cx="${cx}" cy="${photoCY}" r="${photoR}" fill="none" stroke="${th.ring}" stroke-width="2"/>
+      <circle cx="${photoCX.toFixed(1)}" cy="${cy.toFixed(1)}" r="${photoR.toFixed(1)}" fill="none" stroke="${th.ring}" stroke-width="2"/>
       <!-- inner soft ring (decorative) -->
-      <circle cx="${cx}" cy="${photoCY}" r="${photoR - 5}" fill="none" stroke="${th.ringSoft}" stroke-width="0.5" opacity="0.55"/>
+      <circle cx="${photoCX.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(photoR - 5).toFixed(1)}" fill="none" stroke="${th.ringSoft}" stroke-width="0.5" opacity="0.55"/>
       <!-- name -->
-      <text x="${cx}" y="${nameY.toFixed(1)}" text-anchor="middle"
+      <text x="${textX.toFixed(1)}" y="${nameY.toFixed(1)}"
             font-family="${th.nameFont}"
-            font-size="${nameSize}" letter-spacing="1.5" fill="${th.name}" font-weight="700">${nameKey}</text>
-      <!-- specialty / alias -->
-      <text x="${cx}" y="${metaY.toFixed(1)}" text-anchor="middle"
+            font-size="${nameSize}" letter-spacing="1.2" fill="${th.name}" font-weight="700">${nameKey}</text>
+      <!-- country / alias -->
+      <text x="${textX.toFixed(1)}" y="${metaY.toFixed(1)}"
             font-family="${th.bodyFont}"
-            ${th.italicMeta ? 'font-style="italic"' : ''} font-size="${metaSize}" letter-spacing="1.2"
+            ${th.italicMeta ? 'font-style="italic"' : ''} font-size="${metaSize}" letter-spacing="1.6"
             fill="${th.alias}" opacity="0.85">${metaKey}</text>
     </g>
   `;
 }
 
-// uid 카운터 — 같은 SVG 안에서 clipPath id 충돌 방지 (예선·본선·결승 동시 렌더 가능성 대비).
-let cardUidCounter = 0;
 
 /**
  * 1명 단독 — hero 카드. 사진을 크게, 이름·전문도 큼직하게.
@@ -182,7 +178,7 @@ function singleHeroCard(th: JudgesIntroTheme): string {
   const cy = 460;
   const photoR = 130;
   const photoCY = cy - 60;
-  const clipId = `judgeClip-hero-${++cardUidCounter}`;
+  const clipId = 'judgeClip-hero';
   return `
     <g>
       <defs>
@@ -269,18 +265,16 @@ export function judgesIntroContent(opts: JudgesIntroLayoutOpts): string {
   const cellH = usableH / rows;
 
   // 카드 photo 반경 — 가로(cellW)·세로(cellH) 양쪽 한계 안에서 결정.
-  // 세로는 한 행에 [사진 2R + 간격 + 이름 + 별칭] 스택이 들어가고도 행간 여백이 남도록 cellH 비율로 제한.
-  // 4행(16~20명)은 행 높이가 작아 캡을 0.20 으로 더 죄어 사진을 약간 줄이고 행간 간격을 넉넉히 확보.
-  const vCap = rows >= 4 ? 0.20 : 0.25;
-  const photoR = Math.min(cellW * 0.30, cellH * vCap);
-  // 행 수가 많을수록 글자 크기 축소
-  const baseNameFont = rows >= 4 ? 12 : rows === 3 ? 14 : rows === 2 ? 16 : 18;
-  const baseMetaFont = rows >= 4 ? 9 : rows === 3 ? 10 : rows === 2 ? 12 : 14;
+  // 가로형 카드라 세로 예산은 사진 지름만 쓰면 되므로 cellH 캡을 0.42 까지 열 수 있고,
+  // 대신 옆에 이름/나라가 들어갈 폭이 필요해 cellW 캡은 0.17 로 좁게 잡는다.
+  const photoR = Math.max(14, Math.min(cellW * 0.17, cellH * 0.42));
+  // 행 수가 많을수록 글자 크기 축소 (가로형이라 세로형보다 한 단계씩 크게 잡을 수 있다)
+  const baseNameFont = rows >= 4 ? 15 : rows === 3 ? 17 : rows === 2 ? 20 : 22;
+  const baseMetaFont = rows >= 4 ? 10 : rows === 3 ? 11 : rows === 2 ? 13 : 15;
 
-  const uid = ++cardUidCounter;
   const cards: string[] = [];
 
-  // 마지막 행이 빈 슬롯이 있으면 가운데 정렬 (예: 7명 = 4+3, 11명 = 4+4+3, 등)
+  // 마지막 행이 빈 슬롯이 있으면 가운데 정렬 (예: 7명 = 3+3+1, 11명 = 4+4+3, 등)
   for (let i = 0; i < count; i++) {
     const row = Math.floor(i / cols);
     const isLastRow = row === rows - 1;
@@ -288,9 +282,9 @@ export function judgesIntroContent(opts: JudgesIntroLayoutOpts): string {
     const col = i - row * cols;
     // 마지막 행만 itemsInRow 개를 가로 중앙으로 재배치 (남는 빈 슬롯의 절반만큼 우측으로 시프트)
     const xOffset = isLastRow ? ((cols - itemsInRow) * cellW) / 2 : 0;
-    const cx = paddingX + xOffset + cellW * (col + 0.5);
+    const cellX = paddingX + xOffset + cellW * col;
     const cy = contentTop + cellH * (row + 0.5);
-    cards.push(judgeCard(i + 1, cx, cy, photoR, baseNameFont, baseMetaFont, uid, th));
+    cards.push(judgeCard(i + 1, cellX, cy, cellW, photoR, baseNameFont, baseMetaFont, th));
   }
 
   return `${title}<g>${cards.join('')}</g>`;

@@ -23,6 +23,7 @@ const STEP_LABEL: Record<StepKey, string> = {
   result: 'RES',
   ceremony: 'CER',
   report: 'REPORT',
+  reportOnline: 'O-REPORT',
 };
 
 // 같은 라운드에 pairingB/C가 있으면 'pairing'은 'PAIR-A'로 명시.

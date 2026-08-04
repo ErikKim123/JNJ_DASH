@@ -37,7 +37,7 @@ export function liveSvg(): string {
     ${topBar()}
 
     ${liveMark(CX, 196)}
-    ${metaLabel(CX, 244, '{{stage_label}} · {{round_title}}', { size: 12, tracking: 6, fill: INK_SOFT })}
+    ${metaLabel(CX, 250, '{{stage_label}} · {{round_title}}', { size: 20, tracking: 7, fill: INK_SOFT })}
 
     <text x="${CX}" y="${378}" text-anchor="middle" font-family="${DISPLAY}" font-weight="700"
       font-size="86" letter-spacing="8" fill="${INK}">ON STAGE</text>

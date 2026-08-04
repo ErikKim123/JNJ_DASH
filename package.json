@@ -13,9 +13,13 @@
     "db:status": "node scripts/apply-migrations.mjs --list",
     "import:sheets": "node scripts/import-from-sheets.mjs",
     "import:sheets:skip-existing": "node scripts/import-from-sheets.mjs --skip-existing",
-    "db:seed-judging": "node scripts/seed-judging-from-meta.mjs"
+    "db:seed-judging": "node scripts/seed-judging-from-meta.mjs",
+    "ajudge:audit": "node scripts/ai-judge-audit.mjs",
+    "ajudge:assets": "node scripts/ajudge-assets.mjs"
   },
   "dependencies": {
+    "@mediapipe/tasks-vision": "^1.0.0",
+    "@supabase/ssr": "^0.12.3",
     "@supabase/supabase-js": "^2.105.4",
     "exceljs": "^4.4.0",
     "lru-cache": "^11.0.2",

@@ -1,3 +1,4 @@
+import { svgId } from '@/lib/templates/shared/svgId';
 // Design Ref: §11.1 #6 — Template 01의 공통 SVG 빌딩 블록.
 // 원본: DashDesignTemplates/01/jeju_bachata_process_templates.html (lines 184-456)
 // 함수 시그니처는 그대로 유지하되 TS로 마이그레이션. 모든 함수는 SVG 문자열 반환.
@@ -149,6 +150,7 @@ export function shell(content: string): string {
   ${PALM_LAYER}
   ${FRAME_LAYER}
   ${content}
+  <!--ICON_SLOT-->
 </svg>`;
 }
 
@@ -185,7 +187,6 @@ export function sunburstTop(cx = 640, cy = 110, scale = 1): string {
 }
 
 // 같은 SVG 안에서 여러 hexagonFrame이 호출될 때 clipPath id가 충돌하지 않도록 고유 카운터.
-let hexClipCounter = 0;
 
 export function hexagonFrame(
   cx: number,
@@ -216,7 +217,7 @@ export function hexagonFrame(
   // placeholder가 빈 문자열로 치환되면 href=""가 되는데, 이 경우 브라우저는 아무것도 렌더하지 않음(broken icon 회피).
   let photoEl = '';
   if (photoKey) {
-    const clipId = `hxclip-${++hexClipCounter}`;
+    const clipId = svgId('hxclip', cx, cy, size);
     const ix = cx - size;
     const iy = cy - size;
     const iw = size * 2;

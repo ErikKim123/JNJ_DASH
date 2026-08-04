@@ -1,3 +1,4 @@
+import { svgId } from '@/lib/templates/shared/svgId';
 // Design Ref: Template 04 — Template 03 사본. 배경/레이아웃은 동일하고
 // 고정 그래픽(JLCF 골드 스탬프 로고, 돌하르방 3인)만 제거한 변형.
 // 배경 원본: DashDesignTemplates/02/2026배경2.pdf → public/templates/02/background.jpg (03과 공유)
@@ -150,6 +151,7 @@ export function shell(content: string): string {
   <!--BG_OVERRIDE_SLOT-->
   ${FRAME_LAYER}
   ${content}
+  <!--ICON_SLOT-->
 </svg>`;
 }
 
@@ -188,7 +190,6 @@ export function sunburstTop(cx = 640, cy = 110, scale = 1): string {
 }
 
 // 같은 SVG 안에서 여러 hexagonFrame이 호출될 때 clipPath id가 충돌하지 않도록 고유 카운터.
-let hexClipCounter = 0;
 
 export function hexagonFrame(
   cx: number,
@@ -217,7 +218,7 @@ export function hexagonFrame(
 
   let photoEl = '';
   if (photoKey) {
-    const clipId = `hxclip-t04-${++hexClipCounter}`;
+    const clipId = svgId('hxclip-t04', cx, cy, size);
     const ix = cx - size;
     const iy = cy - size;
     const iw = size * 2;

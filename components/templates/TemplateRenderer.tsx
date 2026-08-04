@@ -32,6 +32,10 @@ export interface TemplateRendererProps {
   backgroundOverride?: string;
   /** 커스텀 배경 투명도 (0-100). 미지정 시 100. */
   backgroundOpacity?: number;
+  /** 대회 아이콘(로고) URL — 상단 중앙에 표시. 비어있으면 미표시. */
+  iconOverride?: string;
+  /** 아이콘 투명도 (0-100). 미지정 시 100. */
+  iconOpacity?: number;
   /** MC 원격 영상 명령 — VIDEO 스텝 플레이어를 재생/일시정지. */
   videoCommand?: VideoCommand | null;
   /** MC 원격 발표 명령 — 결승 RESULT 다음 자리 발표 / 초기화. */
@@ -55,13 +59,13 @@ const SvgHost = memo(
   })
 );
 
-export function TemplateRenderer({ templateId, round, step, data, fit = 'width', backgroundOverride, backgroundOpacity, videoCommand, revealCommand, pairCircle }: TemplateRendererProps) {
+export function TemplateRenderer({ templateId, round, step, data, fit = 'width', backgroundOverride, backgroundOpacity, iconOverride, iconOpacity, videoCommand, revealCommand, pairCircle }: TemplateRendererProps) {
   const template = getTemplate(templateId);
-  // svg 문자열을 메모이즈 — data/round/step/배경 override/opacity/페어 레이아웃이
+  // svg 문자열을 메모이즈 — data/round/step/배경·아이콘 override/opacity/페어 레이아웃이
   // 같으면 이전 결과 재사용
   const svg = useMemo(
-    () => template.render(round, step, data, { backgroundOverride, backgroundOpacity, pairCircle }),
-    [template, round, step, data, backgroundOverride, backgroundOpacity, pairCircle]
+    () => template.render(round, step, data, { backgroundOverride, backgroundOpacity, iconOverride, iconOpacity, pairCircle }),
+    [template, round, step, data, backgroundOverride, backgroundOpacity, iconOverride, iconOpacity, pairCircle]
   );
 
   const isFinalResult = round === 'final' && step === 'result';

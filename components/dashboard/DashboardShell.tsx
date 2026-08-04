@@ -345,6 +345,8 @@ export function DashboardShell({
             fit="viewport"
             backgroundOverride={meta.backgroundImage}
             backgroundOpacity={meta.backgroundOpacity}
+            iconOverride={meta.iconImage}
+            iconOpacity={meta.iconOpacity}
             videoCommand={videoCommand}
             revealCommand={revealCommand}
             pairCircle={pairCircle}
@@ -548,6 +550,8 @@ export function DashboardShell({
             data={result.payload}
             backgroundOverride={meta.backgroundImage}
             backgroundOpacity={meta.backgroundOpacity}
+            iconOverride={meta.iconImage}
+            iconOpacity={meta.iconOpacity}
             videoCommand={videoCommand}
             revealCommand={revealCommand}
             pairCircle={pairCircle}

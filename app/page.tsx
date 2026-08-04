@@ -15,10 +15,19 @@ export default function HomePage() {
           </h1>
           <p className="text-sm text-ink2 mt-1">대회를 선택하세요 / Select a Competition</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-wrap gap-y-2 justify-end">
           <p className="text-xs text-ink2 font-mono tracking-widest uppercase">
             DANCE · COMPETITION · DASHBOARD
           </p>
+          {/* AI Judge — 참가자용 영상 분석 서브 프로덕트 */}
+          <Link
+            href="/ajudge"
+            target="_blank"
+            rel="noopener"
+            className="text-xs font-mono tracking-widest uppercase px-3 py-1.5 rounded border border-accent bg-accent/10 text-accent hover:bg-accent/20 transition"
+          >
+            AI Judge ↗
+          </Link>
           <Link
             href="/vote"
             target="_blank"

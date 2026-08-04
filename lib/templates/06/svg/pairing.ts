@@ -9,7 +9,16 @@ import {
 } from '../common';
 import { circlePairingLayout } from '../../shared/circlePairing';
 
-const TOP = 250;
+// 헤더 블록(스테이지 라벨·제목·구분선)을 통째로 내리는 양.
+// 지면 하단의 태그라인·스폰서 구역이 비어 있는 대회에선 화면이 위로 쏠려 보인다.
+// 라벨 구간은 푸터 헤어라인(FOOT_RULE_Y=592) 여백을 지켜야 해서 같은 양만큼은 못 내려가므로,
+// 위쪽을 더 잘라 내리는 방식으로 블록 중심을 함께 내린다.
+const SHIFT = 16;
+const STAGE_Y = 166 + SHIFT;
+const TITLE_Y = 212 + SHIFT;
+const RULE_Y = 232 + SHIFT;
+
+const TOP = 268;
 const BOTTOM = 574;
 
 /**
@@ -18,7 +27,7 @@ const BOTTOM = 574;
  */
 function renderCircle(pairCount: number): string {
   const count = Math.max(1, Math.min(30, pairCount));
-  const L = circlePairingLayout(count, { band: [248, 580], withNames: false, ryScale: 1.3 });
+  const L = circlePairingLayout(count, { band: [266, 584], withNames: false, ryScale: 1.3 });
   const fs = L.fontSize;
 
   const body = L.slots
@@ -50,11 +59,11 @@ function renderCircle(pairCount: number): string {
   return shell(`
     ${topBar()}
 
-    ${metaLabel(CX, 166, '{{stage_label}}', { size: 13, tracking: 10 })}
-    <text x="${CX}" y="${212}" text-anchor="middle" font-family="${DISPLAY}" font-weight="700"
+    ${metaLabel(CX, STAGE_Y, '{{stage_label}}', { size: 13, tracking: 10 })}
+    <text x="${CX}" y="${TITLE_Y}" text-anchor="middle" font-family="${DISPLAY}" font-weight="700"
       font-size="44" letter-spacing="4" fill="${INK}">{{round_title}}</text>
-    ${metaLabel(RX, 212, `${count} COUPLES`, { size: 12, tracking: 4, anchor: 'end', fill: INK_SOFT })}
-    ${hairline(232, MX, RX, 0.18)}
+    ${metaLabel(RX, TITLE_Y, `${count} COUPLES`, { size: 12, tracking: 4, anchor: 'end', fill: INK_SOFT })}
+    ${hairline(RULE_Y, MX, RX, 0.18)}
 
     ${centerMark}
     ${body}
@@ -101,11 +110,11 @@ function renderList(pairCount: number): string {
   return shell(`
     ${topBar()}
 
-    ${metaLabel(CX, 166, '{{stage_label}}', { size: 13, tracking: 10 })}
-    <text x="${CX}" y="${212}" text-anchor="middle" font-family="${DISPLAY}" font-weight="700"
+    ${metaLabel(CX, STAGE_Y, '{{stage_label}}', { size: 13, tracking: 10 })}
+    <text x="${CX}" y="${TITLE_Y}" text-anchor="middle" font-family="${DISPLAY}" font-weight="700"
       font-size="44" letter-spacing="4" fill="${INK}">{{round_title}}</text>
-    ${metaLabel(RX, 212, `${count} COUPLES`, { size: 12, tracking: 4, anchor: 'end', fill: INK_SOFT })}
-    ${hairline(232, MX, RX, 0.18)}
+    ${metaLabel(RX, TITLE_Y, `${count} COUPLES`, { size: 12, tracking: 4, anchor: 'end', fill: INK_SOFT })}
+    ${hairline(RULE_Y, MX, RX, 0.18)}
 
     ${panel(MX - 16, top - 14, RX - MX + 32, blockH + 28, 0.4)}
     ${rows}

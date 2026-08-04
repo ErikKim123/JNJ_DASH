@@ -8,7 +8,9 @@
 //
 // 도메인 타입은 lib/sheets/types.ts 를 그대로 재사용 (의도된 의존 — sheets/* 는 점진 폐기 예정).
 import { getSupabaseAdmin } from './client';
-import { listQualifiersWithLiveVotes } from './queries';
+import { listQualifiersWithLiveVotes, listOnlineJudgeVotes } from './queries';
+import { resolveActiveOnlineDefs } from './scoring';
+import type { OnlineScoringItemKey } from './scoring';
 import { normalizePhotoUrl, resolvePhotoUrl } from '@/lib/photo';
 import type {
   PairingRow,
@@ -245,6 +247,8 @@ export async function getContestMeta(contestId: string): Promise<ContestMeta | n
     backgroundImage: contest.background_image ?? '',
     backgroundOpacity:
       typeof contest.background_opacity === 'number' ? contest.background_opacity : 100,
+    iconImage: contest.icon_image ?? '',
+    iconOpacity: typeof contest.icon_opacity === 'number' ? contest.icon_opacity : 100,
     extraVideos: normalizeExtraVideos(contest.extra_videos),
     rounds: {
       prelim: { label: '예선', steps: STEPS_BY_ROUND.prelim },
@@ -385,6 +389,95 @@ async function getFinalReport(
       total: fmt(r.total_score),
       avg: fmt(r.average),
     }));
+  }
+
+  return { leaders: build('leader'), followers: build('follower') };
+}
+
+/**
+ * 온라인 심사위원 전용 결승 보고서 — 판정단 점수를 빼고 online_judge_votes 만으로 집계.
+ *
+ * 집계식은 online-final-judging/commit 라우트의 온라인 파트와 동일하다.
+ *   · 후보 = 본선 통과자(qualifiers.round='semi', passed=true)
+ *   · avg  = 활성 온라인 항목(contests.online_scoring_items) 점수의 단순 평균(0–10)
+ *            → 심사위원 수가 몇 명이든 항목 점수 전체를 모아 평균내므로 인원에 좌우되지 않음
+ *   · total = avg × 활성 항목 수 (판정단 보고서의 total_score 와 같은 표시 규칙)
+ *   · rank  = 역할별 avg 내림차순, 동점은 같은 등수
+ */
+async function getOnlineFinalReport(
+  contestId: string,
+  topN = 5
+): Promise<{ leaders: ReportEntry[]; followers: ReportEntry[] }> {
+  const sb = getSupabaseAdmin();
+
+  const { data: contest, error: ce } = await sb
+    .from('contests')
+    .select('online_scoring_items')
+    .eq('id', contestId)
+    .maybeSingle();
+  if (ce) throw new Error(`getOnlineFinalReport(contest): ${ce.message}`);
+  const cols = resolveActiveOnlineDefs(
+    (contest?.online_scoring_items ?? []) as OnlineScoringItemKey[]
+  ).map((d) => d.column);
+
+  const { data: qs, error: qe } = await sb
+    .from('qualifiers')
+    .select('participant_num, team_name, role')
+    .eq('contest_id', contestId)
+    .eq('round', 'semi')
+    .eq('passed', true);
+  if (qe) throw new Error(`getOnlineFinalReport(qualifiers): ${qe.message}`);
+  const candidates = (qs ?? []).filter(
+    (q) => q.role === 'leader' || q.role === 'follower'
+  ) as Array<{ participant_num: string; team_name: string; role: 'leader' | 'follower' }>;
+
+  // num → 항목 점수 합/개수.
+  const agg = new Map<string, { sum: number; cnt: number }>();
+  if (cols.length > 0) {
+    const votes = await listOnlineJudgeVotes(contestId);
+    for (const v of votes) {
+      const cur = agg.get(v.participant_num) ?? { sum: 0, cnt: 0 };
+      for (const c of cols) {
+        const x = (v as unknown as Record<string, number | null>)[c];
+        if (x != null) { cur.sum += Number(x); cur.cnt++; }
+      }
+      agg.set(v.participant_num, cur);
+    }
+  }
+  const itemCount = cols.length || 1;
+  const fmt = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(2));
+
+  function build(role: 'leader' | 'follower'): ReportEntry[] {
+    const list = candidates
+      .filter((c) => c.role === role)
+      .map((c) => {
+        const a = agg.get(c.participant_num);
+        return {
+          num: c.participant_num,
+          name: c.team_name,
+          avg: a && a.cnt > 0 ? a.sum / a.cnt : null,
+        };
+      })
+      .filter((x): x is { num: string; name: string; avg: number } => x.avg != null);
+
+    list.sort(
+      (a, b) => b.avg - a.avg || a.num.localeCompare(b.num, undefined, { numeric: true })
+    );
+
+    // 동점은 같은 등수 (commit 라우트와 동일한 dense-ish 규칙: 다음 등수는 순번 그대로).
+    let lastKey: string | null = null;
+    let lastRank = 0;
+    return list.slice(0, topN).map((x, i) => {
+      const key = x.avg.toFixed(4);
+      if (key !== lastKey) { lastRank = i + 1; lastKey = key; }
+      return {
+        rank: lastRank,
+        num: x.num,
+        name: x.name,
+        total: fmt(Number((x.avg * itemCount).toFixed(2))),
+        avg: fmt(Number(x.avg.toFixed(2))),
+      };
+    });
   }
 
   return { leaders: build('leader'), followers: build('follower') };
@@ -792,6 +885,22 @@ export async function getStepData(params: GetStepDataParams): Promise<StepDataPa
       festival_header: festivalHeader,
       report_title: 'SCORE REPORT',
       report_subtitle: 'GRAND FINAL · TOP 5',
+      label_leader: 'LEADER',
+      label_follower: 'FOLLOWER',
+      leaders,
+      followers,
+    };
+    return { kind: 'report', data: out };
+  }
+
+  // ── Report (online) — 온라인 심사위원 점수만으로 뽑은 1~5등 표. 화면은 REPORT 와 동일. ──
+  if (step === 'reportOnline') {
+    if (round !== 'final') throw new StepNotAvailableError(round, step);
+    const { leaders, followers } = await getOnlineFinalReport(contestId, 5);
+    const out: ReportData = {
+      festival_header: festivalHeader,
+      report_title: 'ONLINE SCORE REPORT',
+      report_subtitle: 'ONLINE JUDGES · TOP 5',
       label_leader: 'LEADER',
       label_follower: 'FOLLOWER',
       leaders,

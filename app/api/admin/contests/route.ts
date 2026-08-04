@@ -58,6 +58,11 @@ const CreateContestSchema = z.object({
     .optional()
     .default(''),
   background_opacity: z.number().int().min(0).max(100).optional().default(100),
+  icon_image: z
+    .union([z.literal(''), z.string().url().max(2000)])
+    .optional()
+    .default(''),
+  icon_opacity: z.number().int().min(0).max(100).optional().default(100),
   // 원격 URL(https) 또는 로컬 파일 풀경로(Z:\...) 모두 허용 — 표출 시 /api/video 로 변환.
   judges_video_url: z
     .union([z.literal(''), z.string().min(1).max(2000)])

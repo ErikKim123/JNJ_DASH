@@ -16,9 +16,16 @@ import { useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from './ui';
 import { jsonBackupToXlsx, xlsxFileToJsonBackup } from './backup-xlsx';
+import { useT } from '@/lib/i18n/LocaleContext';
+
+/** 간단한 {KEY} → value 치환. messages.ts 의 placeholder 패턴과 일치 (ContestForm 과 동일). */
+function fmt(template: string, vars: Record<string, string | number>): string {
+  return template.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? `{${k}}`));
+}
 
 export function ContestBackupBar({ contestId }: { contestId: string }) {
   const router = useRouter();
+  const t = useT();
   const fileRef = useRef<HTMLInputElement>(null);
   const [pending, startTransition] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
@@ -35,7 +42,7 @@ export function ContestBackupBar({ contestId }: { contestId: string }) {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    setMsg('JSON backup download started.');
+    setMsg(t('cb.jsonStarted'));
   }
 
   function downloadXlsx() {
@@ -43,7 +50,7 @@ export function ContestBackupBar({ contestId }: { contestId: string }) {
     startTransition(async () => {
       try {
         const res = await fetch(`/api/admin/contests/${encodeURIComponent(contestId)}/export`);
-        if (!res.ok) throw new Error(`Export failed (${res.status})`);
+        if (!res.ok) throw new Error(fmt(t('cb.exportFailed'), { STATUS: res.status }));
         const backup = (await res.json()) as Record<string, unknown>;
         const blob = await jsonBackupToXlsx(backup);
         const url = URL.createObjectURL(blob);
@@ -55,9 +62,9 @@ export function ContestBackupBar({ contestId }: { contestId: string }) {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        setMsg('XLSX backup downloaded.');
+        setMsg(t('cb.xlsxDone'));
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Failed to build XLSX');
+        setError(e instanceof Error ? e.message : t('cb.xlsxFailed'));
       }
     });
   }
@@ -75,7 +82,7 @@ export function ContestBackupBar({ contestId }: { contestId: string }) {
     const isXlsx = /\.xlsx$/i.test(file.name);
     const isJson = /\.json$/i.test(file.name);
     if (!isXlsx && !isJson) {
-      setError('Unsupported file — choose .json or .xlsx.');
+      setError(t('cb.badFile'));
       return;
     }
 
@@ -88,7 +95,11 @@ export function ContestBackupBar({ contestId }: { contestId: string }) {
         parsed = JSON.parse(text);
       }
     } catch (err) {
-      setError(`Parse failed: ${err instanceof Error ? err.message : 'unknown'}`);
+      setError(
+        fmt(t('cb.parseFailed'), {
+          MSG: err instanceof Error ? err.message : t('cb.parseUnknown'),
+        })
+      );
       return;
     }
 
@@ -99,12 +110,12 @@ export function ContestBackupBar({ contestId }: { contestId: string }) {
     let namesOnly = false;
     if (backupContestId !== contestId) {
       const proceed = confirm(
-        `This backup is for "${backupContestId ?? '?'}", not "${contestId}".\n\n` +
-        `Copy participants & judges only into "${contestId}"?\n` +
-        `· participants: ${summarize('participants')}\n` +
-        `· judges: ${summarize('judges')}\n\n` +
-        `Existing rows in "${contestId}" with matching id will be overwritten. ` +
-        `Other tables (votes, pairings, qualifiers, finals) and contest meta are NOT copied. Continue?`
+        fmt(t('cb.confirmOther'), {
+          SRC: backupContestId ?? '?',
+          DEST: contestId,
+          P: summarize('participants'),
+          J: summarize('judges'),
+        })
       );
       if (!proceed) return;
       namesOnly = true;
@@ -120,8 +131,11 @@ export function ContestBackupBar({ contestId }: { contestId: string }) {
       ].join(' · ');
 
       if (!confirm(
-        `Apply ${isXlsx ? 'XLSX' : 'JSON'} backup to "${contestId}"?\n\n${summary}\n\n` +
-        `Rows with matching id will be overwritten. Continue?`
+        fmt(t('cb.confirmApply'), {
+          FMT: isXlsx ? 'XLSX' : 'JSON',
+          DEST: contestId,
+          SUMMARY: summary,
+        })
       )) return;
     }
 
@@ -137,20 +151,30 @@ export function ContestBackupBar({ contestId }: { contestId: string }) {
       );
       const j = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(j.error ?? `Import failed (${res.status})`);
+        setError(j.error ?? fmt(t('cb.importFailed'), { STATUS: res.status }));
         return;
       }
       const c = j.data?.counts ?? {};
       if (namesOnly) {
         setMsg(
-          `Names-only restore from "${backupContestId}" → "${contestId}" — ` +
-          `participants ${c.participants ?? 0}, judges ${c.judges ?? 0}.`
+          fmt(t('cb.restoredNames'), {
+            SRC: backupContestId ?? '?',
+            DEST: contestId,
+            P: c.participants ?? 0,
+            J: c.judges ?? 0,
+          })
         );
       } else {
         setMsg(
-          `Restored — contests ${c.contests ?? 0}, participants ${c.participants ?? 0}, ` +
-          `judges ${c.judges ?? 0}, judge_votes ${c.judge_votes ?? 0}, ` +
-          `pairings ${c.pairings ?? 0}, qualifiers ${c.qualifiers ?? 0}, finals ${c.final_results ?? 0}.`
+          fmt(t('cb.restored'), {
+            C: c.contests ?? 0,
+            P: c.participants ?? 0,
+            J: c.judges ?? 0,
+            V: c.judge_votes ?? 0,
+            PR: c.pairings ?? 0,
+            Q: c.qualifiers ?? 0,
+            F: c.final_results ?? 0,
+          })
         );
       }
       router.refresh();
@@ -160,7 +184,7 @@ export function ContestBackupBar({ contestId }: { contestId: string }) {
   return (
     <section className="rounded border border-border bg-panel/40 p-4 max-w-3xl">
       <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
-        <h3 className="text-sm font-semibold">Backup & Restore</h3>
+        <h3 className="text-sm font-semibold">{t('cb.title')}</h3>
         <div className="flex items-center gap-2 flex-wrap">
           <Button onClick={downloadJson} disabled={pending}>↓ JSON</Button>
           <Button onClick={downloadXlsx} disabled={pending}>↓ XLSX</Button>
@@ -174,16 +198,8 @@ export function ContestBackupBar({ contestId }: { contestId: string }) {
           />
         </div>
       </div>
-      <p className="text-xs text-ink2">
-        Downloads a snapshot of this contest as <strong>JSON</strong> or <strong>XLSX</strong> (Excel).
-        XLSX includes <strong>contest · participants · judges · pairings · qualifiers · final_results</strong>{' '}
-        plus per-round score sheets <strong>prelim_votes · semi_votes · final_scores</strong>{' '}
-        (with judge name &amp; team name columns for readability) — edit in Excel and upload back.
-        Existing votes are matched by (judge, participant) and overwritten.
-        Uploading a backup from a different contest copies <strong>participants &amp; judges only</strong>{' '}
-        (after confirmation) — useful for seeding a new contest.
-      </p>
-      {pending && <p className="text-xs text-ink2 mt-2">working…</p>}
+      <p className="text-xs text-ink2" dangerouslySetInnerHTML={{ __html: t('cb.desc') }} />
+      {pending && <p className="text-xs text-ink2 mt-2">{t('cb.working')}</p>}
       {msg && (
         <p className="text-xs text-ok mt-2 rounded border border-ok/40 bg-ok/5 px-2 py-1">
           ✓ {msg}
