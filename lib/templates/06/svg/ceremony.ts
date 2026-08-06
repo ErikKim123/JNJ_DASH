@@ -53,9 +53,8 @@ function sakuraFall(): string {
 
 /**
  * 구획 헤더 — 구분선(위) + [로마 숫자 · 라벨](아래).
- * 라벨은 {{label_leader}} 같은 placeholder 라서 최종 길이를 알 수 없다. 선을 텍스트
- * 양옆에 두면 긴 라벨이 선을 파고들므로, 선은 위에 한 줄로 긋고 텍스트는 하나의
- * <text> 로 묶어 중앙 정렬한다 (길이가 변해도 항상 축에 맞는다).
+ * 선을 텍스트 양옆에 두면 라벨 길이에 따라 선을 파고들므로, 선은 위에 한 줄로 긋고
+ * 텍스트는 하나의 <text> 로 묶어 중앙 정렬한다 (길이가 변해도 항상 축에 맞는다).
  */
 function rankHeader(cx: number, y: number, rank: 1 | 2 | 3, label: string, color: string, half = 150): string {
   return `
@@ -113,7 +112,7 @@ export function ceremonySvg(): string {
 
     ${panel(MX - 16, 254, RX - MX + 32, 350, 0.4)}
 
-    ${rankHeader(CX, 288, 1, '{{label_leader}} · {{label_follower}}', ACCENT, 230)}
+    ${rankHeader(CX, 288, 1, 'FIRST', ACCENT, 230)}
     ${pair(1, 556, 724, 366, 56, 452, 19, 0.25)}
 
     ${rankHeader(320, 486, 2, 'SECOND', TEAL, 130)}
