@@ -196,6 +196,14 @@ export const MESSAGES_EN = {
   'cf.festivalHeader': 'Festival Header (display)',
   'cf.festivalHeaderHint': 'Defaults to contest name if blank',
   'cf.tagline': 'Tagline (display)',
+  // Audience listing
+  'cf.audienceListedTitle': 'Show in AUDIENCE lists',
+  'cf.audienceListedOn': 'Listed',
+  'cf.audienceListedOff': 'Hidden',
+  'cf.audienceListedHint':
+    'Controls whether this contest appears in the audience judge sign-up and audience vote lists. Turn it off for internal contests (CHECK, DEMO) or ones that are over. Anyone holding a direct link or QR can still open it.',
+  'cf.audienceListedVoteNote':
+    'Sign-up list only for now — the vote list also needs Audience judges turned on under Final judging.',
   // SNS room
   'cf.snsTitle': 'SNS Room (Community Chat)',
   'cf.snsMeta': 'Shown as a join button on the registration-complete screen',
@@ -560,6 +568,14 @@ export const MESSAGES_KO: Record<MessageKey, string> = {
   'cf.festivalHeader': '페스티벌 헤더 (표출)',
   'cf.festivalHeaderHint': '비워두면 대회명이 사용됩니다',
   'cf.tagline': '태그라인 (표출)',
+  // Audience listing
+  'cf.audienceListedTitle': 'AUDIENCE 목록 노출',
+  'cf.audienceListedOn': '노출',
+  'cf.audienceListedOff': '숨김',
+  'cf.audienceListedHint':
+    '관객 심사위원 등록 목록과 관객 채점 목록에 이 대회를 띄울지 정합니다. CHECK·DEMO 같은 내부 대회나 끝난 대회는 꺼 두세요. 링크나 QR을 직접 가진 사람은 그대로 들어올 수 있습니다.',
+  'cf.audienceListedVoteNote':
+    '지금은 등록 목록에만 나옵니다 — 채점 목록에도 띄우려면 결승 심사에서 관객 심사위원을 켜야 합니다.',
   // SNS room
   'cf.snsTitle': 'SNS 방 (커뮤니티 채팅)',
   'cf.snsMeta': '등록 완료 화면에 참여 버튼으로 노출됩니다',

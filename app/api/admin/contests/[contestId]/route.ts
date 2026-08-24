@@ -76,6 +76,7 @@ const PatchSchema = z.object({
   payment_enabled: z.boolean().optional(),
   panel_judges_enabled: z.boolean().optional(),
   online_judges_enabled: z.boolean().optional(),
+  audience_listed: z.boolean().optional(),
   panel_judge_weight: z.number().min(0).max(9999).optional(),
   online_judge_weight: z.number().min(0).max(9999).optional(),
   online_judge_rounds: z.array(z.enum(['prelim', 'semi', 'final'])).optional(),

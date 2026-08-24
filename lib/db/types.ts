@@ -85,6 +85,11 @@ export interface ContestRow {
   panel_judges_enabled: boolean;
   /** 관객 심사위원 사용 여부. */
   online_judges_enabled: boolean;
+  /**
+   * AUDIENCE 등록/투표 대회 목록에 이 대회를 띄울지.
+   * 기능 on/off 가 아니라 '목록 노출'만 결정한다 — 기능은 online_judges_enabled 가 맡는다.
+   */
+  audience_listed: boolean;
   /** 최종 결과에서 판정단 평균의 가중치(평균 가중 합산). */
   panel_judge_weight: number;
   /** 최종 결과에서 관객 심사위원 평균의 가중치(평균 가중 합산). */

@@ -14,7 +14,9 @@ function buildQrSrc(url: string, size = 120): string {
 
 export default async function OJudgeCompetitionsPage() {
   const all = await listContests().catch(() => []);
-  const contests = all.filter((c) => c.status !== 'archived');
+  // audience_listed 로 노출을 고른다(대회 정보 > AUDIENCE 목록 노출).
+  // 컬럼이 없던 시절 데이터는 노출로 본다 — 0036 이전 동작(전부 노출)과 같게.
+  const contests = all.filter((c) => c.status !== 'archived' && c.audience_listed !== false);
 
   const h = await headers();
   const proto = h.get('x-forwarded-proto') ?? 'http';

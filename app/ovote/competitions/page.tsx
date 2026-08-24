@@ -8,7 +8,11 @@ export const dynamic = 'force-dynamic';
 
 export default async function OVoteCompetitions() {
   const all = await listContests().catch(() => []);
-  const contests = all.filter((c) => c.status !== 'archived' && c.online_judges_enabled);
+  // audience_listed = 목록 노출 여부, online_judges_enabled = 관객 채점 기능 자체.
+  // 기능이 꺼져 있으면 들어와도 투표가 막히므로 둘 다 만족할 때만 띄운다.
+  const contests = all.filter(
+    (c) => c.status !== 'archived' && c.audience_listed !== false && c.online_judges_enabled,
+  );
 
   const h = await headers();
   const proto = h.get('x-forwarded-proto') ?? 'http';
