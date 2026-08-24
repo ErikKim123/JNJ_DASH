@@ -109,9 +109,16 @@ export function OJudgeDonePanel({
 
       <div style={{ flex: 1, minHeight: 24 }} />
 
-      <Link href="/ojudge/competitions" className="jnj-btn jnj-btn-secondary jnj-btn-full jnj-btn-lg">
-        {lang === 'en' ? 'Back to Competitions' : '대회 목록으로'}
-      </Link>
+      {/* 등록 다음 걸음은 '채점하러 가기' 다 — 바로 위에서 안내한 4자리 비밀번호를 쓰는 곳으로 보낸다.
+          대회 목록은 되돌아가는 길이라 아래에 보조로 남긴다. */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <Link href="/ovote/competitions" className="jnj-btn jnj-btn-primary jnj-btn-full jnj-btn-lg">
+          {lang === 'en' ? 'Go to Audience Vote' : '관객 채점 하러 가기'}
+        </Link>
+        <Link href="/ojudge/competitions" className="jnj-btn jnj-btn-secondary jnj-btn-full jnj-btn-lg">
+          {lang === 'en' ? 'Back to Competitions' : '대회 목록으로'}
+        </Link>
+      </div>
     </div>
   );
 }
