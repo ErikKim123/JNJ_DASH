@@ -14,6 +14,7 @@ import {
 } from '@/lib/vote/sheet-schema';
 import { OVoteTopNav } from '@/components/ovote/OVoteTopNav';
 import { getSession, clearSession, type OJudgeSession } from '@/lib/ovote/session';
+import { QRCodeImg } from '@/components/vote/QRCode';
 
 type Round = 'prelim' | 'semi' | 'final';
 
@@ -34,6 +35,7 @@ export default function OVoteRoundsPage({
   const [state, setState] = useState<State | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [shareUrl, setShareUrl] = useState('');
 
   const load = useCallback((judgeId: string) => {
     setLoading(true);
@@ -50,6 +52,10 @@ export default function OVoteRoundsPage({
       })
       .catch(() => setError('네트워크 오류'))
       .finally(() => setLoading(false));
+  }, [contestId]);
+
+  useEffect(() => {
+    setShareUrl(`${window.location.origin}/ovote/${encodeURIComponent(contestId)}`);
   }, [contestId]);
 
   useEffect(() => {
@@ -88,16 +94,24 @@ export default function OVoteRoundsPage({
         onLogout={logout}
       />
 
-      <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--jnj-space-2)' }}>
-        {state?.contestName && (
-          <span className="jnj-small" style={{ color: 'var(--jnj-text-secondary)', letterSpacing: '0.06em' }}>
-            {contestId} · {state.contestName}
+      <section style={{ display: 'flex', alignItems: 'flex-end', gap: 'var(--jnj-space-4)' }}>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--jnj-space-2)' }}>
+          {state?.contestName && (
+            <span className="jnj-small" style={{ color: 'var(--jnj-text-secondary)', letterSpacing: '0.06em' }}>
+              {contestId} · {state.contestName}
+            </span>
+          )}
+          <span className="jnj-small" style={{ color: 'var(--jnj-text-secondary)', letterSpacing: '0.08em' }}>ROUND</span>
+          <h1 className="jnj-display" style={{ fontSize: 'clamp(36px, 9vw, 64px)', margin: 0 }}>
+            SELECT ROUND
+          </h1>
+        </div>
+        {shareUrl && (
+          <span title={shareUrl} style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--jnj-space-2)' }}>
+            <QRCodeImg value={shareUrl} size={88} margin={1} alt={`QR · ${contestId}`} style={{ padding: 4 }} />
+            <span className="jnj-small" style={{ color: 'var(--jnj-text-secondary)', letterSpacing: '0.06em' }}>SCAN TO JOIN</span>
           </span>
         )}
-        <span className="jnj-small" style={{ color: 'var(--jnj-text-secondary)', letterSpacing: '0.08em' }}>ROUND</span>
-        <h1 className="jnj-display" style={{ fontSize: 'clamp(36px, 9vw, 64px)', margin: 0 }}>
-          SELECT ROUND
-        </h1>
       </section>
 
       {error && (
