@@ -4,6 +4,7 @@ import { headers } from 'next/headers';
 import { getContest } from '@/lib/db/queries';
 import { contestTheme, joinRootProps } from '@/lib/join/theme';
 import { OnlineJudgeForm } from './OnlineJudgeForm';
+import { RegistrationClosedPanel } from './RegistrationClosedPanel';
 import { TopNav } from '../../join/_components/TopNav';
 
 export const dynamic = 'force-dynamic';
@@ -31,16 +32,7 @@ export default async function OJudgeFormPage({
         style={{ padding: '24px 20px', maxWidth: 480, margin: '0 auto', minHeight: '100dvh', ...root.style }}
       >
         <TopNav variant={root.mode === 'dark' ? 'dark' : 'light'} trophyHref="/ojudge/competitions" />
-        <div
-          className="jnj-card"
-          style={{ marginTop: 24, textAlign: 'center', padding: 32, background: 'var(--jnj-surface-2)', border: '1px solid var(--jnj-border)' }}
-        >
-          <p className="jnj-mono" style={{ fontSize: 12, color: 'var(--jnj-text-muted)', marginBottom: 8, letterSpacing: '0.08em' }}>
-            REGISTRATION CLOSED
-          </p>
-          <p className="jnj-h2" style={{ marginBottom: 8 }}>{contest.name}</p>
-          <p className="jnj-caption" style={{ color: 'var(--jnj-text-muted)' }}>대회가 종료되어 등록을 받지 않습니다.</p>
-        </div>
+        <RegistrationClosedPanel contestName={contest.name} />
       </main>
     );
   }
@@ -67,7 +59,7 @@ export default async function OJudgeFormPage({
           <a
             href={absUrl}
             title={absUrl}
-            aria-label="이 페이지의 QR 코드"
+            aria-label="QR code for this page"
             style={{
               flexShrink: 0,
               width: 112,
