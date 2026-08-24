@@ -60,6 +60,17 @@ export default function OJudgeLandingPage() {
       <p className="jnj-caption jnj-text-center" style={{ marginTop: 12, color: 'var(--jnj-text-muted)' }}>
         Select an active competition
       </p>
+
+      {/* 이미 등록을 마친 관객은 여기가 아니라 채점 앱으로 가야 한다.
+          두 앱이 서로를 모르면 현장에서 QR/주소를 따로 안내해야 하므로 서로 오갈 길을 열어둔다. */}
+      <Link
+        href="/ovote"
+        className="jnj-small jnj-text-center"
+        style={{ display: 'block', marginTop: 20, textDecoration: 'none' }}
+      >
+        <span style={{ color: 'var(--jnj-text-muted)' }}>Already registered? </span>
+        <span style={{ color: 'var(--jnj-text)', textDecoration: 'underline' }}>Go to Audience Vote →</span>
+      </Link>
     </main>
   );
 }

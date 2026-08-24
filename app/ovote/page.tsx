@@ -78,6 +78,24 @@ export default function OVoteHome() {
         >
           Select your competition
         </p>
+
+        {/* 아직 심사위원 등록을 안 한 관객은 채점에 들어올 수 없다 — 등록 앱으로 보낸다.
+            색은 이 페이지가 쓰는 토큰 그대로라 라이트/다크 어느 쪽이든 따라온다. */}
+        <Link
+          href="/ojudge"
+          style={{
+            marginTop: 'var(--jnj-space-2)',
+            fontFamily: 'var(--jnj-font-text)',
+            fontSize: 'var(--jnj-size-small)',
+            textAlign: 'center',
+            textDecoration: 'none',
+          }}
+        >
+          <span style={{ color: 'var(--jnj-grey-500)' }}>Not registered yet? </span>
+          <span style={{ color: 'var(--jnj-white)', textDecoration: 'underline' }}>
+            Register as an Audience Judge →
+          </span>
+        </Link>
       </footer>
     </main>
   );
