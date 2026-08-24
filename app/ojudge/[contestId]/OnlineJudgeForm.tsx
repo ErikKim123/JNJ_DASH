@@ -1,6 +1,6 @@
 'use client';
 
-// 온라인 심사위원 셀프 등록 폼 — JOIN 참가자 폼과 동일 디자인/위젯 재사용.
+// 관객 심사위원 셀프 등록 폼 — JOIN 참가자 폼과 동일 디자인/위젯 재사용.
 // 필드: 사진 · 이름(First/Last) · 국가 · 이메일 · 연락처(WhatsApp) · 4자리 PIN.
 // 제출: /api/ojudge/[contestId]/submit → 성공 시 /ojudge/[contestId]/done 로 이동.
 import { useRef, useState } from 'react';

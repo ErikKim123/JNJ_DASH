@@ -1,4 +1,4 @@
-// /ovote — 온라인 심사위원 VOTE 앱 진입점 (VOTE 앱과 동일 디자인).
+// /ovote — 관객 심사위원 VOTE 앱 진입점 (VOTE 앱과 동일 디자인).
 import Link from 'next/link';
 
 export default function OVoteHome() {
@@ -39,7 +39,7 @@ export default function OVoteHome() {
             color: 'var(--jnj-white)',
           }}
         >
-          ONLINE
+          AUDIENCE
           <br />
           VOTE.
         </h1>
@@ -55,7 +55,7 @@ export default function OVoteHome() {
             letterSpacing: '0.02em',
           }}
         >
-          Online judges — log in and score the final.
+          Audience judges — log in and score the final.
         </p>
       </section>
 

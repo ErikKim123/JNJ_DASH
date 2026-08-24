@@ -1,6 +1,6 @@
 'use client';
 
-// 온라인 심사위원 VOTE 앱 세션 — 대회별로 로그인한 심사위원 정보를 localStorage 보관.
+// 관객 심사위원 VOTE 앱 세션 — 대회별로 로그인한 심사위원 정보를 localStorage 보관.
 // (VOTE 앱과 동일하게 별도 인증 쿠키 없이 클라이언트 저장. judgeId 는 uuid 라 추측 불가.)
 
 export interface OJudgeSession {

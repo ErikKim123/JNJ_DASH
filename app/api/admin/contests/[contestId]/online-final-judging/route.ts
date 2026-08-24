@@ -1,5 +1,5 @@
 // GET /api/admin/contests/[id]/online-final-judging
-//   온라인 결승 심사 매트릭스 새로고침용 — 온라인 심사위원 + votes 최신값.
+//   관객 결승 심사 매트릭스 새로고침용 — 관객 심사위원 + votes 최신값.
 import { NextResponse } from 'next/server';
 import { listAllOnlineJudges, listOnlineJudgeVotes } from '@/lib/db/queries';
 

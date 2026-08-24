@@ -1,5 +1,5 @@
 // POST /api/ovote/[contestId]/login
-//   온라인 심사위원 로그인 — 등록 번호(또는 이메일) + 4자리 PIN 검증.
+//   관객 심사위원 로그인 — 등록 번호(또는 이메일) + 4자리 PIN 검증.
 //   성공 시 { judgeId, name, displayOrder } 반환(클라이언트가 세션 보관).
 // 공개 엔드포인트(미들웨어 대상 아님). VOTE 앱처럼 별도 세션 쿠키 없이 클라 저장.
 import { NextResponse } from 'next/server';

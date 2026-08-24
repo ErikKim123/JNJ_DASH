@@ -16,7 +16,7 @@ export type StepKey =
   | 'result'
   | 'ceremony'
   | 'report'
-  /** 온라인 심사위원 점수만으로 뽑은 보고서 — REPORT 와 화면 구성은 동일. */
+  /** 관객 심사위원 점수만으로 뽑은 보고서 — REPORT 와 화면 구성은 동일. */
   | 'reportOnline';
 
 export const ROUND_KEYS = ['prelim', 'semi', 'final'] as const;

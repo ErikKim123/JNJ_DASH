@@ -1,6 +1,6 @@
 // POST /api/ojudge/[contestId]/photo
 //
-// 공개 사진 업로드 — 온라인 심사위원 셀프 등록 시 사용. multipart/form-data 의 file 필드.
+// 공개 사진 업로드 — 관객 심사위원 셀프 등록 시 사용. multipart/form-data 의 file 필드.
 // 반환: { url } — Supabase Storage public CDN URL. participant-photos 버킷을 재사용하되
 // `${contestId}/_ojudge_pending/` 하위 경로에 저장.
 import { NextResponse } from 'next/server';

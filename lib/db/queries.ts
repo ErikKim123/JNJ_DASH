@@ -187,7 +187,7 @@ export async function listQualifiersWithLiveVotes(
 }
 
 /**
- * 온라인 심사위원 목록 — 대회당 최대 ~1000명이라 페이지네이션(기본 50/page).
+ * 관객 심사위원 목록 — 대회당 최대 ~1000명이라 페이지네이션(기본 50/page).
  *   page 는 1-기반. total 은 필터된 전체 건수(페이지 계산용).
  */
 export async function listOnlineJudges(
@@ -210,7 +210,7 @@ export async function listOnlineJudges(
   return { rows: (data ?? []) as OnlineJudgeRow[], total: count ?? 0 };
 }
 
-/** 온라인 심사위원 전체(페이지 없이) — 결승 채점 매트릭스 컬럼용. 대회당 최대 ~1000명. */
+/** 관객 심사위원 전체(페이지 없이) — 결승 채점 매트릭스 컬럼용. 대회당 최대 ~1000명. */
 export async function listAllOnlineJudges(contestId: string): Promise<OnlineJudgeRow[]> {
   const sb = getSupabaseAdmin();
   const PAGE = 1000;
@@ -230,7 +230,7 @@ export async function listAllOnlineJudges(contestId: string): Promise<OnlineJudg
   return all;
 }
 
-/** 온라인 심사위원 결승 채점 votes 전체 — 대회의 online_judge id 들로 조회(1000행 페이지네이션). */
+/** 관객 심사위원 결승 채점 votes 전체 — 대회의 online_judge id 들로 조회(1000행 페이지네이션). */
 export async function listOnlineJudgeVotes(contestId: string): Promise<OnlineJudgeVoteRow[]> {
   const sb = getSupabaseAdmin();
   const { data: judges, error: je } = await sb

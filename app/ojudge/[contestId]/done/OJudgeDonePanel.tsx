@@ -1,6 +1,6 @@
 'use client';
 
-// 온라인 심사위원 등록 완료 본문 — EN/KO 토글. 색상은 <main> 테마 토큰 상속.
+// 관객 심사위원 등록 완료 본문 — EN/KO 토글. 색상은 <main> 테마 토큰 상속.
 import { useState } from 'react';
 import Link from 'next/link';
 import { LangToggle, type Lang } from '../../../join/_components/form-widgets';
@@ -60,7 +60,7 @@ export function OJudgeDonePanel({
           )}
         </h1>
         <p className="jnj-mono" style={{ marginTop: 12, fontSize: 13, color: 'var(--jnj-text-muted)', letterSpacing: '0.08em' }}>
-          {lang === 'en' ? 'YOUR ONLINE JUDGE SIGN-UP HAS BEEN RECEIVED.' : '온라인 심사위원 등록이 접수되었습니다.'}
+          {lang === 'en' ? 'YOUR AUDIENCE JUDGE SIGN-UP HAS BEEN RECEIVED.' : '관객 심사위원 등록이 접수되었습니다.'}
         </p>
       </div>
 
@@ -101,7 +101,7 @@ export function OJudgeDonePanel({
             <>
               등록하신 <strong>4자리 비밀번호</strong>를 꼭 기억해 주세요.
               <br />
-              온라인 채점 접속 시 사용됩니다.
+              관객 채점 접속 시 사용됩니다.
             </>
           )}
         </p>

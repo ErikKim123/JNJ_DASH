@@ -1,6 +1,6 @@
 // POST /api/ojudge/[contestId]/submit
 //
-// 공개 온라인 심사위원 셀프 등록 엔드포인트. /admin 미들웨어 대상이 아니라 누구나 호출.
+// 공개 관객 심사위원 셀프 등록 엔드포인트. /admin 미들웨어 대상이 아니라 누구나 호출.
 //
 // 안전 정책(참가자 join 과 동일 패턴):
 //   - Zod strict validate + 필드 길이 제한.

@@ -1,4 +1,4 @@
-// /ojudge — JNJ JUDGE. 온라인 심사위원 셀프 등록 앱 진입점 (JOIN 앱과 동일 디자인).
+// /ojudge — JNJ JUDGE. 관객 심사위원 셀프 등록 앱 진입점 (JOIN 앱과 동일 디자인).
 import Link from 'next/link';
 import { joinRootProps, DEFAULT_JOIN_THEME } from '@/lib/join/theme';
 
@@ -33,7 +33,7 @@ export default function OJudgeLandingPage() {
         >
           JNJ
           <br />
-          ONLINE
+          AUDIENCE
           <br />
           JUDGE
         </h1>
@@ -48,7 +48,7 @@ export default function OJudgeLandingPage() {
             lineHeight: 1.3,
           }}
         >
-          REGISTER AS AN ONLINE JUDGE.
+          REGISTER AS AN AUDIENCE JUDGE.
         </p>
       </div>
 

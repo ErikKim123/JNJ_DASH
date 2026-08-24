@@ -1,4 +1,4 @@
-// /ovote/competitions — 온라인 심사위원 사용이 켜진 대회 목록. 각 카드는 로그인 화면으로.
+// /ovote/competitions — 관객 심사위원 사용이 켜진 대회 목록. 각 카드는 로그인 화면으로.
 import Link from 'next/link';
 import { headers } from 'next/headers';
 import { listContests } from '@/lib/db/queries';
@@ -45,7 +45,7 @@ export default async function OVoteCompetitions() {
 
       {contests.length === 0 ? (
         <p className="jnj-body" style={{ color: 'var(--jnj-text-secondary)' }}>
-          No competitions with online judging enabled.
+          No competitions with audience judging enabled.
         </p>
       ) : (
         <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--jnj-space-3)' }}>

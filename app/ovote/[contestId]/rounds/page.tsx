@@ -1,6 +1,6 @@
 'use client';
 
-// /ovote/[contestId]/rounds — 로그인한 온라인 심사위원의 라운드 선택.
+// /ovote/[contestId]/rounds — 로그인한 관객 심사위원의 라운드 선택.
 //   online_judge_rounds 에 포함되고 해당 라운드 상태가 OPEN/LIVE 인 라운드만 활성화.
 //   현재 결승만 구현 → 예선/본선은 (설정과 무관하게) 비활성 처리하고 안내.
 import { use, useCallback, useEffect, useState } from 'react';
@@ -150,11 +150,11 @@ function RoundButton({
   implemented: boolean;
 }) {
   const interactive = isRoundInteractive(status);
-  // 활성 조건: 온라인 라운드 설정 ON + 구현됨 + 상태 OPEN/LIVE.
+  // 활성 조건: 관객 라운드 설정 ON + 구현됨 + 상태 OPEN/LIVE.
   const clickable = enabledForOnline && implemented && interactive;
 
   let note: string;
-  if (!enabledForOnline) note = '온라인 심사 비활성';
+  if (!enabledForOnline) note = '관객 심사 비활성';
   else if (!implemented) note = '준비 중';
   else if (!interactive) note = ROUND_LIFECYCLE_LABEL[status];
   else note = ROUND_LIFECYCLE_LABEL[status];

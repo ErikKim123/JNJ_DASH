@@ -1,4 +1,4 @@
-// /ojudge/[contestId]/done — 온라인 심사위원 등록 완료 화면 (JOIN done 과 동일 디자인).
+// /ojudge/[contestId]/done — 관객 심사위원 등록 완료 화면 (JOIN done 과 동일 디자인).
 import { getContest } from '@/lib/db/queries';
 import { contestTheme, joinRootProps } from '@/lib/join/theme';
 import { OJudgeDonePanel } from './OJudgeDonePanel';

@@ -1,4 +1,4 @@
-// /ojudge/[contestId] — 온라인 심사위원 등록 폼 (JOIN 앱과 동일 디자인).
+// /ojudge/[contestId] — 관객 심사위원 등록 폼 (JOIN 앱과 동일 디자인).
 import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 import { getContest } from '@/lib/db/queries';
@@ -58,7 +58,7 @@ export default async function OJudgeFormPage({
         <div style={{ marginTop: 8, marginBottom: 20, display: 'flex', alignItems: 'flex-start', gap: 16 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <p className="jnj-mono jnj-small" style={{ color: 'var(--jnj-text-muted)', letterSpacing: '0.08em', marginBottom: 6 }}>
-              ONLINE JUDGE
+              AUDIENCE JUDGE
             </p>
             <h1 className="jnj-display" style={{ fontSize: 'clamp(28px, 9vw, 44px)', lineHeight: 1.0 }}>
               {contest.name}

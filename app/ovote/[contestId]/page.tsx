@@ -1,6 +1,6 @@
 'use client';
 
-// /ovote/[contestId] — 온라인 심사위원 로그인 (등록 번호/이메일 + 4자리 PIN).
+// /ovote/[contestId] — 관객 심사위원 로그인 (등록 번호/이메일 + 4자리 PIN).
 import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';

@@ -89,7 +89,7 @@ const CreateContestSchema = z.object({
   sns_enabled: z.boolean().optional().default(false),
   payment_url: z.union([z.literal(''), z.string().url().max(2000)]).optional().default(''),
   payment_enabled: z.boolean().optional().default(true),
-  // 심사위원 / 온라인 심사위원 사용 여부 + 가중치(평균 가중 합산).
+  // 심사위원 / 관객 심사위원 사용 여부 + 가중치(평균 가중 합산).
   panel_judges_enabled: z.boolean().optional().default(true),
   online_judges_enabled: z.boolean().optional().default(false),
   panel_judge_weight: z.number().min(0).max(9999).optional().default(1),

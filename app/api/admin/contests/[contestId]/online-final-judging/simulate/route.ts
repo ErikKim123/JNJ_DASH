@@ -1,5 +1,5 @@
 // POST /api/admin/contests/[id]/online-final-judging/simulate
-//   Prep 단계 테스트용 — 온라인 심사위원 × 결승 진출자에 랜덤 점수를 자동 채운다.
+//   Prep 단계 테스트용 — 관객 심사위원 × 결승 진출자에 랜덤 점수를 자동 채운다.
 //   기존 점수는 upsert 로 덮어씀. 제출 상태는 건드리지 않음.
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/db/client';

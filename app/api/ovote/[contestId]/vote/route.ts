@@ -1,5 +1,5 @@
 // PUT /api/ovote/[contestId]/vote
-//   온라인 심사위원 결승 점수 단일 셀 upsert(공개). PIN 로그인으로 얻은 judgeId 를 함께 전송.
+//   관객 심사위원 결승 점수 단일 셀 upsert(공개). PIN 로그인으로 얻은 judgeId 를 함께 전송.
 //   결승(final)이 online_judge_rounds 에 포함되고 final_status 가 open/live 일 때만 허용.
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
@@ -31,7 +31,7 @@ export async function PUT(req: Request, ctx: RouteCtx) {
 
   const contest = await getContest(contestId);
   if (!contest) return NextResponse.json({ error: 'CONTEST_NOT_FOUND' }, { status: 404 });
-  // 결승 온라인 심사 허용 조건 검증.
+  // 결승 관객 심사 허용 조건 검증.
   const rounds = Array.isArray(contest.online_judge_rounds) ? contest.online_judge_rounds : [];
   if (!contest.online_judges_enabled || !rounds.includes('final')) {
     return NextResponse.json({ error: 'ROUND_DISABLED' }, { status: 403 });

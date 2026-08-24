@@ -1,5 +1,5 @@
 // PATCH/DELETE /api/admin/contests/[id]/online-judges/[judgeId]
-//   온라인 심사위원 한 명의 프로필/PIN 수정 또는 삭제.
+//   관객 심사위원 한 명의 프로필/PIN 수정 또는 삭제.
 //   (등록 자체는 공개 조인앱 /api/ojudge/[id]/submit 에서 이뤄짐)
 import { NextResponse } from 'next/server';
 import { z } from 'zod';

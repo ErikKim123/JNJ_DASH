@@ -134,7 +134,7 @@ export function ContestForm({
     })(),
   });
 
-  // 온라인 심사위원 라운드 체크박스 토글 (canonical 순서 유지).
+  // 관객 심사위원 라운드 체크박스 토글 (canonical 순서 유지).
   // 현재 버전은 결승만 지원 — 예선/본선은 안내 후 무시.
   function toggleOnlineRound(round: 'prelim' | 'semi' | 'final') {
     if (round !== 'final') {
@@ -697,7 +697,7 @@ export function ContestForm({
               />
             </Field>
           </div>
-          {/* 온라인 심사위원 사용 */}
+          {/* 관객 심사위원 사용 */}
           <div className="rounded border border-border bg-panel/60 p-3 flex flex-col gap-3">
             <ToggleRow
               label={t('cf.onlineJudgesLabel')}
@@ -717,7 +717,7 @@ export function ContestForm({
                   className="w-28 font-mono"
                 />
               </Field>
-              {/* 온라인 심사위원 참여 라운드 */}
+              {/* 관객 심사위원 참여 라운드 */}
               <div className="flex flex-col gap-1.5">
                 <span className="text-xs text-ink2">{t('cf.onlineRoundsLabel')}</span>
                 <div className="flex items-center gap-3">

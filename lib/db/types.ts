@@ -51,7 +51,7 @@ export interface ContestRow {
   group_name: string;
   /** 결승 채점 활성 항목 키 배열. 기본값: ['fundamentals','connection','musicality']. */
   scoring_items: ScoringItemKey[];
-  /** 온라인 심사위원 전용 결승 채점 활성 항목 키 배열. 기본값: 6개 전체. */
+  /** 관객 심사위원 전용 결승 채점 활성 항목 키 배열. 기본값: 6개 전체. */
   online_scoring_items: OnlineScoringItemKey[];
   /** PREP 화면 하단 광고/스폰서 로고 (최대 6개 public URL). */
   sponsor_logos: string[];
@@ -83,13 +83,13 @@ export interface ContestRow {
   payment_enabled: boolean;
   /** 기존 판정단(심사위원) 사용 여부. */
   panel_judges_enabled: boolean;
-  /** 온라인 심사위원 사용 여부. */
+  /** 관객 심사위원 사용 여부. */
   online_judges_enabled: boolean;
   /** 최종 결과에서 판정단 평균의 가중치(평균 가중 합산). */
   panel_judge_weight: number;
-  /** 최종 결과에서 온라인 심사위원 평균의 가중치(평균 가중 합산). */
+  /** 최종 결과에서 관객 심사위원 평균의 가중치(평균 가중 합산). */
   online_judge_weight: number;
-  /** 온라인 심사위원이 참여하는 라운드 목록('prelim'|'semi'|'final'). */
+  /** 관객 심사위원이 참여하는 라운드 목록('prelim'|'semi'|'final'). */
   online_judge_rounds: JudgingRound[];
   /** MC 표출 포인터 — MC 폰이 기록, 프로젝터(대시보드)가 폴링해 따라감. null=미설정. */
   display_round: RoundKey | null;
@@ -203,7 +203,7 @@ export interface JudgeRow {
 }
 
 /**
- * 온라인 심사위원 — 대회별 셀프 등록 심사위원(판정단 judges 와 분리된 별도 개념).
+ * 관객 심사위원 — 대회별 셀프 등록 심사위원(판정단 judges 와 분리된 별도 개념).
  * /ojudge 조인앱에서 본인이 등록. 대회당 최대 ~1000명, 관리자 목록은 페이지네이션.
  */
 export interface OnlineJudgeRow {
@@ -229,7 +229,7 @@ export interface OnlineJudgeRow {
   updated_at: string;
 }
 
-/** 온라인 심사위원의 결승 채점 — judge_votes 의 기본 6 점수 컬럼과 동일 구조. */
+/** 관객 심사위원의 결승 채점 — judge_votes 의 기본 6 점수 컬럼과 동일 구조. */
 export interface OnlineJudgeVoteRow {
   id: string;
   online_judge_id: string;
