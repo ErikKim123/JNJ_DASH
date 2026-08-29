@@ -1,99 +1,91 @@
 // 심사·확정 컨트롤 (예선/본선 공용) — 실시간 순위 + 경계 동점 추려내기 + 통과자 확정. (요구 3·5)
+//   순위 데이터는 StandingsProvider 가 5초마다 폴링한 것을 공유한다(배너와 같은 값).
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Btn, Card, StatusLine, adminFetch, sendDisplayCmd, useMcAction } from './ui';
 import type { RoleStanding, StandingEntry } from '@/lib/judging/standings';
+import { roleLabel, useStandings } from './standingsContext';
 
 type PairRound = 'prelim' | 'semi';
 
-interface StandingsResp {
-  round: PairRound;
-  maxPerRole: number;
-  leader: RoleStanding;
-  follower: RoleStanding;
-  committed: boolean;
-}
-
 export function JudgingControl({ contestId, round }: { contestId: string; round: PairRound }) {
-  const [data, setData] = useState<StandingsResp | null>(null);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const { data, error: loadError, loading, updatedAt, reload, ties, tieCount, openTie } = useStandings();
   const { pending, error, message, run } = useMcAction();
   const cbase = `/api/admin/contests/${encodeURIComponent(contestId)}/judging/${round}`;
 
-  const load = useCallback(async () => {
-    const d = await adminFetch<StandingsResp>(`${cbase}/standings`);
-    setData(d);
-    // 동점 후보의 추천 preselect 로 선택 초기화.
-    const init = new Set<string>();
-    for (const role of [d.leader, d.follower]) {
-      if (role.tie) role.tie.suggested.forEach((n) => init.add(n));
-    }
-    setSelected(init);
-    return d;
-  }, [cbase]);
-
-  useEffect(() => {
-    load().catch(() => setData(null));
-  }, [load]);
-
-  const ties = useMemo(() => {
-    if (!data) return [];
-    return ([data.leader, data.follower] as RoleStanding[]).filter((r) => r.tie);
-  }, [data]);
-
-  const toggle = (num: string) =>
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(num)) next.delete(num);
-      else next.add(num);
-      return next;
-    });
-
   const commit = () =>
     run(async () => {
-      const tieExclude: string[] = [];
-      for (const role of [data!.leader, data!.follower]) {
-        if (role.tie) role.tie.candidates.forEach((n) => { if (!selected.has(n)) tieExclude.push(n); });
-      }
       const res = await adminFetch<{ confirmedLeaders: number; confirmedFollowers: number }>(
         `${cbase}/commit`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tieExclude }),
-        }
+        { method: 'POST' }
       );
-      await load();
+      await reload();
       return `통과 확정 — 리더 ${res.confirmedLeaders} · 팔로워 ${res.confirmedFollowers}`;
     });
 
   const uncommit = () =>
     run(async () => {
       await adminFetch(`${cbase}/uncommit`, { method: 'POST' });
-      await load();
+      await reload();
       return '확정 취소 완료';
     });
 
   // 조회 — 표출(프로젝터) 화면의 "조회 / Refresh" 를 원격 실행하고, MC 순위표도 같이 새로고침.
   const refresh = () =>
     run(async () => {
-      await Promise.all([load(), sendDisplayCmd(contestId, 'refresh')]);
+      await Promise.all([reload(), sendDisplayCmd(contestId, 'refresh')]);
       return '조회 완료 — 표출 화면을 갱신했습니다';
     });
 
   if (!data) {
-    return <Card title="심사 순위">{error ? <StatusLine tone="danger">{error}</StatusLine> : <p className="text-sm text-ink2">불러오는 중…</p>}</Card>;
+    return (
+      <Card title="심사 순위">
+        {loadError ? <StatusLine tone="danger">{loadError}</StatusLine> : <p className="text-sm text-ink2">불러오는 중…</p>}
+      </Card>
+    );
   }
 
   return (
     <>
+      {/* 동점 추려내기 — 동점이 있으면 순위표보다 먼저, 눈에 띄게. */}
+      {ties.length > 0 && (
+        <section className="rounded-2xl border-2 border-danger/60 bg-danger/10 p-4">
+          <h2 className="text-sm font-semibold text-danger">⚠ 경계 동점 {tieCount}명</h2>
+          <div className="mt-2 space-y-1">
+            {ties.map((role) => (
+              <p key={role.role} className="text-xs text-ink2">
+                {roleLabel(role.role)} — 동점 {role.tie!.candidates.length}명 중{' '}
+                <span className="text-accent font-semibold">{role.tie!.slots}자리</span> ·{' '}
+                {role.entries
+                  .filter((e) => e.boundaryTie)
+                  .map((e) => `${e.num} ${e.name}`)
+                  .join(', ')}
+              </p>
+            ))}
+          </div>
+          <Btn variant="primary" onClick={openTie} className="w-full mt-3">
+            ⚖ 동점 추려내기 (통과자 고르기)
+          </Btn>
+          <p className="text-[10px] text-ink2 mt-2">
+            합의된 사람을 통과로 두고 저장하면 그대로 확정됩니다 · ★ = 헤드(타이브레이커) 심사위원 O
+          </p>
+        </section>
+      )}
+
       <Card
         title={`심사 순위 · 정원 역할별 ${data.maxPerRole}`}
         right={
-          <button type="button" onClick={refresh} disabled={pending} className="text-[11px] text-accent font-mono active:opacity-60 disabled:opacity-40">
-            ↻ 조회
-          </button>
+          <span className="flex items-center gap-2 text-[10px] text-ink2">
+            {loading ? '갱신중…' : updatedAt ? new Date(updatedAt).toLocaleTimeString('ko-KR', { hour12: false }) : ''}
+            <button
+              type="button"
+              onClick={refresh}
+              disabled={pending}
+              className="text-[11px] text-accent font-mono active:opacity-60 disabled:opacity-40"
+            >
+              ↻ 조회
+            </button>
+          </span>
         }
       >
         <RoleTable label="리더 / Leader" role={data.leader} />
@@ -101,50 +93,15 @@ export function JudgingControl({ contestId, round }: { contestId: string; round:
         <RoleTable label="팔로워 / Follower" role={data.follower} />
       </Card>
 
-      {/* 동점 추려내기 */}
-      {ties.length > 0 && (
-        <Card title="동점 추려내기 / Tie-break">
-          {ties.map((role) => (
-            <div key={role.role} className="mb-3 last:mb-0">
-              <p className="text-xs text-ink2 mb-2">
-                {role.role === 'leader' ? '리더' : '팔로워'} — 동점 {role.tie!.candidates.length}명 중{' '}
-                <span className="text-accent font-semibold">{role.tie!.slots}자리</span> · 선택{' '}
-                <span className={selectedCountFor(role, selected) === role.tie!.slots ? 'text-ok' : 'text-danger'}>
-                  {selectedCountFor(role, selected)}
-                </span>
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {role.entries
-                  .filter((e) => e.boundaryTie)
-                  .map((e) => {
-                    const on = selected.has(e.num);
-                    return (
-                      <button
-                        key={e.num}
-                        type="button"
-                        onClick={() => toggle(e.num)}
-                        className={`min-h-[44px] rounded-lg border px-3 text-xs font-semibold transition ${
-                          on ? 'bg-accent text-[#1A1612] border-accent' : 'bg-bg2 text-ink2 border-border active:text-ink'
-                        }`}
-                      >
-                        <span className="font-mono mr-1">{e.num}</span>
-                        {e.name}
-                        {e.headO ? <span className="ml-1" title="헤드 심사 O">★</span> : null}
-                        <span className="ml-1 text-[10px] opacity-80">({e.value}표)</span>
-                      </button>
-                    );
-                  })}
-              </div>
-            </div>
-          ))}
-          <p className="text-[10px] text-ink2 mt-1">★ = 헤드(타이브레이커) 심사위원이 O를 준 후보</p>
-        </Card>
-      )}
-
       <div className="grid grid-cols-1 gap-2">
         <Btn variant="primary" onClick={commit} disabled={pending}>
-          ✓ 통과자 확정 (Commit){ties.length ? ' · 동점 반영' : ''}
+          ✓ 통과자 확정 (Commit){ties.length ? ' · 동점 전원 통과' : ''}
         </Btn>
+        {ties.length > 0 && (
+          <p className="text-[10px] text-danger text-center -mt-1">
+            그냥 확정하면 동점자가 모두 통과해 정원을 넘습니다 — 위의 동점 추려내기를 쓰세요
+          </p>
+        )}
         {data.committed && (
           <Btn variant="danger" onClick={uncommit} disabled={pending}>
             확정 취소 (Uncommit)
@@ -158,14 +115,9 @@ export function JudgingControl({ contestId, round }: { contestId: string; round:
 
       {pending && <StatusLine>처리 중…</StatusLine>}
       {message && !error && <StatusLine tone="ok">{message}</StatusLine>}
-      {error && <StatusLine tone="danger">{error}</StatusLine>}
+      {(error || loadError) && <StatusLine tone="danger">{error ?? loadError}</StatusLine>}
     </>
   );
-}
-
-function selectedCountFor(role: RoleStanding, selected: Set<string>): number {
-  if (!role.tie) return 0;
-  return role.tie.candidates.filter((n) => selected.has(n)).length;
 }
 
 function RoleTable({ label, role }: { label: string; role: RoleStanding }) {
