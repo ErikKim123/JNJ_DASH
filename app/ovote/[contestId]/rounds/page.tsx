@@ -154,8 +154,9 @@ function RoundButton({
   const clickable = enabledForOnline && implemented && interactive;
 
   let note: string;
-  if (!enabledForOnline) note = '관객 심사 비활성';
-  else if (!implemented) note = '준비 중';
+  // 이 자리는 ROUND_LIFECYCLE_LABEL(OPEN/LIVE/RESULT…)과 같은 칸이라 표기도 영문 대문자로 맞춘다.
+  if (!enabledForOnline) note = 'AUDIENCE VOTE OFF';
+  else if (!implemented) note = 'COMING SOON';
   else if (!interactive) note = ROUND_LIFECYCLE_LABEL[status];
   else note = ROUND_LIFECYCLE_LABEL[status];
 
