@@ -8,13 +8,20 @@ import { LangToggle, type Lang } from '../../../join/_components/form-widgets';
 export function OJudgeDonePanel({
   contestId,
   num,
+  judgeNo,
   name,
   contestName,
+  alsoEnrolled,
 }: {
   contestId: string;
+  /** 이 대회 안의 등록 순번. 관리자 명단 정렬용이라 화면에선 보조 표기. */
   num: string;
+  /** 전역 심사위원 번호 — 어느 대회에서든 이 번호로 로그인한다. */
+  judgeNo: string;
   name: string;
   contestName: string;
+  /** 이번 등록으로 함께 참여가 잡힌 같은 페스티벌의 다른 대회들. */
+  alsoEnrolled: { id: string; name: string }[];
 }) {
   const [lang, setLang] = useState<Lang>('en');
 
@@ -77,8 +84,13 @@ export function OJudgeDonePanel({
         <p className="jnj-mono" style={{ fontSize: 11, color: 'var(--jnj-text-muted)', letterSpacing: '0.1em', fontWeight: 600, margin: 0 }}>
           {lang === 'en' ? 'JUDGE NUMBER' : '심사위원 번호'}
         </p>
-        <p className="jnj-display" style={{ fontSize: 'clamp(56px, 18vw, 88px)', lineHeight: 1.0, marginTop: 8, marginBottom: 0, color: 'var(--jnj-text)' }}>
-          No. {num || '—'}
+        <p className="jnj-display" style={{ fontSize: 'clamp(48px, 15vw, 76px)', lineHeight: 1.0, marginTop: 8, marginBottom: 0, color: 'var(--jnj-text)' }}>
+          No. {judgeNo || num || '—'}
+        </p>
+        <p className="jnj-small" style={{ marginTop: 8, marginBottom: 0, color: 'var(--jnj-text-muted)' }}>
+          {lang === 'en'
+            ? 'One number for every competition. Use it to sign in anywhere.'
+            : '모든 대회에서 쓰는 번호입니다. 어느 대회든 이 번호로 로그인하세요.'}
         </p>
         {name && (
           <p className="jnj-caption" style={{ marginTop: 12, color: 'var(--jnj-text-muted)' }}>
@@ -87,6 +99,36 @@ export function OJudgeDonePanel({
           </p>
         )}
       </div>
+
+      {/* 함께 등록된 대회 — 한 번 등록하면 같은 페스티벌 대회 전체에 심사위원으로 잡힌다.
+          이걸 안 보여주면 다른 대회에 가서 또 등록하려는 문제가 그대로 남는다. */}
+      {alsoEnrolled.length > 0 && (
+        <div
+          style={{
+            marginTop: 16,
+            padding: '16px 20px',
+            border: '1px solid var(--jnj-border)',
+            borderRadius: 16,
+            background: 'var(--jnj-surface-2)',
+          }}
+        >
+          <p className="jnj-mono" style={{ fontSize: 11, color: 'var(--jnj-text-muted)', letterSpacing: '0.1em', fontWeight: 600, margin: 0 }}>
+            {lang === 'en' ? 'ALSO REGISTERED FOR' : '함께 등록된 대회'}
+          </p>
+          <ul style={{ listStyle: 'none', padding: 0, margin: '10px 0 0', display: 'grid', gap: 6 }}>
+            {alsoEnrolled.map((c) => (
+              <li key={c.id} style={{ fontSize: 15, lineHeight: 1.45, color: 'var(--jnj-text)' }}>
+                {c.name}
+              </li>
+            ))}
+          </ul>
+          <p className="jnj-small" style={{ marginTop: 10, marginBottom: 0, color: 'var(--jnj-text-muted)' }}>
+            {lang === 'en'
+              ? 'No need to register again — just sign in.'
+              : '다시 등록하실 필요 없습니다 — 바로 로그인하시면 됩니다.'}
+          </p>
+        </div>
+      )}
 
       {/* PIN 안내 */}
       <div style={{ marginTop: 20 }}>

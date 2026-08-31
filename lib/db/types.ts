@@ -211,11 +211,41 @@ export interface JudgeRow {
  * 관객 심사위원 — 대회별 셀프 등록 심사위원(판정단 judges 와 분리된 별도 개념).
  * /ojudge 조인앱에서 본인이 등록. 대회당 최대 ~1000명, 관리자 목록은 페이지네이션.
  */
+/**
+ * 관객 심사위원 통합 계정 — "사람" 한 명. (0037)
+ * online_judges 는 이 사람이 특정 대회에 참여한 기록이고, 프로필/PIN 의 출처는 여기다.
+ */
+export interface AudienceJudgeRow {
+  id: string;
+  /** 전역 심사위원 번호(100001~). 대회별 display_order 와 다르다 — 어느 대회에서든 이 번호로 로그인. */
+  judge_no: number;
+  first_name: string;
+  last_name: string;
+  /** 표시명 — last_name 우선. */
+  name: string;
+  /** 국가. */
+  representative: string;
+  email: string;
+  /** 이메일 소문자 정규화(생성 컬럼). 계정 조회는 이 컬럼으로 한다. */
+  email_key: string;
+  phone: string;
+  /** 연락처 숫자만(생성 컬럼). 중복 검사·계정 찾기용. */
+  phone_key: string;
+  photo_url: string;
+  /** 계정 단위 4자리 숫자 PIN. */
+  pin: string;
+  meta: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface OnlineJudgeRow {
   id: string;
   contest_id: string;
   /** 대회 내 등록 순번(1,2,3…). 목록 정렬 키. */
   display_order: number;
+  /** 통합 계정(audience_judges) 연결. null = 0037 이전에 이메일 없이 등록된 옛 행. */
+  audience_judge_id: string | null;
   first_name: string;
   last_name: string;
   /** 표시명 — last_name 우선. */
