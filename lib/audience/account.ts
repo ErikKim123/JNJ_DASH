@@ -92,9 +92,10 @@ export function isEnrollable(c: Pick<ContestRow, 'status' | 'audience_listed'>):
 }
 
 /**
- * 함께 등록할 대회들 — 같은 group_name 의 열린 대회 전체 + 지금 들어온 대회.
- *   group_name 이 빈 값이면 "미분류" 라 서로 관계 없는 대회끼리 묶여버린다 →
- *   그 경우엔 지금 대회 하나만 대상으로 한다.
+ * 같은 페스티벌의 다른 열린 대회들 — 안내용.
+ *   여기에 미리 참여 행을 만들지는 않는다. 참여 행은 그 사람이 실제로 그 대회에
+ *   들어올 때(등록 또는 로그인) 생긴다 — 심사하지 않을 대회의 명단을 부풀리지 않기 위해.
+ *   group_name 이 빈 값이면 "미분류" 라 서로 관계 없는 대회끼리 묶이므로 제외한다.
  */
 export async function siblingContestIds(
   sb: SupabaseClient,
@@ -184,31 +185,4 @@ export async function ensureEnrollment(
     if (raced) return raced as OnlineJudgeRow;
   }
   return null;
-}
-
-/**
- * 같은 페스티벌의 열린 대회 전체에 한 번에 참여시킨다.
- * 반환: 지금 들어온 대회의 참여 행 + 함께 등록된 대회 id 목록.
- * 한 대회가 실패해도(마감 처리 등) 나머지는 계속 — 등록 자체를 막지 않는다.
- */
-export async function enrollInGroup(
-  sb: SupabaseClient,
-  contest: ContestRow,
-  account: AudienceJudgeRow
-): Promise<{ primary: OnlineJudgeRow | null; enrolledContestIds: string[] }> {
-  const ids = await siblingContestIds(sb, contest);
-  const enrolled: string[] = [];
-  let primary: OnlineJudgeRow | null = null;
-
-  for (const id of ids) {
-    try {
-      const row = await ensureEnrollment(sb, id, account);
-      if (!row) continue;
-      enrolled.push(id);
-      if (id === contest.id) primary = row;
-    } catch {
-      // 개별 대회 실패는 삼킨다 — 본 대회 등록 결과는 primary 로 판정한다.
-    }
-  }
-  return { primary, enrolledContestIds: enrolled };
 }
