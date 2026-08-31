@@ -55,6 +55,11 @@ const T = {
     ko: '이미 등록된 이메일 또는 연락처입니다.',
     en: 'This email or number is already registered.',
   },
+  // 통합 계정이 이미 있는데 비밀번호가 다를 때 — 프로필을 덮어쓰지 않고 기존 비밀번호를 묻는다.
+  errAccountExists: {
+    ko: '이미 관객 심사위원으로 등록된 이메일/연락처입니다. 처음 등록할 때 정한 4자리 비밀번호를 입력해 주세요.',
+    en: 'You are already registered as an audience judge. Please enter the 4-digit password you set when you first signed up.',
+  },
   errNet: { ko: '네트워크 오류', en: 'Network error' },
   errPhoto: { ko: '사진 업로드 실패', en: 'Photo upload failed' },
   errSubmit: { ko: '등록 실패', en: 'Registration failed' },
@@ -162,14 +167,17 @@ export function OnlineJudgeForm({ contestId }: { contestId: string }) {
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok || !j.data) {
+        if (j.error === 'ACCOUNT_EXISTS') { setError(t('errAccountExists', lang)); return; }
         if (j.error === 'DUPLICATE') { setError(t('errDuplicate', lang)); return; }
         if (j.error === 'PHONE_REQUIRED') { setError(t('errPhone', lang)); return; }
         if (j.error === 'PIN_INVALID') { setError(t('errPin', lang)); return; }
         setError(j.error ?? `${t('errSubmit', lang)} (${res.status})`);
         return;
       }
+      // 완료 화면은 전역 심사위원 번호를 크게 보여준다 — 어느 대회에서든 이 번호로 로그인한다.
       const params = new URLSearchParams({
         num: String(j.data.display_order ?? ''),
+        no: String(j.data.judge_no ?? ''),
         name: draft.first_name.trim(),
       });
       router.push(`/ojudge/${encodeURIComponent(contestId)}/done?${params.toString()}`);

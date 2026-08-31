@@ -7,9 +7,23 @@ export interface OJudgeSession {
   judgeId: string;
   name: string;
   displayOrder: number;
+  /** 전역 심사위원 번호(0037). 계정 없이 남은 옛 등록은 null. */
+  judgeNo?: number | null;
 }
 
 const key = (contestId: string) => `ojvote.session.${contestId}`;
+
+// 마지막으로 로그인에 쓴 번호/이메일 — 대회가 달라도 같은 계정이므로 다음 대회에서 미리 채워준다.
+// PIN 은 저장하지 않는다.
+const LAST_ID_KEY = 'ojvote.lastIdentifier';
+
+export function getLastIdentifier(): string {
+  try { return localStorage.getItem(LAST_ID_KEY) ?? ''; } catch { return ''; }
+}
+
+export function setLastIdentifier(identifier: string): void {
+  try { localStorage.setItem(LAST_ID_KEY, identifier); } catch { /* ignore */ }
+}
 
 export function getSession(contestId: string): OJudgeSession | null {
   try {
