@@ -61,13 +61,14 @@ export async function POST(req: Request, ctx: RouteCtx) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'DB_ERR' }, { status: 500 });
   }
 
-  // 2) 폴백 — 계정 없이 남은 옛 행(대회별 등록 번호 또는 이메일).
+  // 2) 대회별 등록 번호 경로 — 이 대회 명단 안에서 찾는다.
+  //    계정 연결 여부로 거르면 안 된다: 백필로 기존 행이 전부 계정에 연결됐기 때문에
+  //    그 조건을 걸면 현장에서 안내받은 옛 번호(1,2,3…)로 아무도 못 들어온다.
   const asNumber = /^\d+$/.test(id) ? Number(id) : null;
   let query = sb
     .from('online_judges')
     .select('id, display_order, first_name, last_name, name, email, pin')
-    .eq('contest_id', contestId)
-    .is('audience_judge_id', null);
+    .eq('contest_id', contestId);
   query =
     asNumber != null
       ? query.eq('display_order', asNumber)

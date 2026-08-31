@@ -4,8 +4,10 @@
 //
 // 0037 이후 동작:
 //   · 사람은 audience_judges(통합 계정) 에 한 번만 만들어진다 — 이메일 1개 = 계정 1개.
-//   · 등록하면 같은 group_name(같은 페스티벌)의 열린 대회 전체에 참여 행이 함께 생긴다.
-//     → 대회마다 사진·이름·PIN 을 다시 입력할 필요가 없다.
+//     → 다른 대회에서 사진·이름·PIN 을 다시 입력할 필요가 없다.
+//   · 참여 행(online_judges)은 지금 들어온 대회에만 만든다. 다른 대회의 명단에는
+//     그 사람이 실제로 그 대회에 들어올 때(로그인) 비로소 생긴다 —
+//     심사하지 않을 대회의 명단을 미리 부풀리지 않기 위해.
 //   · 이미 계정이 있으면 PIN 이 열쇠다. 맞으면 프로필을 갱신하고 참여만 붙이고,
 //     틀리면 ACCOUNT_EXISTS 로 돌려보낸다(남의 이메일로 계정을 덮어쓰지 못하게).
 //
@@ -18,7 +20,7 @@ import { z } from 'zod';
 import { getSupabaseAdmin } from '@/lib/db/client';
 import { getContest } from '@/lib/db/queries';
 import { normalizeNameFields } from '@/lib/participants/name';
-import { enrollInGroup, findAccount, phoneKey } from '@/lib/audience/account';
+import { ensureEnrollment, findAccount, phoneKey } from '@/lib/audience/account';
 import type { AudienceJudgeRow, OnlineJudgeRow } from '@/lib/db/types';
 
 export const dynamic = 'force-dynamic';
@@ -138,11 +140,10 @@ export async function POST(req: Request, ctx: RouteCtx) {
 
   if (!account) return NextResponse.json({ error: 'ACCOUNT_FAILED' }, { status: 500 });
 
-  // 같은 페스티벌의 열린 대회 전체에 일괄 참여.
+  // 참여 행은 지금 들어온 이 대회에만.
   let primary: OnlineJudgeRow | null = null;
-  let enrolledContestIds: string[] = [];
   try {
-    ({ primary, enrolledContestIds } = await enrollInGroup(sb, contest, account));
+    primary = await ensureEnrollment(sb, contest.id, account);
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'DB_ERR' }, { status: 500 });
   }
@@ -153,8 +154,6 @@ export async function POST(req: Request, ctx: RouteCtx) {
       data: {
         ...primary,
         judge_no: account.judge_no,
-        // 이 사람이 지금 등록으로 참여하게 된 대회 전체(지금 대회 포함).
-        enrolled_contest_ids: enrolledContestIds,
         // 기존 계정에 이어 붙인 등록인지 — 완료 화면 문구가 달라진다.
         linked,
       },

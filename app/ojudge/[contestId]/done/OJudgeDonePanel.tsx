@@ -11,7 +11,7 @@ export function OJudgeDonePanel({
   judgeNo,
   name,
   contestName,
-  alsoEnrolled,
+  otherContests,
 }: {
   contestId: string;
   /** 이 대회 안의 등록 순번. 관리자 명단 정렬용이라 화면에선 보조 표기. */
@@ -20,8 +20,8 @@ export function OJudgeDonePanel({
   judgeNo: string;
   name: string;
   contestName: string;
-  /** 이번 등록으로 함께 참여가 잡힌 같은 페스티벌의 다른 대회들. */
-  alsoEnrolled: { id: string; name: string }[];
+  /** 같은 페스티벌의 다른 열린 대회들 — 미리 등록되지는 않고, 가면 이 번호로 바로 참여한다. */
+  otherContests: { id: string; name: string }[];
 }) {
   const [lang, setLang] = useState<Lang>('en');
 
@@ -100,9 +100,9 @@ export function OJudgeDonePanel({
         )}
       </div>
 
-      {/* 함께 등록된 대회 — 한 번 등록하면 같은 페스티벌 대회 전체에 심사위원으로 잡힌다.
-          이걸 안 보여주면 다른 대회에 가서 또 등록하려는 문제가 그대로 남는다. */}
-      {alsoEnrolled.length > 0 && (
+      {/* 같은 페스티벌의 다른 대회 — 미리 등록해두지는 않는다(심사 안 할 대회 명단을 부풀리지 않으려고).
+          대신 "또 등록해야 하나?" 라는 질문이 안 생기도록, 이 번호로 바로 들어간다는 걸 여기서 알린다. */}
+      {otherContests.length > 0 && (
         <div
           style={{
             marginTop: 16,
@@ -113,10 +113,10 @@ export function OJudgeDonePanel({
           }}
         >
           <p className="jnj-mono" style={{ fontSize: 11, color: 'var(--jnj-text-muted)', letterSpacing: '0.1em', fontWeight: 600, margin: 0 }}>
-            {lang === 'en' ? 'ALSO REGISTERED FOR' : '함께 등록된 대회'}
+            {lang === 'en' ? 'OTHER COMPETITIONS' : '같은 페스티벌의 다른 대회'}
           </p>
           <ul style={{ listStyle: 'none', padding: 0, margin: '10px 0 0', display: 'grid', gap: 6 }}>
-            {alsoEnrolled.map((c) => (
+            {otherContests.map((c) => (
               <li key={c.id} style={{ fontSize: 15, lineHeight: 1.45, color: 'var(--jnj-text)' }}>
                 {c.name}
               </li>
@@ -124,8 +124,8 @@ export function OJudgeDonePanel({
           </ul>
           <p className="jnj-small" style={{ marginTop: 10, marginBottom: 0, color: 'var(--jnj-text-muted)' }}>
             {lang === 'en'
-              ? 'No need to register again — just sign in.'
-              : '다시 등록하실 필요 없습니다 — 바로 로그인하시면 됩니다.'}
+              ? 'No need to register again — just sign in with the number above.'
+              : '다시 등록하실 필요 없습니다 — 위 번호로 로그인하시면 바로 심사에 참여됩니다.'}
           </p>
         </div>
       )}
