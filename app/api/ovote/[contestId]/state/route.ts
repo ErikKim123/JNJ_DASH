@@ -1,5 +1,5 @@
 // GET /api/ovote/[contestId]/state?judgeId=...
-//   온라인 심사위원 앱의 라운드/결승 화면 데이터.
+//   관객 심사위원 앱의 라운드/결승 화면 데이터.
 //   반환: 대회 라운드 설정(online_judge_rounds, final_status, 사용여부) +
 //         결승 진출자 목록 + 활성 채점 항목 + 이 심사위원의 기존 점수.
 import { NextResponse } from 'next/server';
@@ -79,7 +79,7 @@ export async function GET(req: Request, ctx: RouteCtx) {
     })
     .sort((a, b) => a.num.localeCompare(b.num, undefined, { numeric: true }));
 
-  // 이 심사위원의 기존 점수. (온라인 심사위원 전용 채점 항목 사용)
+  // 이 심사위원의 기존 점수. (관객 심사위원 전용 채점 항목 사용)
   const defs = resolveActiveOnlineDefs(contest.online_scoring_items);
   const myVotes: Record<string, Record<string, number | null>> = {};
   if (judgeId) {

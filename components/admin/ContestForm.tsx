@@ -118,6 +118,8 @@ export function ContestForm({
     payment_enabled: initial?.payment_enabled ?? true,
     panel_judges_enabled: initial?.panel_judges_enabled ?? true,
     online_judges_enabled: initial?.online_judges_enabled ?? false,
+    // 컬럼이 없던 시절 데이터도 노출로 본다(0036 이전 = 전부 보이던 동작).
+    audience_listed: initial?.audience_listed ?? true,
     panel_judge_weight: ((): number => {
       const v = Number(initial?.panel_judge_weight);
       return Number.isFinite(v) && v >= 0 ? v : 1;
@@ -134,7 +136,7 @@ export function ContestForm({
     })(),
   });
 
-  // 온라인 심사위원 라운드 체크박스 토글 (canonical 순서 유지).
+  // 관객 심사위원 라운드 체크박스 토글 (canonical 순서 유지).
   // 현재 버전은 결승만 지원 — 예선/본선은 안내 후 무시.
   function toggleOnlineRound(round: 'prelim' | 'semi' | 'final') {
     if (round !== 'final') {
@@ -561,6 +563,37 @@ export function ContestForm({
         </Field>
       </div>
 
+      {/* AUDIENCE 목록 노출 — 관객이 보는 등록/투표 대회 목록에 이 대회를 띄울지.
+          기능 자체(관객 심사위원 사용)는 '결승 심사' 쪽 online_judges_enabled 가 계속 맡는다. */}
+      <section className="rounded border border-border bg-panel/40 p-4">
+        <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+          <h3 className="text-sm font-semibold">{t('cf.audienceListedTitle')}</h3>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={form.audience_listed}
+            onClick={() => update('audience_listed', !form.audience_listed)}
+            className="inline-flex items-center gap-2 text-xs"
+          >
+            <span className="text-ink2">
+              {form.audience_listed ? t('cf.audienceListedOn') : t('cf.audienceListedOff')}
+            </span>
+            <span
+              className={`relative w-9 h-5 rounded-full transition ${form.audience_listed ? 'bg-accent' : 'bg-border'}`}
+            >
+              <span
+                className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition"
+                style={{ transform: form.audience_listed ? 'translateX(16px)' : 'translateX(0)' }}
+              />
+            </span>
+          </button>
+        </div>
+        <p className="text-xs text-ink2">{t('cf.audienceListedHint')}</p>
+        {form.audience_listed && !form.online_judges_enabled && (
+          <p className="text-xs text-ink2 mt-2 opacity-80">{t('cf.audienceListedVoteNote')}</p>
+        )}
+      </section>
+
       {/* 디자인 템플릿 — registry 등록 템플릿을 실시간 SVG 미리보기 카드로 선택 */}
       <TemplatePicker
         value={form.design_template_number}
@@ -697,7 +730,7 @@ export function ContestForm({
               />
             </Field>
           </div>
-          {/* 온라인 심사위원 사용 */}
+          {/* 관객 심사위원 사용 */}
           <div className="rounded border border-border bg-panel/60 p-3 flex flex-col gap-3">
             <ToggleRow
               label={t('cf.onlineJudgesLabel')}
@@ -717,7 +750,7 @@ export function ContestForm({
                   className="w-28 font-mono"
                 />
               </Field>
-              {/* 온라인 심사위원 참여 라운드 */}
+              {/* 관객 심사위원 참여 라운드 */}
               <div className="flex flex-col gap-1.5">
                 <span className="text-xs text-ink2">{t('cf.onlineRoundsLabel')}</span>
                 <div className="flex items-center gap-3">

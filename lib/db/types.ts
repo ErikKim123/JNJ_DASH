@@ -51,7 +51,7 @@ export interface ContestRow {
   group_name: string;
   /** 결승 채점 활성 항목 키 배열. 기본값: ['fundamentals','connection','musicality']. */
   scoring_items: ScoringItemKey[];
-  /** 온라인 심사위원 전용 결승 채점 활성 항목 키 배열. 기본값: 6개 전체. */
+  /** 관객 심사위원 전용 결승 채점 활성 항목 키 배열. 기본값: 6개 전체. */
   online_scoring_items: OnlineScoringItemKey[];
   /** PREP 화면 하단 광고/스폰서 로고 (최대 6개 public URL). */
   sponsor_logos: string[];
@@ -83,13 +83,18 @@ export interface ContestRow {
   payment_enabled: boolean;
   /** 기존 판정단(심사위원) 사용 여부. */
   panel_judges_enabled: boolean;
-  /** 온라인 심사위원 사용 여부. */
+  /** 관객 심사위원 사용 여부. */
   online_judges_enabled: boolean;
+  /**
+   * AUDIENCE 등록/투표 대회 목록에 이 대회를 띄울지.
+   * 기능 on/off 가 아니라 '목록 노출'만 결정한다 — 기능은 online_judges_enabled 가 맡는다.
+   */
+  audience_listed: boolean;
   /** 최종 결과에서 판정단 평균의 가중치(평균 가중 합산). */
   panel_judge_weight: number;
-  /** 최종 결과에서 온라인 심사위원 평균의 가중치(평균 가중 합산). */
+  /** 최종 결과에서 관객 심사위원 평균의 가중치(평균 가중 합산). */
   online_judge_weight: number;
-  /** 온라인 심사위원이 참여하는 라운드 목록('prelim'|'semi'|'final'). */
+  /** 관객 심사위원이 참여하는 라운드 목록('prelim'|'semi'|'final'). */
   online_judge_rounds: JudgingRound[];
   /** MC 표출 포인터 — MC 폰이 기록, 프로젝터(대시보드)가 폴링해 따라감. null=미설정. */
   display_round: RoundKey | null;
@@ -203,14 +208,44 @@ export interface JudgeRow {
 }
 
 /**
- * 온라인 심사위원 — 대회별 셀프 등록 심사위원(판정단 judges 와 분리된 별도 개념).
+ * 관객 심사위원 — 대회별 셀프 등록 심사위원(판정단 judges 와 분리된 별도 개념).
  * /ojudge 조인앱에서 본인이 등록. 대회당 최대 ~1000명, 관리자 목록은 페이지네이션.
  */
+/**
+ * 관객 심사위원 통합 계정 — "사람" 한 명. (0037)
+ * online_judges 는 이 사람이 특정 대회에 참여한 기록이고, 프로필/PIN 의 출처는 여기다.
+ */
+export interface AudienceJudgeRow {
+  id: string;
+  /** 전역 심사위원 번호(100001~). 대회별 display_order 와 다르다 — 어느 대회에서든 이 번호로 로그인. */
+  judge_no: number;
+  first_name: string;
+  last_name: string;
+  /** 표시명 — last_name 우선. */
+  name: string;
+  /** 국가. */
+  representative: string;
+  email: string;
+  /** 이메일 소문자 정규화(생성 컬럼). 계정 조회는 이 컬럼으로 한다. */
+  email_key: string;
+  phone: string;
+  /** 연락처 숫자만(생성 컬럼). 중복 검사·계정 찾기용. */
+  phone_key: string;
+  photo_url: string;
+  /** 계정 단위 4자리 숫자 PIN. */
+  pin: string;
+  meta: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface OnlineJudgeRow {
   id: string;
   contest_id: string;
   /** 대회 내 등록 순번(1,2,3…). 목록 정렬 키. */
   display_order: number;
+  /** 통합 계정(audience_judges) 연결. null = 0037 이전에 이메일 없이 등록된 옛 행. */
+  audience_judge_id: string | null;
   first_name: string;
   last_name: string;
   /** 표시명 — last_name 우선. */
@@ -229,7 +264,7 @@ export interface OnlineJudgeRow {
   updated_at: string;
 }
 
-/** 온라인 심사위원의 결승 채점 — judge_votes 의 기본 6 점수 컬럼과 동일 구조. */
+/** 관객 심사위원의 결승 채점 — judge_votes 의 기본 6 점수 컬럼과 동일 구조. */
 export interface OnlineJudgeVoteRow {
   id: string;
   online_judge_id: string;

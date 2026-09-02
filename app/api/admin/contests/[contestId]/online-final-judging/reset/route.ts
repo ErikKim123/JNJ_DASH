@@ -1,5 +1,5 @@
 // POST /api/admin/contests/[id]/online-final-judging/reset
-//   온라인 결승 채점 초기화 — 이 대회 온라인 심사위원의 모든 점수 삭제 + 제출 상태 해제.
+//   관객 결승 채점 초기화 — 이 대회 관객 심사위원의 모든 점수 삭제 + 제출 상태 해제.
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/db/client';
 
@@ -12,7 +12,7 @@ export async function POST(_req: Request, ctx: RouteCtx) {
   const { contestId } = await ctx.params;
   const sb = getSupabaseAdmin();
 
-  // 대회의 온라인 심사위원 id 목록.
+  // 대회의 관객 심사위원 id 목록.
   const { data: judges, error: je } = await sb
     .from('online_judges').select('id').eq('contest_id', contestId);
   if (je) return NextResponse.json({ error: je.message }, { status: 500 });

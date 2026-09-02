@@ -1,10 +1,10 @@
 'use client';
 
-// 온라인 결승 심사 매트릭스 — 온라인 심사위원(행) × 결승 진출자(열).
+// 관객 결승 심사 매트릭스 — 관객 심사위원(행) × 결승 진출자(열).
 //   결승 심사 매트릭스와 동일한 운영 버튼: 새로고침 · 자동 5초 · 초기화 · Excel.
-//   · 온라인 심사위원은 최대 ~1000명이라 행(심사위원)을 페이지로 나눠 표시 + 이름 검색.
+//   · 관객 심사위원은 최대 ~1000명이라 행(심사위원)을 페이지로 나눠 표시 + 이름 검색.
 //   · 각 셀은 활성 채점 항목별 점수 입력(blur 저장). 저장은 votes upsert API.
-//   · 상단 요약 행 = 진출자별 온라인 평균 / 우측 열 = 심사위원별 평균.
+//   · 상단 요약 행 = 진출자별 관객 평균 / 우측 열 = 심사위원별 평균.
 //   · 심사위원 추가/삭제·결과 확정은 여기서 하지 않음(등록은 조인앱, 결과는 결승 결과 탭).
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
@@ -95,7 +95,7 @@ export function OnlineFinalJudgingMatrix({
   const safePage = Math.min(page, totalPages);
   const pageJudges = filteredJudges.slice((safePage - 1) * JUDGES_PER_PAGE, safePage * JUDGES_PER_PAGE);
 
-  // 진출자별 온라인 평균(전체 심사위원 기준) + 채점 인원수.
+  // 진출자별 관객 평균(전체 심사위원 기준) + 채점 인원수.
   const finalistStats = useMemo(() => {
     const acc = new Map<string, { sum: number; n: number }>();
     for (const v of votes) {
@@ -179,7 +179,7 @@ export function OnlineFinalJudgingMatrix({
   }, [autoRefresh]);
 
   function resetAll() {
-    if (!confirm('온라인 결승 채점을 모두 초기화할까요?\n\n이 대회 온라인 심사위원의 모든 점수와 제출 상태가 삭제됩니다. (되돌릴 수 없음)')) return;
+    if (!confirm('관객 결승 채점을 모두 초기화할까요?\n\n이 대회 관객 심사위원의 모든 점수와 제출 상태가 삭제됩니다. (되돌릴 수 없음)')) return;
     setError(null); setActionMsg(null);
     startTransition(async () => {
       const res = await fetch(`${apiBase}/reset`, { method: 'POST' });
@@ -213,8 +213,8 @@ export function OnlineFinalJudgingMatrix({
         row['SUBMITTED'] = j.final_submitted_at ? 'Y' : '';
         return row;
       });
-      // 진출자별 온라인 평균 요약 행.
-      const avgRow: Record<string, string | number> = { '#': '', JUDGE: '온라인 평균' };
+      // 진출자별 관객 평균 요약 행.
+      const avgRow: Record<string, string | number> = { '#': '', JUDGE: '관객 평균' };
       for (const f of finalists) {
         const st = finalistStats.get(f.num);
         avgRow[`${f.num} ${f.team_name}`] = st && st.n > 0 ? Number((st.sum / st.n).toFixed(2)) : '';
@@ -256,13 +256,13 @@ export function OnlineFinalJudgingMatrix({
       const j = await res.json();
       const lc = j.data?.confirmedLeaders ?? 0;
       const fc = j.data?.confirmedFollowers ?? 0;
-      const src = [j.data?.usedPanel ? '판정단' : null, j.data?.usedOnline ? '온라인' : null].filter(Boolean).join('+') || '없음';
+      const src = [j.data?.usedPanel ? '판정단' : null, j.data?.usedOnline ? '관객' : null].filter(Boolean).join('+') || '없음';
       setActionMsg(`결승 결과 확정 완료 — 시상 리더 ${lc} · 팔로워 ${fc} (반영: ${src})`);
     });
   }
 
   function commitFinal() {
-    if (!confirm('결승 결과를 확정할까요?\n\n판정단 + 온라인 심사위원 점수를 가중 결합해 결승 결과(1~3위)를 산출합니다. 기존 결과는 덮어씁니다.')) return;
+    if (!confirm('결승 결과를 확정할까요?\n\n판정단 + 관객 심사위원 점수를 가중 결합해 결승 결과(1~3위)를 산출합니다. 기존 결과는 덮어씁니다.')) return;
     runCommit();
   }
 
@@ -295,9 +295,9 @@ export function OnlineFinalJudgingMatrix({
     runCommit(exclude);
   }
 
-  // 시뮬레이션 (Prep 전용) — 온라인 심사위원 × 진출자 랜덤 점수 자동 채움.
+  // 시뮬레이션 (Prep 전용) — 관객 심사위원 × 진출자 랜덤 점수 자동 채움.
   function simulate() {
-    if (!confirm('온라인 심사위원 전원에게 결승 진출자 랜덤 점수를 자동 입력할까요? (테스트용 · 기존 온라인 점수 덮어씀)')) return;
+    if (!confirm('관객 심사위원 전원에게 결승 진출자 랜덤 점수를 자동 입력할까요? (테스트용 · 기존 관객 점수 덮어씀)')) return;
     setError(null); setActionMsg(null);
     startTransition(async () => {
       const res = await fetch(`${apiBase}/simulate`, { method: 'POST' });
@@ -308,9 +308,9 @@ export function OnlineFinalJudgingMatrix({
     });
   }
 
-  // 제출 해제 — 관리자가 특정 온라인 심사위원의 제출 잠금을 푼다.
+  // 제출 해제 — 관리자가 특정 관객 심사위원의 제출 잠금을 푼다.
   function releaseSubmit(judgeId: string) {
-    if (!confirm('이 온라인 심사위원의 제출을 해제할까요? (심사위원이 다시 수정/제출할 수 있습니다)')) return;
+    if (!confirm('이 관객 심사위원의 제출을 해제할까요? (심사위원이 다시 수정/제출할 수 있습니다)')) return;
     setError(null); setActionMsg(null);
     startTransition(async () => {
       const res = await fetch(`${apiBase}/submit`, {
@@ -336,7 +336,7 @@ export function OnlineFinalJudgingMatrix({
     <div className="space-y-4">
       {!onlineEnabled && (
         <div className="rounded border border-accent/40 bg-accent/5 px-4 py-2 text-sm text-accent">
-          이 대회는 “온라인 심사위원 사용”이 꺼져 있습니다. 대회 정보에서 켜면 최종 결과에 반영됩니다. (점수 입력은 가능)
+          이 대회는 “관객 심사위원 사용”이 꺼져 있습니다. 대회 정보에서 켜면 최종 결과에 반영됩니다. (점수 입력은 가능)
         </div>
       )}
 
@@ -344,7 +344,7 @@ export function OnlineFinalJudgingMatrix({
         <header className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border bg-bg2/50 flex-wrap">
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="text-sm font-semibold mr-1">Online Final Judging</h3>
-            <Badge tone="info">{judges.length} online judges</Badge>
+            <Badge tone="info">{judges.length} audience judges</Badge>
             <Badge tone="neutral">{finalists.length} finalists</Badge>
             {submittedCount > 0 && <Badge tone="ok">{submittedCount} 제출완료</Badge>}
             <Badge tone="neutral">
@@ -392,7 +392,7 @@ export function OnlineFinalJudgingMatrix({
         </header>
 
         <div className="px-4 py-1.5 text-xs text-ink2 border-b border-border bg-bg2/20">
-          행 = 온라인 심사위원 · 열 = 결승 진출자 · 셀 = 항목별 점수(입력 시 자동 저장)
+          행 = 관객 심사위원 · 열 = 결승 진출자 · 셀 = 항목별 점수(입력 시 자동 저장)
         </div>
 
         {error && (
@@ -405,13 +405,13 @@ export function OnlineFinalJudgingMatrix({
         {finalists.length === 0 ? (
           <p className="text-center text-ink2 py-10">결승 진출자가 없습니다. 본선 통과자를 먼저 확정하세요.</p>
         ) : judges.length === 0 ? (
-          <p className="text-center text-ink2 py-10">등록된 온라인 심사위원이 없습니다.</p>
+          <p className="text-center text-ink2 py-10">등록된 관객 심사위원이 없습니다.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="text-sm border-collapse">
               <thead className="bg-bg2 text-ink2 text-xs uppercase tracking-wider">
                 <tr>
-                  <th className="text-left px-3 py-2 sticky left-0 bg-bg2 z-10 min-w-[13rem]">Online Judge</th>
+                  <th className="text-left px-3 py-2 sticky left-0 bg-bg2 z-10 min-w-[13rem]">Audience Judge</th>
                   {finalists.map((f) => (
                     <th key={f.num} className="text-center px-3 py-2 min-w-[9rem] border-l border-border">
                       <div className="flex items-center justify-center gap-1.5">
@@ -423,9 +423,9 @@ export function OnlineFinalJudgingMatrix({
                   ))}
                   <th className="text-center px-3 py-2 min-w-[5rem] border-l border-border">심사위원<br />평균</th>
                 </tr>
-                {/* 진출자별 온라인 평균(전체 기준) */}
+                {/* 진출자별 관객 평균(전체 기준) */}
                 <tr className="text-ink2">
-                  <th className="text-left px-3 py-1.5 sticky left-0 bg-bg2 z-10 normal-case font-normal">온라인 평균 (전체)</th>
+                  <th className="text-left px-3 py-1.5 sticky left-0 bg-bg2 z-10 normal-case font-normal">관객 평균 (전체)</th>
                   {finalists.map((f) => {
                     const st = finalistStats.get(f.num);
                     return (

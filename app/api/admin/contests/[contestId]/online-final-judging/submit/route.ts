@@ -1,5 +1,5 @@
 // POST /api/admin/contests/[id]/online-final-judging/submit
-//   관리자용 — 특정 온라인 심사위원의 결승 제출 상태 토글.
+//   관리자용 — 특정 관객 심사위원의 결승 제출 상태 토글.
 //   { judgeId, submitted:boolean } → final_submitted_at = now / null.
 //   주로 제출 해제(submitted=false)에 사용.
 import { NextResponse } from 'next/server';

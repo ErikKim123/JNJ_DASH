@@ -191,7 +191,7 @@ export function FinalsPanel({
         </span>
         <span className="text-ink2">+</span>
         <span className="inline-flex items-center gap-1 rounded border border-border px-2 py-0.5">
-          온라인 {weights.useOnline ? `가중치 ${fmt(weights.online)}` : <span className="text-ink2/50">미사용</span>}
+          관객 {weights.useOnline ? `가중치 ${fmt(weights.online)}` : <span className="text-ink2/50">미사용</span>}
         </span>
         <span className="text-ink2">→</span>
         <span className="inline-flex items-center gap-1 rounded border border-ok/40 text-ok px-2 py-0.5">최종(가중 평균)</span>
@@ -279,7 +279,7 @@ function RoleTable({
               <th className="text-left px-3 py-2 w-20">#</th>
               <th className="text-left px-3 py-2 min-w-[10rem]">Team</th>
               <th className="text-right px-3 py-2 w-28">판정단</th>
-              <th className="text-right px-3 py-2 w-28">온라인</th>
+              <th className="text-right px-3 py-2 w-28">관객</th>
               <th className="text-right px-3 py-2 w-32 text-ok">최종(가중)</th>
               <th className="text-right px-3 py-2 w-20">Actions</th>
             </tr>

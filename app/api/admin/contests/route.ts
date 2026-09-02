@@ -89,9 +89,11 @@ const CreateContestSchema = z.object({
   sns_enabled: z.boolean().optional().default(false),
   payment_url: z.union([z.literal(''), z.string().url().max(2000)]).optional().default(''),
   payment_enabled: z.boolean().optional().default(true),
-  // 심사위원 / 온라인 심사위원 사용 여부 + 가중치(평균 가중 합산).
+  // 심사위원 / 관객 심사위원 사용 여부 + 가중치(평균 가중 합산).
   panel_judges_enabled: z.boolean().optional().default(true),
   online_judges_enabled: z.boolean().optional().default(false),
+  // AUDIENCE 등록/투표 목록 노출 — 기능 on/off 와 별개. 새 대회는 노출이 기본.
+  audience_listed: z.boolean().optional().default(true),
   panel_judge_weight: z.number().min(0).max(9999).optional().default(1),
   online_judge_weight: z.number().min(0).max(9999).optional().default(1),
   online_judge_rounds: z.array(z.enum(['prelim', 'semi', 'final'])).optional().default(['final']),

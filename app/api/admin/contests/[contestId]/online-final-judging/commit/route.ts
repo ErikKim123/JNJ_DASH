@@ -1,5 +1,5 @@
 // POST /api/admin/contests/[id]/online-final-judging/commit
-//   결승 결과 확정 — 판정단(judges) + 온라인 심사위원(online_judges) 점수를 가중 결합해 final_results 에 반영.
+//   결승 결과 확정 — 판정단(judges) + 관객 심사위원(online_judges) 점수를 가중 결합해 final_results 에 반영.
 //     결합식(평균 가중 합산): combined = (panelAvg×wp + onlineAvg×wo) / (wp+wo)
 //       · 한쪽만 사용/데이터 있으면 그 평균이 곧 combined.
 //       · panelAvg/onlineAvg = 각 그룹의 활성 항목 점수 평균(0–10 스케일).

@@ -1,6 +1,6 @@
 'use client';
 
-// JOIN / OJUDGE 공용 폼 위젯 — 참가자 등록(JoinForm)과 온라인 심사위원 등록(OnlineJudgeForm)이
+// JOIN / OJUDGE 공용 폼 위젯 — 참가자 등록(JoinForm)과 관객 심사위원 등록(OnlineJudgeForm)이
 // 함께 쓰는 재사용 조각: 국가 코드 데이터, 검색형 국가 선택, WhatsApp 입력, 이미지 압축, 소소한 UI.
 // 색상은 페이지 <main> 의 테마 토큰(var(--jnj-*))을 상속한다.
 import { useEffect, useRef, useState } from 'react';

@@ -1,6 +1,6 @@
 'use client';
 
-// 온라인 심사위원 관리 — 대회당 최대 ~1000명이라 페이지네이션(50/page).
+// 관객 심사위원 관리 — 대회당 최대 ~1000명이라 페이지네이션(50/page).
 //   목록/편집만 담당(등록은 공개 조인앱 /ojudge 에서 셀프 등록).
 //   · PIN(4자리)·이름·국가·이메일·연락처 인라인 편집(blur 저장) + 행 삭제.
 //   · 페이지 이동은 URL(?page=N) 기반 — 서버가 해당 페이지만 다시 로드.
@@ -60,7 +60,7 @@ export function OnlineJudgesAdmin({
 
   function remove(row: OnlineJudgeRow) {
     const label = row.name || `${row.first_name} ${row.last_name}`.trim() || row.email || '(no name)';
-    if (!confirm(`온라인 심사위원 "${label}" 을(를) 삭제할까요?`)) return;
+    if (!confirm(`관객 심사위원 "${label}" 을(를) 삭제할까요?`)) return;
     setError(null);
     startTransition(async () => {
       const res = await fetch(`${apiBase}/${row.id}`, { method: 'DELETE' });
@@ -87,7 +87,7 @@ export function OnlineJudgesAdmin({
       <section className="rounded border border-border bg-panel">
         <header className="flex items-start justify-between px-4 py-3 border-b border-border bg-bg2/50 flex-wrap gap-3">
           <div className="flex items-center gap-3">
-            <h3 className="text-sm font-semibold">Online Judges</h3>
+            <h3 className="text-sm font-semibold">Audience Judges</h3>
             <Badge tone="info">{total} judges</Badge>
             <span className="text-xs text-ink2">공개 조인앱(/ojudge)에서 셀프 등록 · {pageSize}명씩 페이지</span>
           </div>
@@ -109,7 +109,7 @@ export function OnlineJudgesAdmin({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={buildQrSrc(joinUrl, 120)}
-                alt="Online judge registration QR"
+                alt="Audience judge registration QR"
                 width={56}
                 height={56}
                 loading="lazy"
@@ -144,7 +144,7 @@ export function OnlineJudgesAdmin({
               {rows.length === 0 && (
                 <tr>
                   <td colSpan={8} className="text-center text-ink2 py-8">
-                    아직 등록된 온라인 심사위원이 없습니다.
+                    아직 등록된 관객 심사위원이 없습니다.
                   </td>
                 </tr>
               )}

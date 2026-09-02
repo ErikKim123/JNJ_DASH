@@ -395,7 +395,7 @@ async function getFinalReport(
 }
 
 /**
- * 온라인 심사위원 전용 결승 보고서 — 판정단 점수를 빼고 online_judge_votes 만으로 집계.
+ * 관객 심사위원 전용 결승 보고서 — 판정단 점수를 빼고 online_judge_votes 만으로 집계.
  *
  * 집계식은 online-final-judging/commit 라우트의 온라인 파트와 동일하다.
  *   · 후보 = 본선 통과자(qualifiers.round='semi', passed=true)
@@ -893,14 +893,14 @@ export async function getStepData(params: GetStepDataParams): Promise<StepDataPa
     return { kind: 'report', data: out };
   }
 
-  // ── Report (online) — 온라인 심사위원 점수만으로 뽑은 1~5등 표. 화면은 REPORT 와 동일. ──
+  // ── Report (online) — 관객 심사위원 점수만으로 뽑은 1~5등 표. 화면은 REPORT 와 동일. ──
   if (step === 'reportOnline') {
     if (round !== 'final') throw new StepNotAvailableError(round, step);
     const { leaders, followers } = await getOnlineFinalReport(contestId, 5);
     const out: ReportData = {
       festival_header: festivalHeader,
-      report_title: 'ONLINE SCORE REPORT',
-      report_subtitle: 'ONLINE JUDGES · TOP 5',
+      report_title: 'AUDIENCE SCORE REPORT',
+      report_subtitle: 'AUDIENCE JUDGES · TOP 5',
       label_leader: 'LEADER',
       label_follower: 'FOLLOWER',
       leaders,

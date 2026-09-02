@@ -39,10 +39,10 @@ export default async function OnlineFinalJudgingPage({
         title={
           <>
             <span className="font-mono text-xs text-ink2 mr-2">{contest.id}</span>
-            {contest.name} · Online Final Judging
+            {contest.name} · Audience Final Judging
           </>
         }
-        subtitle="온라인 심사위원의 결승 진출자 점수를 입력합니다. 심사위원이 많아 컬럼은 페이지로 나눠 표시됩니다."
+        subtitle="관객 심사위원의 결승 진출자 점수를 입력합니다. 심사위원이 많아 컬럼은 페이지로 나눠 표시됩니다."
       />
       <ContestTabs contestId={contestId} current={`${base}/online-final-judging`} />
       <OnlineFinalJudgingMatrix

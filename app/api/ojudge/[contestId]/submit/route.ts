@@ -1,17 +1,27 @@
 // POST /api/ojudge/[contestId]/submit
 //
-// 공개 온라인 심사위원 셀프 등록 엔드포인트. /admin 미들웨어 대상이 아니라 누구나 호출.
+// 공개 관객 심사위원 셀프 등록 엔드포인트. /admin 미들웨어 대상이 아니라 누구나 호출.
+//
+// 0037 이후 동작:
+//   · 사람은 audience_judges(통합 계정) 에 한 번만 만들어진다 — 이메일 1개 = 계정 1개.
+//     → 다른 대회에서 사진·이름·PIN 을 다시 입력할 필요가 없다.
+//   · 참여 행(online_judges)은 지금 들어온 대회에만 만든다. 다른 대회의 명단에는
+//     그 사람이 실제로 그 대회에 들어올 때(로그인) 비로소 생긴다 —
+//     심사하지 않을 대회의 명단을 미리 부풀리지 않기 위해.
+//   · 이미 계정이 있으면 PIN 이 열쇠다. 맞으면 프로필을 갱신하고 참여만 붙이고,
+//     틀리면 ACCOUNT_EXISTS 로 돌려보낸다(남의 이메일로 계정을 덮어쓰지 못하게).
 //
 // 안전 정책(참가자 join 과 동일 패턴):
 //   - Zod strict validate + 필드 길이 제한.
 //   - display_order 는 서버가 계산(클라이언트 값 불신, 동시성 충돌 방지).
 //   - PIN 은 정확히 4자리 숫자만.
-//   - 이메일/연락처 중복은 저장 거부(409 DUPLICATE).
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getSupabaseAdmin } from '@/lib/db/client';
 import { getContest } from '@/lib/db/queries';
 import { normalizeNameFields } from '@/lib/participants/name';
+import { ensureEnrollment, findAccount, phoneKey } from '@/lib/audience/account';
+import type { AudienceJudgeRow, OnlineJudgeRow } from '@/lib/db/types';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -27,11 +37,6 @@ const SubmitSchema = z.object({
 });
 
 interface RouteCtx { params: Promise<{ contestId: string }> }
-
-// 전화번호 비교용 정규화 — 숫자만.
-function normalizePhone(raw: string): string {
-  return raw.replace(/\D/g, '');
-}
 
 export async function POST(req: Request, ctx: RouteCtx) {
   const { contestId } = await ctx.params;
@@ -64,44 +69,22 @@ export async function POST(req: Request, ctx: RouteCtx) {
     return NextResponse.json({ error: 'EMAIL_INVALID' }, { status: 400 });
   }
   const phone = parsed.data.phone.trim();
-  if (normalizePhone(phone).length < 5) {
+  if (phoneKey(phone).length < 5) {
     return NextResponse.json({ error: 'PHONE_REQUIRED' }, { status: 400 });
   }
 
   const sb = getSupabaseAdmin();
-
-  // 중복 등록 차단 — 같은 대회에 이메일/연락처가 이미 있으면 거부.
-  const { data: existing, error: exErr } = await sb
-    .from('online_judges')
-    .select('id, email, phone')
-    .eq('contest_id', contestId);
-  if (exErr) return NextResponse.json({ error: exErr.message }, { status: 500 });
-  const emailKey = email.toLowerCase();
-  const phoneKey = normalizePhone(phone);
-  const dup = (existing ?? []).some((r) => {
-    const e = (r.email ?? '').trim().toLowerCase();
-    const p = normalizePhone(r.phone ?? '');
-    return (e !== '' && e === emailKey) || (p !== '' && p === phoneKey);
-  });
-  if (dup) return NextResponse.json({ error: 'DUPLICATE' }, { status: 409 });
-
   const name = normalizeNameFields(parsed.data);
+  const pin = parsed.data.pin;
 
-  // 다음 display_order — 대회 내 max + 1. 동시성 충돌 시 1회 재시도.
-  async function nextOrder(): Promise<number> {
-    const { data: maxRow } = await sb
-      .from('online_judges')
-      .select('display_order')
-      .eq('contest_id', contestId)
-      .order('display_order', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    return (maxRow?.display_order ?? 0) + 1;
+  let account: AudienceJudgeRow | null;
+  try {
+    account = await findAccount(sb, { email, phone });
+  } catch (e) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'DB_ERR' }, { status: 500 });
   }
 
-  const insertRow = (displayOrder: number) => ({
-    contest_id: contestId,
-    display_order: displayOrder,
+  const profile = {
     first_name: name.first_name,
     last_name: name.last_name,
     name: name.team_name,
@@ -109,17 +92,72 @@ export async function POST(req: Request, ctx: RouteCtx) {
     email,
     phone,
     photo_url: parsed.data.photo_url,
-    pin: parsed.data.pin,
-  });
+  };
 
-  let displayOrder = await nextOrder();
-  let { data, error } = await sb.from('online_judges').insert(insertRow(displayOrder)).select('*').single();
-  if (error && error.code === '23505') {
-    // display_order 충돌 — 다시 계산 후 1회 재시도.
-    displayOrder = await nextOrder();
-    ({ data, error } = await sb.from('online_judges').insert(insertRow(displayOrder)).select('*').single());
+  let linked = false;
+  if (account) {
+    // 이미 있는 계정 — PIN 이 본인 확인 수단이다.
+    if (account.pin !== pin) {
+      return NextResponse.json(
+        { error: 'ACCOUNT_EXISTS', judge_no: account.judge_no },
+        { status: 409 }
+      );
+    }
+    linked = true;
+    // 사진을 새로 안 올렸으면 기존 사진을 지우지 않는다.
+    const patch = { ...profile, photo_url: profile.photo_url || account.photo_url };
+    const { data, error } = await sb
+      .from('audience_judges')
+      .update(patch)
+      .eq('id', account.id)
+      .select('*')
+      .single();
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    account = data as AudienceJudgeRow;
+  } else {
+    const { data, error } = await sb
+      .from('audience_judges')
+      .insert({ ...profile, pin })
+      .select('*')
+      .single();
+    if (error) {
+      // 동시에 같은 이메일로 들어온 요청이 먼저 만든 경우 — 그 계정으로 이어간다.
+      if (error.code === '23505') {
+        const raced = await findAccount(sb, { email }).catch(() => null);
+        if (!raced) return NextResponse.json({ error: error.message }, { status: 500 });
+        if (raced.pin !== pin) {
+          return NextResponse.json({ error: 'ACCOUNT_EXISTS', judge_no: raced.judge_no }, { status: 409 });
+        }
+        account = raced;
+        linked = true;
+      } else {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+    } else {
+      account = data as AudienceJudgeRow;
+    }
   }
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({ data }, { status: 201 });
+  if (!account) return NextResponse.json({ error: 'ACCOUNT_FAILED' }, { status: 500 });
+
+  // 참여 행은 지금 들어온 이 대회에만.
+  let primary: OnlineJudgeRow | null = null;
+  try {
+    primary = await ensureEnrollment(sb, contest.id, account);
+  } catch (e) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'DB_ERR' }, { status: 500 });
+  }
+  if (!primary) return NextResponse.json({ error: 'ENROLL_FAILED' }, { status: 500 });
+
+  return NextResponse.json(
+    {
+      data: {
+        ...primary,
+        judge_no: account.judge_no,
+        // 기존 계정에 이어 붙인 등록인지 — 완료 화면 문구가 달라진다.
+        linked,
+      },
+    },
+    { status: linked ? 200 : 201 }
+  );
 }

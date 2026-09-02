@@ -1,10 +1,10 @@
 'use client';
 
-// /ovote/[contestId] — 온라인 심사위원 로그인 (등록 번호/이메일 + 4자리 PIN).
+// /ovote/[contestId] — 관객 심사위원 로그인 (등록 번호/이메일 + 4자리 PIN).
 import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getSession, setSession } from '@/lib/ovote/session';
+import { getLastIdentifier, getSession, setLastIdentifier, setSession } from '@/lib/ovote/session';
 
 export default function OVoteLoginPage({
   params,
@@ -20,10 +20,13 @@ export default function OVoteLoginPage({
   const [error, setError] = useState<string | null>(null);
 
   // 이미 로그인돼 있으면 라운드 화면으로.
+  // 아니면 다른 대회에서 쓰던 심사위원 번호를 채워준다 — 계정은 대회를 가리지 않으므로 그대로 통한다.
   useEffect(() => {
     if (getSession(contestId)) {
       router.replace(`/ovote/${encodeURIComponent(contestId)}/rounds`);
+      return;
     }
+    setIdentifier((cur) => cur || getLastIdentifier());
   }, [contestId, router]);
 
   // 대회명 표시용.
@@ -56,11 +59,20 @@ export default function OVoteLoginPage({
             ? '번호/이메일 또는 PIN이 올바르지 않습니다.'
             : j.error === 'PIN_INVALID'
               ? 'PIN은 숫자 4자리입니다.'
-              : `로그인 실패 (${res.status})`,
+              : j.error === 'CONTEST_CLOSED'
+                ? '종료된 대회입니다.'
+                : `로그인 실패 (${res.status})`,
         );
         return;
       }
-      setSession(contestId, { judgeId: j.data.judgeId, name: j.data.name, displayOrder: j.data.displayOrder });
+      setSession(contestId, {
+        judgeId: j.data.judgeId,
+        name: j.data.name,
+        displayOrder: j.data.displayOrder,
+        judgeNo: j.data.judgeNo ?? null,
+      });
+      // 다음 대회에서 미리 채워줄 값 — 전역 번호가 있으면 그걸 우선(대회별 번호는 다른 대회에서 안 통한다).
+      setLastIdentifier(j.data.judgeNo ? String(j.data.judgeNo) : identifier.trim());
       router.replace(`/ovote/${encodeURIComponent(contestId)}/rounds`);
     } catch {
       setError('네트워크 오류');
@@ -98,20 +110,22 @@ export default function OVoteLoginPage({
           JUDGE LOGIN
         </h1>
         <p className="jnj-body" style={{ color: 'var(--jnj-text-secondary)', margin: 0 }}>
-          등록한 번호(또는 이메일)와 4자리 PIN으로 로그인하세요.
+          심사위원 번호(또는 이메일)와 4자리 PIN으로 로그인하세요.
+          <br />
+          이 대회에 따로 등록하지 않으셨어도 그대로 로그인하시면 됩니다.
         </p>
       </header>
 
       <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--jnj-space-4)' }}>
         <label style={{ display: 'flex', flexDirection: 'column', gap: 'var(--jnj-space-2)' }}>
           <span className="jnj-small" style={{ color: 'var(--jnj-text-secondary)', letterSpacing: '0.06em' }}>
-            등록 번호 또는 이메일
+            심사위원 번호 또는 이메일
           </span>
           <input
             className="jnj-input"
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
-            placeholder="예: 12 또는 name@example.com"
+            placeholder="예: 100123 또는 name@example.com"
             autoComplete="username"
           />
         </label>

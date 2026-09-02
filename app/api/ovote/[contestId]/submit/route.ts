@@ -1,5 +1,5 @@
 // POST /api/ovote/[contestId]/submit
-//   온라인 심사위원 결승 채점 제출/해제.
+//   관객 심사위원 결승 채점 제출/해제.
 //     { judgeId, submitted:true }  → 점수 저장 후 final_submitted_at = now (잠금)
 //     { judgeId, submitted:false } → final_submitted_at = null (수정 재개)
 //   entries 를 함께 보내면 제출 직전 일괄 저장(빈 셀은 무시).

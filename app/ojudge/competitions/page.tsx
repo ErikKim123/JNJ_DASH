@@ -1,4 +1,4 @@
-// /ojudge/competitions — 온라인 심사위원 등록 가능한 대회 목록.
+// /ojudge/competitions — 관객 심사위원 등록 가능한 대회 목록.
 // JOIN 앱과 동일 디자인. archived 는 숨김. 각 카드는 /ojudge/[id] 등록 폼으로 이동.
 import Link from 'next/link';
 import { headers } from 'next/headers';
@@ -14,7 +14,9 @@ function buildQrSrc(url: string, size = 120): string {
 
 export default async function OJudgeCompetitionsPage() {
   const all = await listContests().catch(() => []);
-  const contests = all.filter((c) => c.status !== 'archived');
+  // audience_listed 로 노출을 고른다(대회 정보 > AUDIENCE 목록 노출).
+  // 컬럼이 없던 시절 데이터는 노출로 본다 — 0036 이전 동작(전부 노출)과 같게.
+  const contests = all.filter((c) => c.status !== 'archived' && c.audience_listed !== false);
 
   const h = await headers();
   const proto = h.get('x-forwarded-proto') ?? 'http';
@@ -33,7 +35,7 @@ export default async function OJudgeCompetitionsPage() {
           Judge Sign-up
         </h1>
         <p className="jnj-caption" style={{ color: 'var(--jnj-text-muted)', marginBottom: 24 }}>
-          Select a competition to register as an online judge.
+          Select a competition to register as an audience judge.
         </p>
 
         {contests.length === 0 ? (

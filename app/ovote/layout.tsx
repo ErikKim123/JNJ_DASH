@@ -5,8 +5,8 @@ import '../vote/styles/colors_and_type.css';
 import '../vote/vote.css';
 
 export const metadata: Metadata = {
-  title: 'JNJ ONLINE VOTE',
-  description: 'Online judge scoring app for JNJ Dash competitions.',
+  title: 'JNJ AUDIENCE VOTE',
+  description: 'Audience judge scoring app for JNJ Dash competitions.',
 };
 
 export default function OVoteLayout({ children }: { children: React.ReactNode }) {

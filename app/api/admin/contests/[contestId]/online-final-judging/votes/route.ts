@@ -1,6 +1,6 @@
 // PUT /api/admin/contests/[id]/online-final-judging/votes
 //   { online_judge_id, participant_num, basic_score?|connectivity_score?|... }
-// 온라인 심사위원 결승 채점 단일 셀 upsert. 명시되지 않은 컬럼은 유지, 빈 값(null)이면 해당 컬럼 null.
+// 관객 심사위원 결승 채점 단일 셀 upsert. 명시되지 않은 컬럼은 유지, 빈 값(null)이면 해당 컬럼 null.
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getSupabaseAdmin } from '@/lib/db/client';

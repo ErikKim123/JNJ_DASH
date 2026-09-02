@@ -21,7 +21,7 @@ export const STEP_LABEL: Record<StepKey, string> = {
   result: 'RESULT',
   ceremony: 'CEREMONY',
   report: 'REPORT',
-  reportOnline: 'ONLINE REPORT',
+  reportOnline: 'AUDIENCE REPORT',
 };
 
 // pairingB/C가 같은 라운드에 있으면 첫 pairing을 'PAIRING A'로 표기 (StepNav 와 동일).

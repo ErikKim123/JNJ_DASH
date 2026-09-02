@@ -1,6 +1,6 @@
 'use client';
 
-// /ovote/[contestId]/final — 로그인한 온라인 심사위원의 결승 채점 (VOTE 앱과 동일 UX).
+// /ovote/[contestId]/final — 로그인한 관객 심사위원의 결승 채점 (VOTE 앱과 동일 UX).
 //   · 점수는 로컬 draft 로 편집 → 하단 SAVE(중간 저장) / Submit(최종 제출·잠금).
 //   · Submit 후 잠금(수정 불가, 카드 녹색). Edit 로 잠금 해제.
 //   · final_status 가 OPEN/LIVE 이고 online_judge_rounds 에 final 포함일 때만 입력 가능.
@@ -227,7 +227,7 @@ export default function OVoteFinalPage({
           }}
         >
           {!data.onlineEnabled || !data.onlineRounds.includes('final')
-            ? '이 대회는 온라인 결승 심사가 활성화되어 있지 않습니다.'
+            ? '이 대회는 관객 결승 심사가 활성화되어 있지 않습니다.'
             : `결승이 ${ROUND_LIFECYCLE_LABEL[data.roundStatus.final]} 상태입니다 — 입력이 잠겨 있습니다.`}
         </div>
       )}

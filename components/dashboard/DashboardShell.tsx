@@ -44,7 +44,10 @@ export function DashboardShell({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [fullscreen, setFullscreen] = useState(false);
+  // 표출 모드 — ?display=1 로 열면 처음부터 풀스크린(컨트롤 없는 표출 화면)으로 시작한다.
+  // 외부에 이 화면을 끼워 넣을 때(예: WOLF 라이브 페이지의 iframe) 필요하다. 임베드는 버튼을
+  // 눌러 줄 사람이 없어, 주소로 말하지 못하면 관객에게 운영자 콘솔이 그대로 보인다.
+  const [fullscreen, setFullscreen] = useState(searchParams.get('display') === '1');
   // 풀스크린 모드: 마우스가 움직이면 컨트롤(미니내비/Refresh/Exit/Live)이 잠시 보이고,
   // 일정 시간(2.5s) 동안 움직임이 없으면 다시 사라짐. 표출 모니터를 깔끔하게 유지.
   const [controlsVisible, setControlsVisible] = useState(false);

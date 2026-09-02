@@ -30,7 +30,7 @@ export const MESSAGES_EN = {
   // ── Contest tabs ────────────────────────────────────────────────
   'tab.contestInfo': 'Contest Info',
   'tab.judges': 'Judges',
-  'tab.onlineJudges': 'Online Judges',
+  'tab.onlineJudges': 'Audience Judges',
   'tab.participants': 'Participants',
   'tab.prelimPairing': 'Prelim Pairing',
   'tab.prelimJudging': 'Prelim Judging',
@@ -39,7 +39,7 @@ export const MESSAGES_EN = {
   'tab.semiJudging': 'Semi Judging',
   'tab.semiQualifiers': 'Semi Qualifiers',
   'tab.finalJudging': 'Final Judging',
-  'tab.onlineFinalJudging': 'Online Final Judging',
+  'tab.onlineFinalJudging': 'Audience Final Judging',
   'tab.finalResults': 'Final Results',
 
   // ── Round names ────────────────────────────────────────────────
@@ -196,6 +196,14 @@ export const MESSAGES_EN = {
   'cf.festivalHeader': 'Festival Header (display)',
   'cf.festivalHeaderHint': 'Defaults to contest name if blank',
   'cf.tagline': 'Tagline (display)',
+  // Audience listing
+  'cf.audienceListedTitle': 'Show in AUDIENCE lists',
+  'cf.audienceListedOn': 'Listed',
+  'cf.audienceListedOff': 'Hidden',
+  'cf.audienceListedHint':
+    'Controls whether this contest appears in the audience judge sign-up and audience vote lists. Turn it off for internal contests (CHECK, DEMO) or ones that are over. Anyone holding a direct link or QR can still open it.',
+  'cf.audienceListedVoteNote':
+    'Sign-up list only for now — the vote list also needs Audience judges turned on under Final judging.',
   // SNS room
   'cf.snsTitle': 'SNS Room (Community Chat)',
   'cf.snsMeta': 'Shown as a join button on the registration-complete screen',
@@ -217,15 +225,15 @@ export const MESSAGES_EN = {
   'cf.judgesVideoPreview': 'Preview',
   'cf.judgesVideoPreviewEmpty': 'Enter a video link first.',
   // Judge usage & weighting
-  'cf.judgeUseTitle': 'Judges & Online Judges',
+  'cf.judgeUseTitle': 'Judges & Audience Judges',
   'cf.judgeUseMeta': 'Enable each judge type · set weights when both are used',
   'cf.panelJudgesLabel': 'Use Judges (panel)',
-  'cf.onlineJudgesLabel': 'Use Online Judges',
+  'cf.onlineJudgesLabel': 'Use Audience Judges',
   'cf.panelWeightLabel': 'Judge weight',
-  'cf.onlineWeightLabel': 'Online judge weight',
-  'cf.onlineRoundsLabel': 'Rounds online judges participate in',
+  'cf.onlineWeightLabel': 'Audience judge weight',
+  'cf.onlineRoundsLabel': 'Rounds audience judges participate in',
   'cf.judgeWeightHint': 'Only applied when both types are used.',
-  'cf.judgeWeightFormula': 'Final = (judge average × judge weight + online average × online weight) ÷ (sum of weights). If only one type is used, its average is the final.',
+  'cf.judgeWeightFormula': 'Final = (judge average × judge weight + audience average × audience weight) ÷ (sum of weights). If only one type is used, its average is the final.',
   // Extra videos (per round)
   'cf.extraVideosTitle': 'Extra Videos (per round)',
   'cf.extraVideosMeta': '3 per round · shown as buttons at the top-right of the display',
@@ -332,9 +340,9 @@ export const MESSAGES_EN = {
   'cf.scoring.showmanship': 'Showmanship',
   'cf.scoring.audience_impact': 'Audience Impact',
   'cf.scoring.techniques': 'Techniques',
-  'cf.onlineScoringTitle': 'Online Judge Scoring Items',
+  'cf.onlineScoringTitle': 'Audience Judge Scoring Items',
   'cf.onlineScoringMeta': '{N} active · at least 1 required',
-  'cf.onlineScoringHint': 'These criteria are used by online judges in the Final round (online final judging matrix + vote app). Existing scores for deactivated items are preserved in DB.',
+  'cf.onlineScoringHint': 'These criteria are used by audience judges in the Final round (audience final judging matrix + vote app). Existing scores for deactivated items are preserved in DB.',
   'cf.onlineScoring.wow_factor': 'WOW Factor',
   'cf.onlineScoring.stage_presence': 'Stage Presence',
   'cf.onlineScoring.visual_impact': 'Visual Impact',
@@ -394,7 +402,7 @@ export const MESSAGES_KO: Record<MessageKey, string> = {
   // ── Contest tabs ────────────────────────────────────────────────
   'tab.contestInfo': '대회 정보',
   'tab.judges': '심사위원',
-  'tab.onlineJudges': '온라인 심사위원',
+  'tab.onlineJudges': '관객 심사위원',
   'tab.participants': '참가자',
   'tab.prelimPairing': '예선 페어링',
   'tab.prelimJudging': '예선 심사',
@@ -403,7 +411,7 @@ export const MESSAGES_KO: Record<MessageKey, string> = {
   'tab.semiJudging': '본선 심사',
   'tab.semiQualifiers': '본선 통과자',
   'tab.finalJudging': '결승 심사',
-  'tab.onlineFinalJudging': '온라인 결승 심사',
+  'tab.onlineFinalJudging': '관객 결승 심사',
   'tab.finalResults': '결승 결과',
 
   // ── Round names ────────────────────────────────────────────────
@@ -560,6 +568,14 @@ export const MESSAGES_KO: Record<MessageKey, string> = {
   'cf.festivalHeader': '페스티벌 헤더 (표출)',
   'cf.festivalHeaderHint': '비워두면 대회명이 사용됩니다',
   'cf.tagline': '태그라인 (표출)',
+  // Audience listing
+  'cf.audienceListedTitle': 'AUDIENCE 목록 노출',
+  'cf.audienceListedOn': '노출',
+  'cf.audienceListedOff': '숨김',
+  'cf.audienceListedHint':
+    '관객 심사위원 등록 목록과 관객 채점 목록에 이 대회를 띄울지 정합니다. CHECK·DEMO 같은 내부 대회나 끝난 대회는 꺼 두세요. 링크나 QR을 직접 가진 사람은 그대로 들어올 수 있습니다.',
+  'cf.audienceListedVoteNote':
+    '지금은 등록 목록에만 나옵니다 — 채점 목록에도 띄우려면 결승 심사에서 관객 심사위원을 켜야 합니다.',
   // SNS room
   'cf.snsTitle': 'SNS 방 (커뮤니티 채팅)',
   'cf.snsMeta': '등록 완료 화면에 참여 버튼으로 노출됩니다',
@@ -581,15 +597,15 @@ export const MESSAGES_KO: Record<MessageKey, string> = {
   'cf.judgesVideoPreview': '미리보기',
   'cf.judgesVideoPreviewEmpty': '먼저 영상 링크를 입력하세요.',
   // 심사위원 사용 여부 & 가중치
-  'cf.judgeUseTitle': '심사위원 · 온라인 심사위원',
+  'cf.judgeUseTitle': '심사위원 · 관객 심사위원',
   'cf.judgeUseMeta': '각 심사위원 유형 사용 여부 · 함께 사용할 때 가중치 지정',
   'cf.panelJudgesLabel': '심사위원(판정단) 사용',
-  'cf.onlineJudgesLabel': '온라인 심사위원 사용',
+  'cf.onlineJudgesLabel': '관객 심사위원 사용',
   'cf.panelWeightLabel': '심사위원 가중치',
-  'cf.onlineWeightLabel': '온라인 심사위원 가중치',
-  'cf.onlineRoundsLabel': '온라인 심사위원 참여 라운드',
+  'cf.onlineWeightLabel': '관객 심사위원 가중치',
+  'cf.onlineRoundsLabel': '관객 심사위원 참여 라운드',
   'cf.judgeWeightHint': '두 유형을 함께 사용할 때만 적용됩니다.',
-  'cf.judgeWeightFormula': '최종 = (심사위원 평균 × 심사위원 가중치 + 온라인 평균 × 온라인 가중치) ÷ 가중치 합. 한 유형만 사용하면 그 평균이 곧 최종입니다.',
+  'cf.judgeWeightFormula': '최종 = (심사위원 평균 × 심사위원 가중치 + 관객 평균 × 관객 가중치) ÷ 가중치 합. 한 유형만 사용하면 그 평균이 곧 최종입니다.',
   // Extra videos (per round)
   'cf.extraVideosTitle': '라운드별 추가 영상',
   'cf.extraVideosMeta': '라운드당 3개 · 표출 화면 오른쪽 위 버튼으로 표시',
@@ -696,9 +712,9 @@ export const MESSAGES_KO: Record<MessageKey, string> = {
   'cf.scoring.showmanship': '쇼맨십',
   'cf.scoring.audience_impact': '관객 임팩트',
   'cf.scoring.techniques': '테크닉',
-  'cf.onlineScoringTitle': '온라인 심사위원 채점 항목',
+  'cf.onlineScoringTitle': '관객 심사위원 채점 항목',
   'cf.onlineScoringMeta': '{N}개 활성 · 최소 1개 필요',
-  'cf.onlineScoringHint': '온라인 심사위원이 결승에서 사용하는 기준입니다(온라인 결승 심사 매트릭스 + 투표앱). 비활성 항목의 기존 점수는 DB에 보존됩니다.',
+  'cf.onlineScoringHint': '관객 심사위원이 결승에서 사용하는 기준입니다(관객 결승 심사 매트릭스 + 투표앱). 비활성 항목의 기존 점수는 DB에 보존됩니다.',
   'cf.onlineScoring.wow_factor': 'WOW 팩터',
   'cf.onlineScoring.stage_presence': '무대 장악력',
   'cf.onlineScoring.visual_impact': '비주얼 임팩트',

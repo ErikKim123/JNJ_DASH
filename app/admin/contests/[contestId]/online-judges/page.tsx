@@ -37,10 +37,10 @@ export default async function OnlineJudgesPage({
         title={
           <>
             <span className="font-mono text-xs text-ink2 mr-2">{contest.id}</span>
-            {contest.name} · Online Judges
+            {contest.name} · Audience Judges
           </>
         }
-        subtitle="셀프 등록된 온라인 심사위원 명단. 등록은 공개 조인앱(/ojudge)에서 이뤄집니다."
+        subtitle="셀프 등록된 관객 심사위원 명단. 등록은 공개 조인앱(/ojudge)에서 이뤄집니다."
       />
       <ContestTabs contestId={contestId} current={`${base}/online-judges`} />
       <OnlineJudgesAdmin

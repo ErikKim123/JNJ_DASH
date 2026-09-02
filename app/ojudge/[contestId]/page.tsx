@@ -1,9 +1,10 @@
-// /ojudge/[contestId] — 온라인 심사위원 등록 폼 (JOIN 앱과 동일 디자인).
+// /ojudge/[contestId] — 관객 심사위원 등록 폼 (JOIN 앱과 동일 디자인).
 import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 import { getContest } from '@/lib/db/queries';
 import { contestTheme, joinRootProps } from '@/lib/join/theme';
 import { OnlineJudgeForm } from './OnlineJudgeForm';
+import { RegistrationClosedPanel } from './RegistrationClosedPanel';
 import { TopNav } from '../../join/_components/TopNav';
 
 export const dynamic = 'force-dynamic';
@@ -31,16 +32,7 @@ export default async function OJudgeFormPage({
         style={{ padding: '24px 20px', maxWidth: 480, margin: '0 auto', minHeight: '100dvh', ...root.style }}
       >
         <TopNav variant={root.mode === 'dark' ? 'dark' : 'light'} trophyHref="/ojudge/competitions" />
-        <div
-          className="jnj-card"
-          style={{ marginTop: 24, textAlign: 'center', padding: 32, background: 'var(--jnj-surface-2)', border: '1px solid var(--jnj-border)' }}
-        >
-          <p className="jnj-mono" style={{ fontSize: 12, color: 'var(--jnj-text-muted)', marginBottom: 8, letterSpacing: '0.08em' }}>
-            REGISTRATION CLOSED
-          </p>
-          <p className="jnj-h2" style={{ marginBottom: 8 }}>{contest.name}</p>
-          <p className="jnj-caption" style={{ color: 'var(--jnj-text-muted)' }}>대회가 종료되어 등록을 받지 않습니다.</p>
-        </div>
+        <RegistrationClosedPanel contestName={contest.name} />
       </main>
     );
   }
@@ -58,7 +50,7 @@ export default async function OJudgeFormPage({
         <div style={{ marginTop: 8, marginBottom: 20, display: 'flex', alignItems: 'flex-start', gap: 16 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <p className="jnj-mono jnj-small" style={{ color: 'var(--jnj-text-muted)', letterSpacing: '0.08em', marginBottom: 6 }}>
-              ONLINE JUDGE
+              AUDIENCE JUDGE
             </p>
             <h1 className="jnj-display" style={{ fontSize: 'clamp(28px, 9vw, 44px)', lineHeight: 1.0 }}>
               {contest.name}
@@ -67,7 +59,7 @@ export default async function OJudgeFormPage({
           <a
             href={absUrl}
             title={absUrl}
-            aria-label="이 페이지의 QR 코드"
+            aria-label="QR code for this page"
             style={{
               flexShrink: 0,
               width: 112,

@@ -67,9 +67,9 @@ export function getScoringDef(key: ScoringItemKey): ScoringItemDef {
 }
 
 // ─────────────────────────────────────────────────────────────
-// 온라인 심사위원 전용 채점 항목.
+// 관객 심사위원 전용 채점 항목.
 //   판정단(SCORING_ITEMS)과 라벨/의미가 다르지만, 저장은 online_judge_votes 의
-//   동일 6 컬럼을 재사용한다(온라인 투표는 별도 테이블이라 판정단과 충돌 없음).
+//   동일 6 컬럼을 재사용한다(관객 투표는 별도 테이블이라 판정단과 충돌 없음).
 //   대회별 활성 항목은 contests.online_scoring_items 에 저장.
 // ─────────────────────────────────────────────────────────────
 export type OnlineScoringItemKey =

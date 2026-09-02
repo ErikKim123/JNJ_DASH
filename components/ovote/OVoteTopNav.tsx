@@ -2,7 +2,7 @@
 
 // 온라인 VOTE 앱 상단 메뉴 — VOTE 앱(NavBar + JudgeBadge)과 동일한 디자인.
 //   좌측: 이전 / 홈 / 갱신 / 대회목록(트로피) 원형 아이콘 버튼
-//   우측: 로그인한 온라인 심사위원 배지(이름 + 번호) + 로그아웃
+//   우측: 로그인한 관객 심사위원 배지(이름 + 번호) + 로그아웃
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 

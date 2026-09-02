@@ -10,17 +10,20 @@ import { Card, StatusLine, adminFetch, sendDisplayCmd } from './ui';
 
 export function ScreenControl({
   contestId,
-  initialRound,
-  initialStep,
+  round,
+  step,
+  setRound,
+  setStep,
   extraVideos,
 }: {
   contestId: string;
-  initialRound: RoundKey | null;
-  initialStep: StepKey | null;
+  /** 표출 포인터 — MCConsole 이 소유(동점 배너가 같은 라운드를 감시해야 하므로). */
+  round: RoundKey;
+  step: StepKey;
+  setRound: (r: RoundKey) => void;
+  setStep: (s: StepKey) => void;
   extraVideos: ExtraVideos;
 }) {
-  const [round, setRound] = useState<RoundKey>(initialRound ?? 'prelim');
-  const [step, setStep] = useState<StepKey>(initialStep ?? 'prep');
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,7 +47,7 @@ export function ScreenControl({
         setPending(false);
       }
     },
-    [contestId]
+    [contestId, setRound, setStep]
   );
 
   const onRound = (r: RoundKey) => push(r, STEPS_BY_ROUND[r][0]);
