@@ -65,8 +65,8 @@ export default function OVoteLoginPage({
             : j.error === 'CONTEST_CLOSED'
               ? '종료된 대회입니다.'
               : j.error === 'SSO_DISABLED'
-                ? '지금은 WOLF 바로 입장을 쓸 수 없습니다. 아래에서 로그인하거나 등록해 주세요.'
-                : 'WOLF 회원 확인에 실패했습니다. 아래에서 로그인하거나 등록해 주세요.',
+                ? '지금은 WOLF 바로 입장을 쓸 수 없습니다. 아래에서 로그인해 주세요.'
+                : 'WOLF 회원 확인에 실패했습니다. 아래에서 로그인해 주세요.',
         );
         return;
       }

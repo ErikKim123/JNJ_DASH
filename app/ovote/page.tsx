@@ -79,23 +79,10 @@ export default function OVoteHome() {
           Select your competition
         </p>
 
-        {/* 아직 심사위원 등록을 안 한 관객은 채점에 들어올 수 없다 — 등록 앱으로 보낸다.
-            색은 이 페이지가 쓰는 토큰 그대로라 라이트/다크 어느 쪽이든 따라온다. */}
-        <Link
-          href="/ojudge"
-          style={{
-            marginTop: 'var(--jnj-space-2)',
-            fontFamily: 'var(--jnj-font-text)',
-            fontSize: 'var(--jnj-size-small)',
-            textAlign: 'center',
-            textDecoration: 'none',
-          }}
-        >
-          <span style={{ color: 'var(--jnj-grey-500)' }}>Not registered yet? </span>
-          <span style={{ color: 'var(--jnj-white)', textDecoration: 'underline' }}>
-            Register as an Audience Judge →
-          </span>
-        </Link>
+        {/* 여기서 등록 앱(/ojudge)으로 보내던 안내는 뺐다.
+            WOLF 회원은 WOLF 의 '심사하러 가기' 로 등록 없이 바로 들어오고, 현장 관객은
+            대회 화면의 QR(SCAN TO JOIN)로 등록한다 — 채점하러 온 사람에게 가입을
+            권하는 자리가 아니다. 등록 앱 자체는 그대로 있다. */}
       </footer>
     </main>
   );
