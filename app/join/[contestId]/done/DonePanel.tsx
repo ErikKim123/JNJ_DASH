@@ -150,13 +150,13 @@ export function DonePanel({
         <p style={{ fontSize: 16, lineHeight: 1.7, color: 'var(--jnj-text)', margin: 0 }}>
           {lang === 'en' ? (
             <>
-              Please arrive <strong>30 minutes before</strong> the contest starts.
+              Please arrive <strong>1 hour before</strong> the contest starts.
               <br />
               Tell the staff your <strong>participant number</strong> at check-in.
             </>
           ) : (
             <>
-              <strong>대회 시작 30분 전</strong>에 도착해 주세요.
+              <strong>대회 시작 1시간 전</strong>에 도착해 주세요.
               <br />
               체크인 시 위 <strong>참가 번호</strong>를 알려주시면 됩니다.
             </>

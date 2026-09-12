@@ -221,6 +221,8 @@ export function JoinForm({
           role: draft.role,
           photo_url: draft.photo_url,
           meta: draft.meta,
+          // 확인 메일을 지금 보고 있는 언어로 받게 한다.
+          lang,
         }),
       });
       const j = await res.json().catch(() => ({}));
