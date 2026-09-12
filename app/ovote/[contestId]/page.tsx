@@ -21,15 +21,13 @@ export default function OVoteLoginPage({
   // WOLF 에서 토큰을 들고 넘어온 경우 폼 대신 '입장 중' 화면을 보여준다.
   const [entering, setEntering] = useState(false);
 
-  // 이미 로그인돼 있으면 라운드 화면으로.
   // WOLF(worldoflatinfestivals.com) 에서 '심사하러 가기' 로 넘어왔으면 주소에 서명 토큰이 붙어 있다
   //   → 등록도 PIN 도 묻지 않고 그대로 입장시킨다.
-  // 둘 다 아니면 다른 대회에서 쓰던 심사위원 번호를 채워준다 — 계정은 대회를 가리지 않으므로 그대로 통한다.
+  // 토큰을 저장된 세션보다 먼저 본다: 한 기기를 돌려 쓰는 자리(행사장 태블릿, 가족 폰)에서
+  // 앞사람 세션이 남아 있으면, '내 이름으로 들어간다' 고 누른 사람이 앞사람 이름으로 채점하게 된다.
+  // 토큰이 없을 때만 저장된 세션으로 들어가고, 그것도 없으면 지난번 번호를 채워준다
+  //   — 계정은 대회를 가리지 않으므로 다른 대회에서 쓰던 번호가 그대로 통한다.
   useEffect(() => {
-    if (getSession(contestId)) {
-      router.replace(`/ovote/${encodeURIComponent(contestId)}/rounds`);
-      return;
-    }
     // useSearchParams 대신 window 에서 읽는다 — 이 화면 하나 때문에 Suspense 경계를 두지 않으려고.
     const token = new URLSearchParams(window.location.search).get('t');
     if (token) {
@@ -37,6 +35,10 @@ export default function OVoteLoginPage({
       // 주소창에 남은 토큰이 어깨너머로 새어 나갈 이유도 없다.
       window.history.replaceState(null, '', `/ovote/${encodeURIComponent(contestId)}`);
       void enterWithToken(token);
+      return;
+    }
+    if (getSession(contestId)) {
+      router.replace(`/ovote/${encodeURIComponent(contestId)}/rounds`);
       return;
     }
     setIdentifier((cur) => cur || getLastIdentifier());
