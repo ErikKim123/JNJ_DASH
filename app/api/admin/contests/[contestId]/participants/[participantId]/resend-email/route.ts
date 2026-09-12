@@ -6,6 +6,7 @@ import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/db/client';
 import { getContest } from '@/lib/db/queries';
 import { sendConfirmationEmail } from '@/lib/email/sendConfirmation';
+import { pickMailLang } from '@/lib/email/templates';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -36,6 +37,8 @@ export async function POST(_req: Request, ctx: RouteCtx) {
 
   const period = [contest.period_start, contest.period_end].filter(Boolean).join(' ~ ');
   const result = await sendConfirmationEmail(to, {
+    // 재발송에는 신청 당시 고른 언어가 남아 있지 않다 — 적어 낸 국가로 정한다.
+    lang: pickMailLang({ country: row.representative }),
     // 개인 인사이므로 first_name(이름)을 우선. 없으면 표시명(team_name=last)·국가 순.
     displayName: row.first_name || row.team_name || row.representative || '참가자',
     num: row.num,

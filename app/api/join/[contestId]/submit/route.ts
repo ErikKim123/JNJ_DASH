@@ -14,6 +14,7 @@ import { listParticipants, getContest } from '@/lib/db/queries';
 import { nextParticipantNum } from '@/lib/participants/next-num';
 import { normalizeNameFields } from '@/lib/participants/name';
 import { sendConfirmationEmail } from '@/lib/email/sendConfirmation';
+import { pickMailLang } from '@/lib/email/templates';
 import type { ContestRow } from '@/lib/db/types';
 
 export const dynamic = 'force-dynamic';
@@ -38,6 +39,8 @@ const SubmitSchema = z.object({
   photo_url: z.string().max(2048).default(''),
   // meta 객체는 키-값 모두 string 으로 받음. 빈 값/모르는 키는 서버에서 제거.
   meta: z.record(z.string(), z.string().max(2048)).optional().default({}),
+  // 신청 폼에서 고른 언어 — 확인 메일을 그 언어로 보낸다. 없으면 국가로 정한다.
+  lang: z.enum(['ko', 'en']).optional(),
 });
 
 interface RouteCtx { params: Promise<{ contestId: string }> }
@@ -150,14 +153,14 @@ export async function POST(req: Request, ctx: RouteCtx) {
         .single();
       if (err2) return NextResponse.json({ error: err2.message }, { status: 500 });
       const emailResult2 = CONFIRMATION_EMAIL_ENABLED
-        ? await dispatchConfirmation(contest, data2, cleanMeta)
+        ? await dispatchConfirmation(contest, data2, cleanMeta, parsed.data.lang)
         : undefined;
       return NextResponse.json(emailResult2 ? { data: data2, email: emailResult2 } : { data: data2 }, { status: 201 });
     }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
   const emailResult = CONFIRMATION_EMAIL_ENABLED
-    ? await dispatchConfirmation(contest, data, cleanMeta)
+    ? await dispatchConfirmation(contest, data, cleanMeta, parsed.data.lang)
     : undefined;
   return NextResponse.json(emailResult ? { data, email: emailResult } : { data }, { status: 201 });
 }
@@ -172,12 +175,15 @@ function normalizePhone(raw: string): string {
 async function dispatchConfirmation(
   contest: ContestRow,
   row: { num: string; representative: string; team_name: string; first_name?: string },
-  meta: Record<string, string>
+  meta: Record<string, string>,
+  formLang?: 'ko' | 'en'
 ) {
   const to = meta['이메일'];
   if (!to) return { sent: false, reason: 'NO_EMAIL' as const };
   const period = [contest.period_start, contest.period_end].filter(Boolean).join(' ~ ');
   return sendConfirmationEmail(to, {
+    // 본인이 폼을 채운 언어로. 안 고르고 왔으면 적어 낸 국가로 정한다.
+    lang: pickMailLang({ formLang, country: row.representative }),
     // 개인 인사이므로 first_name(이름)을 우선. 없으면 표시명(team_name=last)·국가 순.
     displayName: row.first_name || row.team_name || row.representative || '참가자',
     num: row.num,
