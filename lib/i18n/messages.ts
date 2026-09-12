@@ -217,6 +217,13 @@ export const MESSAGES_EN = {
   'cf.payEnabledOff': 'Disabled',
   'cf.payLabel': 'Payment Page Link',
   'cf.payHint': 'Participation-fee payment page. Shown as the "Make Your Payment" button on the registration-complete screen and in the confirmation e-mail. When disabled, the button is hidden.',
+  // Arrival notice
+  'cf.arrivalTitle': 'Arrival Time',
+  'cf.arrivalLabel': 'Arrive before the start',
+  'cf.arrivalHint': 'Used in the confirmation e-mail and the registration-complete screen: "Please arrive N before the competition starts."',
+  'cf.arrivalCustom': 'Custom',
+  'cf.arrivalUnit': 'minutes',
+  'cf.arrivalPreview': 'Arrive {LEAD} before the start',
   // Judges intro video
   'cf.judgesVideoTitle': 'Judge Introduction Video',
   'cf.judgesVideoMeta': 'Played on the JUDGES VIDEO step (after JUDGES) · paste a YouTube link',
@@ -589,6 +596,13 @@ export const MESSAGES_KO: Record<MessageKey, string> = {
   'cf.payEnabledOff': '비활성',
   'cf.payLabel': '결제 페이지 링크',
   'cf.payHint': '참가비 결제 페이지. 등록 완료 화면과 확인 메일에서 "참가비 결제하기" 버튼으로 노출됩니다. 비활성이면 버튼이 숨겨집니다.',
+  // Arrival notice
+  'cf.arrivalTitle': '도착 안내 시간',
+  'cf.arrivalLabel': '대회 시작 전 도착 시간',
+  'cf.arrivalHint': '확인 메일과 신청 완료 화면의 "대회 시작 N 전까지 도착해 주세요" 문구에 쓰입니다.',
+  'cf.arrivalCustom': '기타(직접 입력)',
+  'cf.arrivalUnit': '분',
+  'cf.arrivalPreview': '대회 시작 {LEAD} 전',
   // Judges intro video
   'cf.judgesVideoTitle': '심사위원 소개 영상',
   'cf.judgesVideoMeta': '예선 JUDGES 다음 "영상소개" 스텝에서 재생 · YouTube 링크 붙여넣기',

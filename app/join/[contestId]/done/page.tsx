@@ -49,6 +49,7 @@ export default async function DonePage({
         snsEnabled={contest?.sns_enabled ?? false}
         paymentUrl={contest?.payment_url ?? ''}
         paymentEnabled={contest?.payment_enabled ?? false}
+        arrivalMinutes={contest?.arrival_lead_minutes ?? 60}
       />
     </main>
   );

@@ -184,6 +184,8 @@ async function dispatchConfirmation(
   return sendConfirmationEmail(to, {
     // 본인이 폼을 채운 언어로. 안 고르고 왔으면 적어 낸 국가로 정한다.
     lang: pickMailLang({ formLang, country: row.representative }),
+    // 도착 안내 시간은 대회 설정값 그대로 — 화면(done)과 같은 값을 쓴다.
+    arrivalMinutes: contest.arrival_lead_minutes,
     // 개인 인사이므로 first_name(이름)을 우선. 없으면 표시명(team_name=last)·국가 순.
     displayName: row.first_name || row.team_name || row.representative || '참가자',
     num: row.num,

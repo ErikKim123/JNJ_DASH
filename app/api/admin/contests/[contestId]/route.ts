@@ -74,6 +74,8 @@ const PatchSchema = z.object({
   sns_enabled: z.boolean().optional(),
   payment_url: z.union([z.literal(''), z.string().url().max(2000)]).optional(),
   payment_enabled: z.boolean().optional(),
+  // 도착 안내 시간(분). 범위는 DB CHECK 와 같게 둔다 — 여기서 걸러야 에러 대신 안내가 나간다.
+  arrival_lead_minutes: z.number().int().min(1).max(1440).optional(),
   panel_judges_enabled: z.boolean().optional(),
   online_judges_enabled: z.boolean().optional(),
   audience_listed: z.boolean().optional(),

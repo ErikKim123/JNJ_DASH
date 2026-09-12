@@ -17,6 +17,13 @@ import {
   ONLINE_SCORING_ITEMS, DEFAULT_ONLINE_SCORING_ITEMS, type OnlineScoringItemKey,
 } from '@/lib/db/scoring';
 import { JOIN_PRESETS, JOIN_PRESET_MAP, resolveJoinPalette } from '@/lib/join/theme';
+import {
+  ARRIVAL_PRESETS,
+  ARRIVAL_MAX,
+  ARRIVAL_MIN,
+  formatArrivalLead,
+  normalizeArrivalLead,
+} from '@/lib/join/arrival';
 import { useT } from '@/lib/i18n/LocaleContext';
 import type { MessageKey } from '@/lib/i18n/messages';
 
@@ -116,6 +123,7 @@ export function ContestForm({
     sns_enabled: initial?.sns_enabled ?? false,
     payment_url: initial?.payment_url ?? '',
     payment_enabled: initial?.payment_enabled ?? true,
+    arrival_lead_minutes: normalizeArrivalLead(initial?.arrival_lead_minutes ?? 60),
     panel_judges_enabled: initial?.panel_judges_enabled ?? true,
     online_judges_enabled: initial?.online_judges_enabled ?? false,
     // 컬럼이 없던 시절 데이터도 노출로 본다(0036 이전 = 전부 보이던 동작).
@@ -135,6 +143,14 @@ export function ContestForm({
       return picked.length ? picked : ['final'];
     })(),
   });
+
+  // 도착 안내 시간 — 드롭다운에 없는 값이면 '기타'로 열어 둔다.
+  // form 값과 따로 두는 이유: 기타로 넣은 숫자가 마침 프리셋과 같아져도 입력칸이 닫히면 안 된다.
+  const [arrivalCustom, setArrivalCustom] = useState(
+    !(ARRIVAL_PRESETS as readonly number[]).includes(
+      normalizeArrivalLead(initial?.arrival_lead_minutes ?? 60),
+    ),
+  );
 
   // 관객 심사위원 라운드 체크박스 토글 (canonical 순서 유지).
   // 현재 버전은 결승만 지원 — 예선/본선은 안내 후 무시.
@@ -447,6 +463,8 @@ export function ContestForm({
         ...form,
         period_start: form.period_start || null,
         period_end: form.period_end || null,
+        // 직접 입력 칸을 비운 채 저장하면 0 이 날아가 서버에서 거절당한다 — 여기서 범위를 잡는다.
+        arrival_lead_minutes: normalizeArrivalLead(form.arrival_lead_minutes),
       };
       const url =
         mode === 'create'
@@ -679,6 +697,57 @@ export function ContestForm({
             maxLength={2000}
             disabled={!form.payment_enabled}
           />
+        </Field>
+      </section>
+
+      {/* 도착 안내 시간 — 확인 메일과 신청 완료 화면의 '대회 시작 N분 전' 문구에 그대로 쓰인다.
+          대회 규모·장소에 따라 다르므로(작은 배틀 10분, 큰 페스티벌 2시간) 대회마다 정한다. */}
+      <section className="rounded border border-border bg-panel/40 p-4">
+        <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+          <h3 className="text-sm font-semibold">{t('cf.arrivalTitle')}</h3>
+          {/* 지금 설정이 실제로 어떤 문구가 되는지 그 자리에서 보여준다. */}
+          <span className="text-xs text-ink2">
+            {fmt(t('cf.arrivalPreview'), { LEAD: formatArrivalLead(form.arrival_lead_minutes, 'ko') })}
+          </span>
+        </div>
+        <Field label={t('cf.arrivalLabel')} hint={t('cf.arrivalHint')}>
+          <div className="flex gap-2 items-stretch flex-wrap">
+            <Select
+              value={arrivalCustom ? 'custom' : String(form.arrival_lead_minutes)}
+              onChange={(e) => {
+                if (e.target.value === 'custom') {
+                  setArrivalCustom(true);
+                  return;
+                }
+                setArrivalCustom(false);
+                update('arrival_lead_minutes', Number(e.target.value));
+              }}
+              className="w-40"
+            >
+              {ARRIVAL_PRESETS.map((m) => (
+                <option key={m} value={m}>
+                  {formatArrivalLead(m, 'ko')}
+                </option>
+              ))}
+              <option value="custom">{t('cf.arrivalCustom')}</option>
+            </Select>
+            {arrivalCustom && (
+              <Input
+                type="number"
+                min={ARRIVAL_MIN}
+                max={ARRIVAL_MAX}
+                step={5}
+                value={form.arrival_lead_minutes}
+                // 타이핑 중간(빈 칸 등)에도 막지 않고, 저장 전에 normalize 가 범위를 잡는다.
+                onChange={(e) => update('arrival_lead_minutes', Number(e.target.value))}
+                onBlur={(e) =>
+                  update('arrival_lead_minutes', normalizeArrivalLead(e.target.value))
+                }
+                className="w-28"
+              />
+            )}
+            {arrivalCustom && <span className="text-xs text-ink2 self-center">{t('cf.arrivalUnit')}</span>}
+          </div>
         </Field>
       </section>
 
