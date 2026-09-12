@@ -4,6 +4,8 @@
 // 언어는 참가자가 신청 폼에서 고른 쪽을 따른다. 고른 기록이 없으면(어드민 재발송 등)
 // 국가로 정한다 — 신청 폼의 국가 선택은 나라 '이름' 을 그대로 저장하므로 'Korea' 면 한국어.
 
+import { formatArrivalLead } from '@/lib/join/arrival';
+
 export type MailLang = 'ko' | 'en';
 
 export interface ConfirmationVars {
@@ -23,6 +25,8 @@ export interface ConfirmationVars {
   paymentUrl?: string;
   /** 본문 언어. 미지정이면 영어. */
   lang?: MailLang;
+  /** 도착 안내 시간(분) — 대회 설정값. 미지정이면 60분. */
+  arrivalMinutes?: number;
 }
 
 /** 신청 폼의 국가 선택에서 한국을 가리키는 표기들. */
@@ -56,10 +60,10 @@ const COPY = {
     ko: (contest: string) => `<strong>${contest}</strong> 참가 신청이 접수되었습니다.`,
   },
   arrive: {
-    en: (num: string) =>
-      `Please arrive <strong>1 hour</strong> before the competition starts. Your participant number is <strong>${num}</strong>.`,
-    ko: (num: string) =>
-      `대회 시작 <strong>1시간 전</strong>까지 도착해 주세요. 참가 번호는 <strong>${num}</strong>번입니다.`,
+    en: (num: string, lead: string) =>
+      `Please arrive <strong>${lead}</strong> before the competition starts. Your participant number is <strong>${num}</strong>.`,
+    ko: (num: string, lead: string) =>
+      `대회 시작 <strong>${lead} 전</strong>까지 도착해 주세요. 참가 번호는 <strong>${num}</strong>번입니다.`,
   },
   payLead: {
     en: 'To complete your registration, please make your participation-fee payment below.',
@@ -80,9 +84,9 @@ const COPY = {
     ko: (c: string) => `${c} 참가 신청이 접수되었습니다.`,
   },
   textArrive: {
-    en: (num: string) =>
-      `Please arrive 1 hour before the competition starts. Your participant number is ${num}.`,
-    ko: (num: string) => `대회 시작 1시간 전까지 도착해 주세요. 참가 번호는 ${num}번입니다.`,
+    en: (num: string, lead: string) =>
+      `Please arrive ${lead} before the competition starts. Your participant number is ${num}.`,
+    ko: (num: string, lead: string) => `대회 시작 ${lead} 전까지 도착해 주세요. 참가 번호는 ${num}번입니다.`,
   },
   textPay: {
     en: 'To complete your registration, please make your participation-fee payment here:',
@@ -92,6 +96,8 @@ const COPY = {
 } as const;
 
 const langOf = (v: ConfirmationVars): MailLang => (v.lang === 'ko' ? 'ko' : 'en');
+const leadOf = (v: ConfirmationVars): string =>
+  formatArrivalLead(v.arrivalMinutes ?? 60, langOf(v));
 
 export function buildSubject(v: ConfirmationVars): string {
   // 제목에 '·'(U+00B7) 같은 기호는 쓰지 않는다 — 일부 메일 클라이언트에서 글자가 깨진다.
@@ -107,7 +113,7 @@ export function buildTextBody(v: ConfirmationVars): string {
     COPY.textHello[L](v.displayName),
     ``,
     COPY.textReceived[L](v.contestName),
-    COPY.textArrive[L](v.num),
+    COPY.textArrive[L](v.num, leadOf(v)),
     ...(pay ? ['', COPY.textPay[L], v.paymentUrl as string] : []),
     ...(sns ? ['', COPY.textSns[L], v.snsUrl as string] : []),
     ``,
@@ -163,7 +169,7 @@ export function buildHtmlBody(v: ConfirmationVars): string {
                   ${COPY.received[L](escapeHtml(v.contestName))}
                 </p>
                 <p style="margin:0 0 4px 0;font-size:16px;line-height:1.6;color:#111111;">
-                  ${COPY.arrive[L](escapeHtml(v.num))}
+                  ${COPY.arrive[L](escapeHtml(v.num), leadOf(v))}
                 </p>
               </td>
             </tr>

@@ -77,6 +77,11 @@ export interface ContestRow {
   sns_url: string;
   /** SNS 방 참여 버튼 노출 여부. false 면 done 화면에서 버튼을 렌더하지 않음. */
   sns_enabled: boolean;
+  /**
+   * 참가자 도착 안내 시간(분) — '대회 시작 N분 전까지 도착' 문구에 쓴다.
+   * 확인 메일과 신청 완료 화면이 같은 값을 읽는다. 기본 60.
+   */
+  arrival_lead_minutes: number;
   /** 참가비 결제 페이지 링크. 비어있으면 done 화면·메일에서 결제 버튼을 숨김. */
   payment_url: string;
   /** 결제 버튼 노출 여부. false 면 done 화면·메일에서 버튼을 렌더하지 않음. */

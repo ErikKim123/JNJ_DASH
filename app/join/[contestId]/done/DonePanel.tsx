@@ -4,6 +4,7 @@
 // 색상은 페이지 <main> 의 테마 토큰(var(--jnj-*))을 상속한다.
 import { useState } from 'react';
 import Link from 'next/link';
+import { formatArrivalLead } from '@/lib/join/arrival';
 
 type Lang = 'en' | 'ko';
 
@@ -17,6 +18,7 @@ export function DonePanel({
   snsEnabled,
   paymentUrl,
   paymentEnabled,
+  arrivalMinutes,
 }: {
   contestId: string;
   num: string;
@@ -27,6 +29,8 @@ export function DonePanel({
   snsEnabled: boolean;
   paymentUrl: string;
   paymentEnabled: boolean;
+  /** 도착 안내 시간(분) — 대회 설정값. 확인 메일과 같은 값을 쓴다. */
+  arrivalMinutes: number;
 }) {
   const [lang, setLang] = useState<Lang>('en');
   // 활성(토글 ON) + 유효 URL 일 때만 버튼 노출. 비활성이면 섹션 자체를 숨김.
@@ -150,13 +154,14 @@ export function DonePanel({
         <p style={{ fontSize: 16, lineHeight: 1.7, color: 'var(--jnj-text)', margin: 0 }}>
           {lang === 'en' ? (
             <>
-              Please arrive <strong>1 hour before</strong> the contest starts.
+              Please arrive <strong>{formatArrivalLead(arrivalMinutes, 'en')} before</strong> the
+              contest starts.
               <br />
               Tell the staff your <strong>participant number</strong> at check-in.
             </>
           ) : (
             <>
-              <strong>대회 시작 1시간 전</strong>에 도착해 주세요.
+              <strong>대회 시작 {formatArrivalLead(arrivalMinutes, 'ko')} 전</strong>에 도착해 주세요.
               <br />
               체크인 시 위 <strong>참가 번호</strong>를 알려주시면 됩니다.
             </>
