@@ -71,6 +71,9 @@ async function ensureMigrationsTable(client) {
       checksum text
     );
   `);
+  // Bookkeeping only — this runner reaches it as postgres, never through PostgREST.
+  await client.query(`alter table public.schema_migrations enable row level security;`);
+  await client.query(`revoke all on table public.schema_migrations from anon, authenticated;`);
 }
 
 async function listApplied(client) {
