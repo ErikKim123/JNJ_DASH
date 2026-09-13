@@ -20,7 +20,7 @@ import {
 // app/layout.tsx 와 동일한 웹폰트 — iframe 은 부모 문서 스타일을 물려받지 않으므로 직접 링크.
 // (부모에서 이미 로드된 폰트라 캐시에서 즉시 뜬다.)
 const FONT_LINK =
-  '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Cinzel:wght@400;500;600;700;800;900&family=Oswald:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap">';
+  '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Cinzel:wght@400;500;600;700;800;900&family=Oswald:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@500;600;700;800;900&display=swap">';
 
 function frameDoc(svg: string): string {
   return (
