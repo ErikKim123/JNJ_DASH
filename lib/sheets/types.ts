@@ -245,6 +245,11 @@ export interface ReportEntry {
   total: string;
   /** 평균 (표시용 문자열, 빈값이면 '—'). */
   avg: string;
+  /**
+   * 관객 심사위원 평균 (0–10, 표시용 문자열).
+   * 관객 심사를 안 쓰는 대회이거나 그 참가자에게 관객 점수가 없으면 빈 문자열 — 그때는 아예 렌더하지 않는다.
+   */
+  aud?: string;
 }
 
 export interface ReportData {

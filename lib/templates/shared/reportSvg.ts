@@ -134,6 +134,13 @@ function row(x0: number, y0: number, e: ReportEntry, th: ReportTheme): string {
   const textX = x0 + s(86);
   const total = xmlEscape(e.total || '—');
   const avg = xmlEscape(e.avg || '—');
+  // 관객 평균은 있을 때만 AVG 옆에 붙인다 — 행 높이를 늘리지 않으려고 같은 줄에 둔다.
+  const aud = xmlEscape(e.aud ?? '');
+  const unit = (t: string) =>
+    `<tspan font-family="${SERIF_BODY}" font-size="${s(10)}" opacity="0.6">${t}</tspan>`;
+  const metrics = aud
+    ? `${avg} ${unit('AVG')}<tspan opacity="0.4">   ·   </tspan>${aud} ${unit('AUD')}`
+    : `${avg} ${unit('AVG')}`;
   const name = xmlEscape(trunc(e.name));
   const num = xmlEscape(`#${e.num}`);
   return `
@@ -149,7 +156,7 @@ function row(x0: number, y0: number, e: ReportEntry, th: ReportTheme): string {
       <text x="${rightX}" y="${y0 + s(38)}" text-anchor="end" font-family="${SERIF}" font-weight="700" font-size="${s(34)}"
         fill="${top ? GOLD : CREAM}">${total}</text>
       <text x="${rightX}" y="${y0 + s(54)}" text-anchor="end" font-family="${SERIF_BODY}" font-size="${s(11)}" letter-spacing="2" fill="${CREAM}" opacity="0.55">TOTAL</text>
-      <text x="${rightX}" y="${y0 + s(74)}" text-anchor="end" font-family="${MONO}" font-size="${s(15)}" fill="${CREAM}" opacity="0.85">${avg} <tspan font-family="${SERIF_BODY}" font-size="${s(10)}" opacity="0.6">AVG</tspan></text>
+      <text x="${rightX}" y="${y0 + s(74)}" text-anchor="end" font-family="${MONO}" font-size="${s(15)}" fill="${CREAM}" opacity="0.85">${metrics}</text>
     </g>`;
 }
 

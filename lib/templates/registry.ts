@@ -7,6 +7,7 @@ import { Template03 } from './03';
 import { Template04 } from './04';
 import { Template05 } from './05';
 import { Template06 } from './06';
+import { Template07 } from './07';
 
 export const TEMPLATES: Record<number, TemplateModule> = {
   1: Template01,
@@ -15,6 +16,7 @@ export const TEMPLATES: Record<number, TemplateModule> = {
   4: Template04,
   5: Template05,
   6: Template06,
+  7: Template07,
 };
 
 export const DEFAULT_TEMPLATE_ID = 1;
