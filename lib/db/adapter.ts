@@ -363,6 +363,18 @@ async function getFinalReport(
     .select('role, team_name, participant_num, final_rank, total_score, average')
     .eq('contest_id', contestId);
   if (error) throw new Error(`getFinalReport: ${error.message}`);
+
+  // 관객 심사를 쓰는 대회면 행마다 관객 평균도 같이 보여준다.
+  //   final_results 의 average 는 판정단·관객을 가중 합산한 값이라, 관객만의 점수는 여기서 따로 구한다.
+  const { data: cfg, error: cfgErr } = await sb
+    .from('contests')
+    .select('online_judges_enabled')
+    .eq('id', contestId)
+    .maybeSingle();
+  if (cfgErr) throw new Error(`getFinalReport(contest): ${cfgErr.message}`);
+  const audByNum = cfg?.online_judges_enabled === true
+    ? await getOnlineAvgByNum(contestId)
+    : new Map<string, number>();
   const rows = (data ?? []) as Array<{
     role: 'leader' | 'follower'; team_name: string; participant_num: string;
     final_rank: number | null; total_score: number | null; average: number | null;
@@ -382,13 +394,17 @@ async function getFinalReport(
       if (ta !== tb) return tb - ta;
       return a.participant_num.localeCompare(b.participant_num, undefined, { numeric: true });
     });
-    return list.slice(0, topN).map((r, i) => ({
-      rank: r.final_rank ?? i + 1,
-      num: r.participant_num,
-      name: r.team_name,
-      total: fmt(r.total_score),
-      avg: fmt(r.average),
-    }));
+    return list.slice(0, topN).map((r, i) => {
+      const aud = audByNum.get(r.participant_num);
+      return {
+        rank: r.final_rank ?? i + 1,
+        num: r.participant_num,
+        name: r.team_name,
+        total: fmt(r.total_score),
+        avg: fmt(r.average),
+        aud: aud == null ? '' : fmt(Number(aud.toFixed(2))),
+      };
+    });
   }
 
   return { leaders: build('leader'), followers: build('follower') };
@@ -404,6 +420,42 @@ async function getFinalReport(
  *   · total = avg × 활성 항목 수 (판정단 보고서의 total_score 와 같은 표시 규칙)
  *   · rank  = 역할별 avg 내림차순, 동점은 같은 등수
  */
+/**
+ * 참가자별 관객 심사위원 평균(0–10) — 판정단 보고서와 관객 전용 보고서가 함께 쓴다.
+ * 활성 온라인 항목 점수를 전부 모아 단순 평균내므로 심사위원 수에 좌우되지 않는다.
+ * 반환: participant_num → 평균. 관객 항목이 하나도 없으면 빈 Map.
+ */
+async function getOnlineAvgByNum(contestId: string): Promise<Map<string, number>> {
+  const sb = getSupabaseAdmin();
+  const { data: contest, error: ce } = await sb
+    .from('contests')
+    .select('online_scoring_items')
+    .eq('id', contestId)
+    .maybeSingle();
+  if (ce) throw new Error(`getOnlineAvgByNum(contest): ${ce.message}`);
+  const cols = resolveActiveOnlineDefs(
+    (contest?.online_scoring_items ?? []) as OnlineScoringItemKey[]
+  ).map((d) => d.column);
+
+  const out = new Map<string, number>();
+  if (cols.length === 0) return out;
+
+  const agg = new Map<string, { sum: number; cnt: number }>();
+  const votes = await listOnlineJudgeVotes(contestId);
+  for (const v of votes) {
+    const cur = agg.get(v.participant_num) ?? { sum: 0, cnt: 0 };
+    for (const c of cols) {
+      const x = (v as unknown as Record<string, number | null>)[c];
+      if (x != null) { cur.sum += Number(x); cur.cnt++; }
+    }
+    agg.set(v.participant_num, cur);
+  }
+  for (const [num, a] of agg) {
+    if (a.cnt > 0) out.set(num, a.sum / a.cnt);
+  }
+  return out;
+}
+
 async function getOnlineFinalReport(
   contestId: string,
   topN = 5
