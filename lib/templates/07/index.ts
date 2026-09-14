@@ -18,6 +18,7 @@ import { ceremonySvg } from './svg/ceremony';
 import { shell, topBar, BG_LAYER, OVERRIDE_SCRIM, DISPLAY, WHITE, GOLD } from './common';
 import { renderReportSvg } from '../shared/reportSvg';
 import { applyContestIcon, type IconRect } from '../shared/contestIcon';
+import { applyTextFit } from './fit';
 
 const REPORT_THEME = {
   accent: GOLD,
@@ -56,7 +57,7 @@ function selectSvg(round: RoundKey, _step: StepKey, data: StepDataPayload, pairC
   if (round === 'final') {
     switch (data.kind) {
       case 'prep':
-        return finalPrepSvg();
+        return finalPrepSvg(Boolean(data.data.participants?.trim()));
       case 'wrapup':
         return finalWrapupSvg();
       case 'result':
@@ -80,7 +81,8 @@ function selectSvg(round: RoundKey, _step: StepKey, data: StepDataPayload, pairC
 
   switch (data.kind) {
     case 'prep':
-      return prepSvg();
+      // 참가 규모가 비어 있으면(운영 기본값) ENTRIES 카드를 빼고 카드 2장으로 폭을 채운다.
+      return prepSvg(false, Boolean(data.data.participants?.trim()));
     case 'judgesIntro':
       return judgesIntroSvg(data.data.judges?.length ?? 0);
     case 'judgesVideo':
@@ -140,7 +142,8 @@ export const Template07: TemplateModule = {
   render(round, step, data, opts) {
     const svg = selectSvg(round, step, data, opts?.pairCircle);
     const placeholders = flattenStepData(data);
-    const filled = applyPlaceholders(svg, placeholders);
+    // 치환이 끝나야 실제 글자 길이를 알 수 있으므로 자동 맞춤은 치환 직후에 적용한다.
+    const filled = applyTextFit(applyPlaceholders(svg, placeholders));
     const withBg = applyBackgroundOverride(filled, opts?.backgroundOverride, opts?.backgroundOpacity);
     // VIDEO(심사위원 소개 영상) 스텝은 플레이어가 화면을 꽉 채워서 아이콘이 영상 위에 걸린다 — 표출하지 않는다.
     const icon = data.kind === 'judgesVideo' ? undefined : opts?.iconOverride;

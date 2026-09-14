@@ -74,15 +74,15 @@ export function wrapupSvg(final = false): string {
     ${final ? lightRays(CX, 250) : ''}
     ${topBar()}
 
-    ${label(CX + 4, 182, '{{stage_label}}', { size: 15, tracking: 8 })}
-    ${strong(CX, 262, '{{wrap_title}}', 72, { cls: 'hero', weight: 900, tracking: 2 })}
-    ${strong(CX + 3, 302, '{{wrap_subtitle}}', 20, { fill: SOFT, tracking: 7 })}
+    ${label(CX + 4, 182, '{{stage_label}}', { size: 15, tracking: 8, fit: 1100 })}
+    ${strong(CX, 262, '{{wrap_title}}', 72, { cls: 'hero', weight: 900, tracking: 2, fit: 1180 })}
+    ${strong(CX + 3, 302, '{{wrap_subtitle}}', 20, { fill: SOFT, tracking: 7, fit: 1180 })}
 
     ${stageBand(328, 194, final)}
     ${reels}
 
     ${progress(558)}
-    ${strong(CX, 606, '{{wrap_message}}', 15, { fill: SOFT, weight: 700, tracking: 4 })}
+    ${strong(CX, 606, '{{wrap_message}}', 15, { fill: SOFT, weight: 700, tracking: 4, fit: 1180 })}
 
     ${footBar()}
   `);

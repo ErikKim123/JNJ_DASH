@@ -55,8 +55,8 @@ function group(g: Group): string {
       ${rolePill(pcx, pillY, labelKey, role, { w: Math.min(pw - 24, 118), h: 22, size: 10, tracking: 2 })}
       ${goldNumber(pcx, numY, `{{${prefix}_num_${rank}}}`, numSize)}
       ${clipBox(px - 4, n1Y - nameSize - 4, pw + 8, n2Y - n1Y + nameSize + 12, `
-        ${strong(pcx, n1Y, `{{${prefix}_${rank}_l1}}`, nameSize)}
-        ${strong(pcx, n2Y, `{{${prefix}_${rank}_l2}}`, nameSize)}
+        ${strong(pcx, n1Y, `{{${prefix}_${rank}_l1}}`, nameSize, { fit: pw + 4, fitMin: 0.7 })}
+        ${strong(pcx, n2Y, `{{${prefix}_${rank}_l2}}`, nameSize, { fit: pw + 4, fitMin: 0.7 })}
       `)}`;
   };
 

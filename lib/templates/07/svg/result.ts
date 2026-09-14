@@ -6,7 +6,7 @@
 //   ≤ 25명 : 3~4행 — 칩 [작은 사진 | 번호 · 이름]
 import {
   shell, topBar, footBar, heading, glassCard, label, goldNumber, strong, photoFrame, fadeUp, clipBox,
-  DISPLAY, NIGHT, MX, RX, f, ROLE_FILL, type Role,
+  DISPLAY, NIGHT, MX, RX, f, fitAttr, ROLE_FILL, type Role,
 } from '../common';
 
 const TOP = 170;
@@ -37,7 +37,7 @@ function tallCard(key: Key, i: number, x: number, y: number, w: number, h: numbe
     ${photoFrame(cx - pw / 2, photoY, pw, ph, `{{${key}_photo_${i}}}`)}
     ${label(cx, labelY, 'CONTESTANT', { size: 10, tracking: 2 })}
     ${goldNumber(cx, labelY + 38, `{{${key}_num_${i}}}`, 36)}
-    ${clipBox(x + 8, y + h - 38, w - 16, 30, strong(cx, y + h - 16, `{{${key}_${i}}}`, 16))}
+    ${clipBox(x + 8, y + h - 38, w - 16, 30, strong(cx, y + h - 16, `{{${key}_${i}}}`, 16, { fit: w - 20, fitMin: 0.8, ellipsis: true }))}
   `;
 }
 
@@ -51,7 +51,7 @@ function midCard(key: Key, i: number, x: number, y: number, w: number, h: number
     ${photoFrame(x + 9, y + 9, pw, ph, `{{${key}_photo_${i}}}`, { rx: 8, ringW: 2 })}
     ${label(tx, y + h * 0.3, 'CONTESTANT', { size: Math.min(10, tw / 9), tracking: 1, anchor: 'start' })}
     ${goldNumber(tx, y + h * 0.63, `{{${key}_num_${i}}}`, Math.min(32, h * 0.3), 'start')}
-    ${clipBox(tx, y + h * 0.68, tw, h * 0.26, strong(tx, y + h * 0.86, `{{${key}_${i}}}`, 13, { anchor: 'start' }))}
+    ${clipBox(tx, y + h * 0.68, tw, h * 0.26, strong(tx, y + h * 0.86, `{{${key}_${i}}}`, 13, { anchor: 'start', fit: tw, fitMin: 0.85, ellipsis: true }))}
   `;
 }
 
@@ -65,7 +65,7 @@ function chipCard(key: Key, i: number, x: number, y: number, w: number, h: numbe
     ${glassCard(x, y, w, h, { rx: Math.min(14, h * 0.25) })}
     ${photoFrame(x + 6, y + 6, ph, ph, `{{${key}_photo_${i}}}`, { rx: 6, ringW: 1.6 })}
     ${goldNumber(tx, y + h * 0.47, `{{${key}_num_${i}}}`, numSize, 'start')}
-    ${clipBox(tx, y + h * 0.55, tw, h * 0.4, strong(tx, y + h * 0.82, `{{${key}_${i}}}`, nameSize, { anchor: 'start' }))}
+    ${clipBox(tx, y + h * 0.55, tw, h * 0.4, strong(tx, y + h * 0.82, `{{${key}_${i}}}`, nameSize, { anchor: 'start', fit: tw, fitMin: 0.85, ellipsis: true }))}
   `;
 }
 
@@ -94,7 +94,7 @@ function roleBand(role: Role, y: number, h: number, labelKey: string, key: Key, 
 
   const tab = `
     <rect x="${MX}" y="${f(y)}" width="${TAB_W}" height="${f(h)}" rx="14" fill="${ROLE_FILL[role]}"/>
-    <text class="flat" transform="translate(${f(MX + TAB_W / 2 + 5)} ${f(y + h / 2)}) rotate(-90)" text-anchor="middle"
+    <text class="flat"${fitAttr(h - 28, 0.6)} transform="translate(${f(MX + TAB_W / 2 + 5)} ${f(y + h / 2)}) rotate(-90)" text-anchor="middle"
       font-family="${DISPLAY}" font-weight="900" font-size="14" letter-spacing="5" fill="${NIGHT}">${labelKey}</text>
   `;
 

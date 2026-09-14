@@ -28,7 +28,7 @@ export function openSvg(): string {
     ${topBar()}
     ${stageBand(176, 344)}
 
-    ${label(CX + 5, 236, '{{round_title}}', { size: 16, tracking: 10 })}
+    ${label(CX + 5, 236, '{{round_title}}', { size: 16, tracking: 10, fit: 1100 })}
     ${strong(CX + 11, 292, 'NOW', 28, { weight: 800, tracking: 22 })}
 
     <text class="hero" ${titleAttrs} fill="${WHITE}">OPEN</text>
@@ -39,8 +39,8 @@ export function openSvg(): string {
       </rect>
     </g>
 
-    ${strong(CX, 574, '{{open_quote}}', 24, { weight: 700, tracking: 0.5 })}
-    ${label(CX, 610, '{{open_subline}}', { size: 13, tracking: 5 })}
+    ${strong(CX, 574, '{{open_quote}}', 24, { weight: 700, tracking: 0.5, fit: 1180 })}
+    ${label(CX + 2, 610, '{{open_subline}}', { size: 13, tracking: 5, fit: 1180 })}
 
     ${footBar()}
   `);
