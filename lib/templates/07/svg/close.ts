@@ -31,13 +31,13 @@ export function closeSvg(): string {
   return shell(`
     ${topBar()}
 
-    ${label(CX + 5, 172, '{{stage_label}}', { size: 15, tracking: 10 })}
+    ${label(CX + 5, 172, '{{stage_label}}', { size: 15, tracking: 10, fit: 1100 })}
     ${seal(CX, 286)}
 
     ${stageBand(392, 212)}
-    ${strong(CX, 470, '{{close_title}}', 62, { cls: 'hero', weight: 900, tracking: 2 })}
-    ${strong(CX + 4, 514, '{{close_subtitle}}', 20, { fill: SOFT, tracking: 8 })}
-    ${label(CX, 566, '{{close_message}}', { size: 16, tracking: 3 })}
+    ${strong(CX, 470, '{{close_title}}', 62, { cls: 'hero', weight: 900, tracking: 2, fit: 1150 })}
+    ${strong(CX + 4, 514, '{{close_subtitle}}', 20, { fill: SOFT, tracking: 8, fit: 1150 })}
+    ${label(CX + 1, 566, '{{close_message}}', { size: 16, tracking: 3, fit: 1150 })}
 
     ${footBar()}
   `);

@@ -211,20 +211,40 @@ export function shell(content: string): string {
 
 // ── 텍스트 프리미티브 ───────────────────────────────────────────────────────
 
+/**
+ * 자동 맞춤 표시 — 운영 데이터(대회명·라운드명·안내 문구·이름)는 길이를 예측할 수 없다.
+ * 이 속성이 붙은 <text> 는 placeholder 치환 뒤 fit.ts 의 applyTextFit 이 실제 글자 폭을 추정해
+ * maxW 안에 들어오도록 font-size 를 줄이고, minRatio 까지 줄여도 넘치면 가로로 압축한다.
+ * ellipsis=true 면 압축 대신 최소 크기에서 말줄임(…) — 좁은 칸의 이름처럼 읽히는 크기가 우선인 자리.
+ */
+export function fitAttr(maxW?: number, minRatio = 0.6, ellipsis = false): string {
+  return maxW ? ` data-fit="${f(maxW)},${minRatio}${ellipsis ? ',t' : ''}"` : '';
+}
+
 /** 작은 황금 대문자 라벨 — CONTESTANT / COUPLE 같은 항목 이름. */
 export function label(
   x: number,
   y: number,
   text: string,
-  opts: { size?: number; fill?: string; anchor?: 'start' | 'middle' | 'end'; tracking?: number; weight?: number } = {}
+  opts: {
+    size?: number; fill?: string; anchor?: 'start' | 'middle' | 'end'; tracking?: number; weight?: number;
+    fit?: number; fitMin?: number; ellipsis?: boolean;
+  } = {}
 ): string {
   const { size = 12, fill = GOLD, anchor = 'middle', tracking = 3, weight = 800 } = opts;
-  return `<text x="${f(x)}" y="${f(y)}" text-anchor="${anchor}" font-family="${DISPLAY}" font-weight="${weight}" font-size="${f(size)}" letter-spacing="${f(tracking)}" fill="${fill}">${text}</text>`;
+  return `<text${fitAttr(opts.fit, opts.fitMin, opts.ellipsis)} x="${f(x)}" y="${f(y)}" text-anchor="${anchor}" font-family="${DISPLAY}" font-weight="${weight}" font-size="${f(size)}" letter-spacing="${f(tracking)}" fill="${fill}">${text}</text>`;
 }
 
 /** 황금 그라디언트 숫자 — 참가번호·순위. */
-export function goldNumber(x: number, y: number, text: string, size: number, anchor: 'start' | 'middle' | 'end' = 'middle'): string {
-  return `<text class="num" x="${f(x)}" y="${f(y)}" text-anchor="${anchor}" font-family="${DISPLAY}" font-weight="900" font-size="${f(size)}" letter-spacing="${f(-size * 0.01)}" fill="url(#t07GoldNum)">${text}</text>`;
+export function goldNumber(
+  x: number,
+  y: number,
+  text: string,
+  size: number,
+  anchor: 'start' | 'middle' | 'end' = 'middle',
+  fit?: number
+): string {
+  return `<text class="num"${fitAttr(fit, 0.55)} x="${f(x)}" y="${f(y)}" text-anchor="${anchor}" font-family="${DISPLAY}" font-weight="900" font-size="${f(size)}" letter-spacing="${f(-size * 0.01)}" fill="url(#t07GoldNum)">${text}</text>`;
 }
 
 const RANK_SUFFIX: Record<1 | 2 | 3, string> = { 1: 'ST', 2: 'ND', 3: 'RD' };
@@ -240,10 +260,13 @@ export function strong(
   y: number,
   text: string,
   size: number,
-  opts: { anchor?: 'start' | 'middle' | 'end'; fill?: string; tracking?: number; weight?: number; cls?: string } = {}
+  opts: {
+    anchor?: 'start' | 'middle' | 'end'; fill?: string; tracking?: number; weight?: number; cls?: string;
+    fit?: number; fitMin?: number; ellipsis?: boolean;
+  } = {}
 ): string {
   const { anchor = 'middle', fill = WHITE, tracking = 0.3, weight = 800, cls } = opts;
-  return `<text${cls ? ` class="${cls}"` : ''} x="${f(x)}" y="${f(y)}" text-anchor="${anchor}" font-family="${DISPLAY}" font-weight="${weight}" font-size="${f(size)}" letter-spacing="${f(tracking)}" fill="${fill}">${text}</text>`;
+  return `<text${cls ? ` class="${cls}"` : ''}${fitAttr(opts.fit, opts.fitMin, opts.ellipsis)} x="${f(x)}" y="${f(y)}" text-anchor="${anchor}" font-family="${DISPLAY}" font-weight="${weight}" font-size="${f(size)}" letter-spacing="${f(tracking)}" fill="${fill}">${text}</text>`;
 }
 
 /** 대형 제목 + 부제 — 화면 상단 중앙 헤더. sub 에는 <tspan> 마크업을 넣을 수 있다. */
@@ -254,8 +277,8 @@ export function heading(
 ): string {
   const { titleY = 120, subY = 150, size = 40 } = opts;
   return `
-    ${strong(CX, titleY, title, size, { cls: 'hero', weight: 900, tracking: 1 })}
-    <text x="${CX}" y="${subY}" text-anchor="middle" font-family="${DISPLAY}" font-weight="800" font-size="14" letter-spacing="4" fill="${SOFT}">${sub}</text>
+    ${strong(CX, titleY, title, size, { cls: 'hero', weight: 900, tracking: 1, fit: 1100 })}
+    <text${fitAttr(1100)} x="${CX}" y="${subY}" text-anchor="middle" font-family="${DISPLAY}" font-weight="800" font-size="14" letter-spacing="4" fill="${SOFT}">${sub}</text>
   `;
 }
 
@@ -449,7 +472,7 @@ export function topBar(): string {
   return `
     ${clipBox(MX, 22, 420, 44, `
       <rect x="${MX}" y="${HEAD_Y - 14}" width="5" height="18" rx="2.5" fill="${GOLD}"/>
-      <text x="${MX + 16}" y="${HEAD_Y}" font-family="${DISPLAY}" font-weight="800" font-size="15"
+      <text${fitAttr(404, 0.72, true)} x="${MX + 16}" y="${HEAD_Y}" font-family="${DISPLAY}" font-weight="800" font-size="15"
         letter-spacing="2.4" fill="${WHITE}">{{festival_header}}</text>
     `)}
     ${liveDisplayPill(RX, HEAD_Y - 5)}
@@ -475,7 +498,7 @@ export function sponsorRow(cy = FOOT_Y - 10, boxW = 100, boxH = 34, gap = 12): s
 export function footBar(): string {
   return `
     ${clipBox(MX, FOOT_Y - 22, 264, 32, `
-      <text x="${MX}" y="${FOOT_Y}" font-family="${DISPLAY}" font-weight="800" font-size="12.5"
+      <text${fitAttr(262, 0.8, true)} x="${MX}" y="${FOOT_Y}" font-family="${DISPLAY}" font-weight="800" font-size="12.5"
         letter-spacing="1.6" fill="${WHITE}" opacity="0.92">{{tagline}}</text>
     `)}
     ${sponsorRow()}

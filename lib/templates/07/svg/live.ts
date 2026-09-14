@@ -56,13 +56,13 @@ export function liveSvg(): string {
     ${topBar()}
 
     ${liveBadge(CX, 176)}
-    ${strong(CX, 238, '{{stage_label}}  ·  {{round_title}}', 18, { fill: SOFT, tracking: 5 })}
+    ${strong(CX + 2, 238, '{{stage_label}}', 18, { fill: SOFT, tracking: 5, fit: 1100 })}
     ${strong(CX + 3, 370, 'ON STAGE', 118, { cls: 'hero', weight: 900, tracking: 6 })}
 
     ${stageBand(406, 166)}
     ${equalizer(CX, 544, 104)}
 
-    ${strong(CX, 618, '{{live_message}}', 22, { fill: GOLD, tracking: 3 })}
+    ${strong(CX, 618, '{{live_message}}', 22, { fill: GOLD, tracking: 3, fit: 1180 })}
 
     ${footBar()}
   `);

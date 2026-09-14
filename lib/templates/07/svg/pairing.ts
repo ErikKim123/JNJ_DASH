@@ -1,8 +1,10 @@
 // Template 07 — PAIRING.
 // 레퍼런스 화면을 가장 직접적으로 옮긴 스텝 — 커플 한 쌍 = 유리 카드 한 장, 5열 격자가 화면을 채운다.
 //   · 카드 크기에 따라 두 가지 구성:
-//       tall    (행 ≤ 2) : COUPLE 라벨 → 큰 황금 순번 → 구분선 → L/F 번호 + 이름
+//       tall    (행 ≤ 2) : COUPLE 라벨 → 큰 황금 순번 → 구분선 → [L 번호 / 이름] [F 번호 / 이름]
 //       compact (행 ≥ 3) : 좌측 [라벨 + 순번] | 우측 [L 번호 / F 번호] (행 높이가 넉넉하면 이름까지)
+//   · 이름은 번호 "아래" 줄에 카드 폭 전체를 쓰게 둔다 — 번호 옆에 두면 폭이 절반으로 줄어 긴 이름이
+//     읽을 수 없을 만큼 작아진다. 그래도 넘치면 읽히는 크기에서 말줄임(fit.ts).
 //   · 마지막 행이 덜 차면 가운데로 모은다.
 import {
   shell, topBar, footBar, heading, glassCard, label, goldNumber, strong, roleChip, fadeUp, clipBox,
@@ -23,50 +25,47 @@ function gridFor(n: number): { cols: number; rows: number } {
   return { cols: 6, rows: 5 };
 }
 
-/** L/F 한 줄 — [칩] 번호 (이름). */
-function roleLine(
-  x: number,
-  baseline: number,
-  role: Role,
-  i: number,
-  size: number,
-  nameBox: { x: number; w: number; y: number } | null
-): string {
-  const numKey = role === 'L' ? `{{leader_num_${i}}}` : `{{follower_num_${i}}}`;
-  const nameKey = role === 'L' ? `{{leader_${i}}}` : `{{follower_${i}}}`;
-  const chip = size * 0.86;
-  const name = nameBox
-    ? clipBox(nameBox.x, nameBox.y - 15, nameBox.w, 21,
-        strong(nameBox.x, nameBox.y, nameKey, 13, { anchor: 'start', fill: SOFT, weight: 700 }))
-    : '';
+const numKey = (role: Role, i: number) => (role === 'L' ? `{{leader_num_${i}}}` : `{{follower_num_${i}}}`);
+const nameKey = (role: Role, i: number) => (role === 'L' ? `{{leader_${i}}}` : `{{follower_${i}}}`);
+
+/** [칩] 번호 — 한 줄. */
+function numberLine(x: number, baseline: number, role: Role, i: number, size: number): string {
   return `
     ${roleChip(x, baseline, role, size)}
-    ${strong(x + chip + 8, baseline, numKey, size, { anchor: 'start', weight: 900, tracking: 0.5 })}
-    ${name}
+    ${strong(x + size * 0.86 + 8, baseline, numKey(role, i), size, { anchor: 'start', weight: 900, tracking: 0.5 })}
   `;
+}
+
+/** 번호 아래 이름 줄 — 넘치면 줄이고, 그래도 넘치면 말줄임. */
+function nameLine(x: number, baseline: number, w: number, role: Role, i: number, size: number): string {
+  return clipBox(x, baseline - size - 3, w, size + 9,
+    strong(x, baseline, nameKey(role, i), size, {
+      anchor: 'start', fill: SOFT, weight: 700, fit: w, fitMin: 0.82, ellipsis: true,
+    }));
 }
 
 function tallCard(i: number, x: number, y: number, w: number, h: number): string {
   const cx = x + w / 2;
-  const numSize = Math.min(96, h * 0.27, w * 0.3);
-  const labelY = y + h * 0.15;
-  const numY = labelY + 8 + numSize * 0.9;
-  const sepY = y + h * 0.55;
-  const size = Math.min(30, h * 0.11);
+  const numSize = Math.min(96, h * 0.25, w * 0.3);
+  const labelY = y + h * 0.13;
+  const numY = labelY + 6 + numSize * 0.9;
+  const sepY = y + h * 0.475;
+  const size = Math.min(30, h * 0.1);
+  const nameSize = Math.min(15, Math.max(12, h * 0.055));
   const rx0 = x + 16;
-  // 번호(3자리 기준) 오른쪽에 이름 — 카드 폭이 넉넉할 때만.
-  const nameX = rx0 + size * 0.86 + 8 + size * 2.1 + 10;
-  const nameW = x + w - 12 - nameX;
-  const withName = nameW >= 70;
-  const lY = y + h * 0.72;
-  const fY = y + h * 0.9;
+  const innerW = w - 32;
+  const lY = y + h * 0.61;
+  const fY = y + h * 0.84;
+  const nameGap = nameSize + 9;
   return `
     ${glassCard(x, y, w, h)}
     ${label(cx, labelY, 'COUPLE', { size: 11, tracking: 3 })}
     ${goldNumber(cx, numY, pad2(i), numSize)}
     <line x1="${f(x + 16)}" y1="${f(sepY)}" x2="${f(x + w - 16)}" y2="${f(sepY)}" stroke="${WHITE}" stroke-opacity="0.16"/>
-    ${roleLine(rx0, lY, 'L', i, size, withName ? { x: nameX, w: nameW, y: lY - 2 } : null)}
-    ${roleLine(rx0, fY, 'F', i, size, withName ? { x: nameX, w: nameW, y: fY - 2 } : null)}
+    ${numberLine(rx0, lY, 'L', i, size)}
+    ${nameLine(rx0, lY + nameGap, innerW, 'L', i, nameSize)}
+    ${numberLine(rx0, fY, 'F', i, size)}
+    ${nameLine(rx0, fY + nameGap, innerW, 'F', i, nameSize)}
   `;
 }
 
@@ -82,22 +81,15 @@ function compactCard(i: number, x: number, y: number, w: number, h: number): str
   const size = Math.min(26, stack ? h * 0.19 : h * 0.24);
   const lY = y + h * (stack ? 0.33 : 0.45);
   const fY = y + h * (stack ? 0.73 : 0.8);
-  const nameLine = (role: Role, baseline: number) =>
-    stack
-      ? clipBox(rx0, baseline + 4, rightW, 20,
-          strong(rx0, baseline + 18, role === 'L' ? `{{leader_${i}}}` : `{{follower_${i}}}`, 12.5, {
-            anchor: 'start', fill: SOFT, weight: 700,
-          }))
-      : '';
   return `
     ${glassCard(x, y, w, h, { rx: 16 })}
     ${label(lcx, labelY, 'COUPLE', { size: Math.min(10, lw / 8.2), tracking: 1.5 })}
     ${goldNumber(lcx, labelY + 6 + numSize * 0.9, pad2(i), numSize)}
     <line x1="${f(divX)}" y1="${f(y + 14)}" x2="${f(divX)}" y2="${f(y + h - 14)}" stroke="${WHITE}" stroke-opacity="0.16"/>
-    ${roleLine(rx0, lY, 'L', i, size, null)}
-    ${nameLine('L', lY)}
-    ${roleLine(rx0, fY, 'F', i, size, null)}
-    ${nameLine('F', fY)}
+    ${numberLine(rx0, lY, 'L', i, size)}
+    ${stack ? nameLine(rx0, lY + 18, rightW, 'L', i, 12.5) : ''}
+    ${numberLine(rx0, fY, 'F', i, size)}
+    ${stack ? nameLine(rx0, fY + 18, rightW, 'F', i, 12.5) : ''}
   `;
 }
 

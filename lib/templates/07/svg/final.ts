@@ -7,7 +7,7 @@ import {
   SOFT, GOLD, FRAME, CX, MX, RX, f, type Role,
 } from '../common';
 
-export const finalPrepSvg = (): string => prepSvg(true);
+export const finalPrepSvg = (withEntries = true): string => prepSvg(true, withEntries);
 export const finalWrapupSvg = (): string => wrapupSvg(true);
 
 // ── 결승 RESULT — 1·2·3위 발표(reveal) ──────────────────────────────────────
@@ -92,8 +92,8 @@ function seat(side: Role, x0: number, s: Seat): string {
       ${label(cx, labelY, PLACE[rank], { size: big ? 12 : 11, tracking: 3, fill: big ? GOLD : SOFT })}
       ${goldNumber(cx, numY, `{{${prefix}_num_${rank}}}`, numSize)}
       ${clipBox(x + 10, n1Y - nameSize - 4, w - 20, n2Y - n1Y + nameSize + 12, `
-        ${strong(cx, n1Y, `{{${prefix}_${rank}_l1}}`, nameSize)}
-        ${strong(cx, n2Y, `{{${prefix}_${rank}_l2}}`, nameSize)}
+        ${strong(cx, n1Y, `{{${prefix}_${rank}_l1}}`, nameSize, { fit: w - 22, fitMin: 0.7 })}
+        ${strong(cx, n2Y, `{{${prefix}_${rank}_l2}}`, nameSize, { fit: w - 22, fitMin: 0.7 })}
       `)}
     </g>`;
 
@@ -157,7 +157,7 @@ export function finalPairingSvg(): string {
     ${topBar()}
     ${twinkles}
     ${label(CX + 7, 196, 'INVITATIONAL', { size: 16, tracking: 14 })}
-    ${strong(CX, 330, '{{round_title}}', 88, { cls: 'hero', weight: 900, tracking: 3 })}
+    ${strong(CX, 330, '{{round_title}}', 88, { cls: 'hero', weight: 900, tracking: 3, fit: 1180 })}
     ${goldRule(372, 260)}
     ${strong(CX, 424, 'Where the judges share the floor with the finalists', 19, { fill: SOFT, weight: 600, tracking: 1 })}
     ${cards}
