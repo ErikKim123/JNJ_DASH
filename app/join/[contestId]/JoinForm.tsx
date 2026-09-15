@@ -23,26 +23,6 @@ const ROLE_OPTIONS: { value: ParticipantRole; label: string }[] = [
   { value: 'follower', label: 'Follower' },
 ];
 
-// 부문/장르 선택지 — value 와 라벨 모두 영문 단일 키 (대회 운영 표준 명칭).
-const CATEGORY_OPTIONS: { value: string; label: { ko: string; en: string } }[] = [
-  { value: 'Jack & Jill', label: { ko: 'Jack & Jill', en: 'Jack & Jill' } },
-  { value: 'Battle', label: { ko: 'Battle', en: 'Battle' } },
-  { value: 'Competition', label: { ko: 'Competition', en: 'Competition' } },
-];
-
-const GENRE_OPTIONS: { value: string; label: { ko: string; en: string } }[] = [
-  { value: 'Salsa', label: { ko: 'Salsa', en: 'Salsa' } },
-  { value: 'Bachata', label: { ko: 'Bachata', en: 'Bachata' } },
-  { value: 'Kizomba', label: { ko: 'Kizomba', en: 'Kizomba' } },
-  { value: 'Zouk', label: { ko: 'Zouk', en: 'Zouk' } },
-];
-
-const DIVISION_OPTIONS: { value: string; label: { ko: string; en: string } }[] = [
-  { value: 'Solo', label: { ko: 'Solo', en: 'Solo' } },
-  { value: 'Couple', label: { ko: 'Couple', en: 'Couple' } },
-  { value: 'Team', label: { ko: 'Team', en: 'Team' } },
-];
-
 const PROFILE_FIELDS: {
   key: string;
   label: { ko: string; en: string };
@@ -51,9 +31,7 @@ const PROFILE_FIELDS: {
   options?: { value: string; label: { ko: string; en: string } }[];
   required?: boolean;
 }[] = [
-  { key: '부문', label: { ko: '부문', en: 'Category' }, type: 'select', options: CATEGORY_OPTIONS, placeholder: { ko: '부문 선택', en: 'Select category' } },
-  { key: '장르', label: { ko: '장르', en: 'Genre' }, type: 'select', options: GENRE_OPTIONS, placeholder: { ko: '장르 선택', en: 'Select genre' } },
-  { key: 'Division', label: { ko: '구분', en: 'Division' }, type: 'select', options: DIVISION_OPTIONS, placeholder: { ko: '구분 선택', en: 'Select division' } },
+  // 부문·장르·구분(Division)은 참가 신청에서 받지 않는다 — 운영자가 관리자 참가자 표에서 필요하면 입력.
   // '연락처'(WhatsApp)와 '이메일'은 BASIC 섹션으로 이동 — 아래 렌더에서 직접 처리.
   // '접수일'은 폼에 노출하지 않고 등록 시 자동으로 오늘 날짜로 저장된다(meta 초기값).
   { key: 'X', label: { ko: '인스타 (@)', en: 'Instagram (@)' }, placeholder: { ko: '@your_id', en: '@your_id' } },
