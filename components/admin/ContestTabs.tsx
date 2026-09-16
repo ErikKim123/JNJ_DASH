@@ -5,12 +5,22 @@
 import { Tabs } from './ui';
 import { useT } from '@/lib/i18n/LocaleContext';
 
-export function ContestTabs({ contestId, current }: { contestId: string; current: string }) {
+export function ContestTabs({
+  contestId,
+  current,
+  trailing,
+}: {
+  contestId: string;
+  current: string;
+  /** 탭 줄 오른쪽 끝 동작 버튼. 페이지마다 다르므로 호출부가 넘긴다(결승 결과 → 웹게시). */
+  trailing?: React.ReactNode;
+}) {
   const t = useT();
   const base = `/admin/contests/${encodeURIComponent(contestId)}`;
   return (
     <Tabs
       current={current}
+      trailing={trailing}
       items={[
         { href: base,                       label: t('tab.contestInfo') },
         { href: `${base}/judges`,           label: t('tab.judges') },

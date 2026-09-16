@@ -139,12 +139,15 @@ export function PageHeader({
 export function Tabs({
   items,
   current,
+  trailing,
 }: {
   items: { href: string; label: string; badge?: string | number }[];
   current: string;
+  /** 탭 줄 오른쪽 끝에 붙는 동작 버튼(예: 결과 웹게시). 탭이 많아 줄이 넘치면 아래로 내려온다. */
+  trailing?: React.ReactNode;
 }) {
   return (
-    <nav className="flex items-center gap-1 mb-4 border-b border-border">
+    <nav className="flex items-center gap-1 mb-4 border-b border-border flex-wrap">
       {items.map((it) => {
         const active = it.href === current;
         return (
@@ -164,6 +167,7 @@ export function Tabs({
           </a>
         );
       })}
+      {trailing && <div className="ml-auto pb-1.5 pl-3">{trailing}</div>}
     </nav>
   );
 }

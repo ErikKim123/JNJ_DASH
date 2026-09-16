@@ -101,6 +101,13 @@ export interface ContestRow {
   online_judge_weight: number;
   /** 관객 심사위원이 참여하는 라운드 목록('prelim'|'semi'|'final'). */
   online_judge_rounds: JudgingRound[];
+  /**
+   * 결승 결과 공개 페이지(/results/<id>) 노출 여부. false 면 그 주소는 404.
+   * 채점 중에 링크가 새도 중간 순위가 보이지 않도록 기본은 비공개다.
+   */
+  results_published: boolean;
+  /** 마지막으로 게시를 켠 시각(ISO). 공개 페이지 하단 '게시 시각' 표기용. null=게시한 적 없음. */
+  results_published_at: string | null;
   /** MC 표출 포인터 — MC 폰이 기록, 프로젝터(대시보드)가 폴링해 따라감. null=미설정. */
   display_round: RoundKey | null;
   /** MC 표출 포인터 — 현재 스텝(StepKey). null=미설정. */
