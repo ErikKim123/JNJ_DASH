@@ -5,7 +5,8 @@
 // 탭을 나눈 이유: 대부분의 사람은 '누가 1등이야?' 만 보고 나가고, 참가자와 코치는
 // 자기 번호를 라운드별로 되짚어 본다. 한 장에 다 쌓으면 앞의 사람은 스크롤을
 // 많이 하고 뒤의 사람은 찾기 어렵다.
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { SaveImageButton, EXPORT_HIDE } from './SaveImageButton';
 import type {
   PublicResults,
   PublicFinalRow,
@@ -189,8 +190,12 @@ export function ResultsView({ data }: { data: PublicResults }) {
 
   const period = dateRange(data.periodStart, data.periodEnd);
 
+  // 이미지로 뜨는 범위 — 머리말부터 아래 내용까지 한 덩어리.
+  // 지금 열려 있는 탭만 그려져 있으므로, 버튼 하나가 두 화면을 각각 담아낸다.
+  const captureRef = useRef<HTMLElement | null>(null);
+
   return (
-    <main className="res-page">
+    <main className="res-page" ref={captureRef}>
       <header className="res-head">
         {data.iconUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -203,21 +208,28 @@ export function ResultsView({ data }: { data: PublicResults }) {
         </p>
       </header>
 
-      <div className="res-tabs" role="tablist" aria-label="Results sections">
-        <button
-          type="button" role="tab" className="res-tab"
-          aria-selected={tab === 'champion'}
-          onClick={() => setTab('champion')}
-        >
-          CHAMPION
-        </button>
-        <button
-          type="button" role="tab" className="res-tab"
-          aria-selected={tab === 'results'}
-          onClick={() => setTab('results')}
-        >
-          RESULTS
-        </button>
+      {/* 탭 줄은 그림에 담지 않는다 — 눌리지 않는 버튼이 찍혀 봐야 읽는 사람을 헷갈리게 한다. */}
+      <div className="res-toolbar" {...{ [EXPORT_HIDE]: '' }}>
+        <div className="res-tabs" role="tablist" aria-label="Results sections">
+          <button
+            type="button" role="tab" className="res-tab"
+            aria-selected={tab === 'champion'}
+            onClick={() => setTab('champion')}
+          >
+            CHAMPION
+          </button>
+          <button
+            type="button" role="tab" className="res-tab"
+            aria-selected={tab === 'results'}
+            onClick={() => setTab('results')}
+          >
+            RESULTS
+          </button>
+        </div>
+        <SaveImageButton
+          targetRef={captureRef}
+          fileName={`${data.contestId}-${tab}`}
+        />
       </div>
 
       {tab === 'champion' ? (
