@@ -16,7 +16,9 @@ import type {
   PairingRoundDb,
   QualifierRoundDb,
   JudgingRound,
+  VoteMark,
 } from './types';
+import { markValue, roundVotes } from '@/lib/vote/mark';
 
 export async function listContests(): Promise<ContestRow[]> {
   const sb = getSupabaseAdmin();
@@ -169,10 +171,15 @@ export async function listQualifiersWithLiveVotes(
   const judgedSet = new Set<string>();
   if (judgeIds.length > 0) {
     const votes = await selectJudgeVotesAll(sb, judgeIds, 'participant_num, vote_mark');
-    for (const v of votes as unknown as { participant_num: string; vote_mark: 'O' | 'X' | null }[]) {
+    for (const v of votes as unknown as { participant_num: string; vote_mark: VoteMark | null }[]) {
       judgedSet.add(v.participant_num);
-      if (v.vote_mark === 'O') {
-        voteCounts.set(v.participant_num, (voteCounts.get(v.participant_num) ?? 0) + 1);
+      // O=1 · M=0.5. X/null 은 0 이지만 judgedSet 에는 남는다(위 주석 참고).
+      const val = markValue(v.vote_mark);
+      if (val > 0) {
+        voteCounts.set(
+          v.participant_num,
+          roundVotes((voteCounts.get(v.participant_num) ?? 0) + val),
+        );
       }
     }
   }

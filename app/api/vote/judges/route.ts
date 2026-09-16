@@ -21,7 +21,7 @@ export async function GET(req: Request) {
   const sb = getServiceClient();
   const q = sb
     .from('judges')
-    .select('id, display_order, name, alias, max_votes, target_role, round')
+    .select('id, display_order, name, alias, max_votes, max_may_votes, target_role, round')
     .eq('contest_id', contestId)
     .order('display_order', { ascending: true });
   const { data, error } = roundParam
@@ -54,6 +54,9 @@ export async function GET(req: Request) {
         active: true,
         maxPrelimVotes: slot.prelim?.max_votes ?? undefined,
         maxSemiVotes: slot.semi?.max_votes ?? undefined,
+        // M(0.5표) 상한도 라운드별로 따로 — O 예산과 별개로 소진된다.
+        maxPrelimMayVotes: slot.prelim?.max_may_votes ?? undefined,
+        maxSemiMayVotes: slot.semi?.max_may_votes ?? undefined,
         voteTarget: targetRoleToVoteTarget(head.target_role),
       } as Judge;
     })

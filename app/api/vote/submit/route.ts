@@ -68,13 +68,14 @@ export async function POST(req: Request) {
   let written = 0;
 
   if (entries.length && (round === 'prelim' || round === 'semi')) {
-    type V = { contestantId: string; status: 'pass' | 'fail' | 'absent' };
+    type V = { contestantId: string; status: 'pass' | 'may' | 'fail' | 'absent' };
     const rows: { judge_id: string; participant_num: string; vote_mark: string }[] = [];
     for (const e of entries as V[]) {
       if (!e.contestantId) continue;
       // 'absent' isn't representable in the new schema (no per-round attendance);
       // record as 'X' (fail/off) — operator handles absence separately.
-      const mark = e.status === 'pass' ? 'O' : 'X';
+      // 'may' 는 M(0.5표) — 동점을 가르기 위한 중간 판정.
+      const mark = e.status === 'pass' ? 'O' : e.status === 'may' ? 'M' : 'X';
       rows.push({ judge_id: targetJudgeId, participant_num: String(e.contestantId), vote_mark: mark });
     }
     if (rows.length) {

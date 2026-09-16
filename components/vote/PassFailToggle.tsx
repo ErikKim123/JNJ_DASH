@@ -2,7 +2,12 @@
 
 import * as React from 'react';
 
-type Verdict = 'pass' | 'fail' | null;
+/**
+ * 판정 세 갈래.
+ *   fail = OFF(0표) · may = MAY(0.5표, 노랑) · pass = ON(1표, 초록)
+ * 'absent'(불참)는 운영자가 따로 처리하므로 심사위원 화면에는 없다.
+ */
+type Verdict = 'pass' | 'may' | 'fail' | null;
 export type RowStatus = 'idle' | 'submitting' | 'saved';
 
 type Props = {
@@ -51,10 +56,42 @@ export function PassFailToggle({
   );
 }
 
-// VOTE ON/OFF toggle. Data model preserved for backend compatibility:
-//   ON  → 'pass' (TRUE in sheet)
-//   OFF → 'fail' (FALSE in sheet)
-// Initial null is rendered as OFF; clicking flips between pass ↔ fail.
+// 왼쪽 OFF · 가운데 MAY · 오른쪽 ON 3단 스위치.
+//
+// 이전에는 두 갈래 토글이라 누를 때마다 뒤집히면 됐지만, 세 갈래부터는
+// '몇 번 눌러야 원하는 칸에 닿는지' 를 세게 만들면 안 된다 — 심사 중에는
+// 손가락이 급하다. 그래서 각 칸을 직접 누르는 세그먼트 방식으로 바꾼다.
+//
+// 데이터 대응: OFF → 'fail'(X) · MAY → 'may'(M) · ON → 'pass'(O).
+// 초기 null 은 OFF 로 보이고, 실제 제출 시에도 X 로 기록된다(종전과 동일).
+const SEGMENTS: { key: Exclude<Verdict, null>; label: string }[] = [
+  { key: 'fail', label: 'OFF' },
+  { key: 'may', label: 'MAY' },
+  { key: 'pass', label: 'ON' },
+];
+
+/** 칸별 선택 색 — MAY 는 노랑(검은 글자라야 읽힌다), ON 은 초록. */
+const SEG_STYLE: Record<
+  Exclude<Verdict, null>,
+  { bg: string; fg: string; border: string }
+> = {
+  fail: {
+    bg: 'var(--jnj-text-primary)',
+    fg: 'var(--jnj-white)',
+    border: 'var(--jnj-text-primary)',
+  },
+  may: {
+    bg: 'var(--jnj-yellow)',
+    fg: 'var(--jnj-black)',
+    border: 'var(--jnj-yellow)',
+  },
+  pass: {
+    bg: 'var(--jnj-green)',
+    fg: 'var(--jnj-white)',
+    border: 'var(--jnj-green)',
+  },
+};
+
 function VoteSwitch({
   value,
   onChange,
@@ -64,73 +101,63 @@ function VoteSwitch({
   onChange: (next: Verdict) => void;
   disabled: boolean;
 }) {
-  const on = value === 'pass';
-  const TRACK_W = 132;
-  const TRACK_H = 36;
-  const THUMB = 28;
-  const PAD = (TRACK_H - THUMB) / 2;
-
-  function handleClick() {
-    if (disabled) return;
-    onChange(on ? 'fail' : 'pass');
-  }
+  // null 은 아직 아무것도 안 누른 상태 — OFF 칸을 선택된 것처럼 보여 준다.
+  const active: Exclude<Verdict, null> = value ?? 'fail';
 
   return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      aria-label={`VOTE ${on ? 'ON' : 'OFF'}`}
-      onClick={handleClick}
-      disabled={disabled}
+    <div
+      role="radiogroup"
+      aria-label="VOTE"
       style={{
-        position: 'relative',
-        appearance: 'none',
         display: 'inline-flex',
         alignItems: 'center',
-        justifyContent: on ? 'flex-start' : 'flex-end',
-        width: TRACK_W,
-        height: TRACK_H,
-        padding: `0 ${PAD + 6}px`,
-        background: on ? 'var(--jnj-green)' : 'var(--jnj-grey-100)',
-        border: `1px solid ${on ? 'var(--jnj-green)' : 'var(--jnj-grey-300)'}`,
+        gap: 2,
+        padding: 2,
+        background: 'var(--jnj-grey-100)',
+        border: '1px solid var(--jnj-grey-300)',
         borderRadius: 'var(--jnj-radius-pill)',
-        cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.55 : 1,
-        transition:
-          'background var(--jnj-transition), border-color var(--jnj-transition)',
-        overflow: 'hidden',
       }}
     >
-      <span
-        aria-hidden
-        style={{
-          fontFamily: 'var(--jnj-font-text-medium)',
-          fontWeight: 600,
-          fontSize: 'var(--jnj-size-btn-sm)',
-          letterSpacing: '0.08em',
-          color: on ? 'var(--jnj-white)' : 'var(--jnj-text-secondary)',
-          textTransform: 'uppercase',
-          transition: 'color var(--jnj-transition)',
-        }}
-      >
-        VOTE {on ? 'ON' : 'OFF'}
-      </span>
-      <span
-        aria-hidden
-        style={{
-          position: 'absolute',
-          top: PAD,
-          left: on ? TRACK_W - THUMB - PAD : PAD,
-          width: THUMB,
-          height: THUMB,
-          borderRadius: '50%',
-          background: on ? 'var(--jnj-white)' : 'var(--jnj-text-primary)',
-          transition: 'left var(--jnj-transition), background var(--jnj-transition)',
-          pointerEvents: 'none',
-        }}
-      />
-    </button>
+      {SEGMENTS.map((seg) => {
+        const on = seg.key === active;
+        const c = SEG_STYLE[seg.key];
+        return (
+          <button
+            key={seg.key}
+            type="button"
+            role="radio"
+            aria-checked={on}
+            aria-label={`VOTE ${seg.label}`}
+            disabled={disabled}
+            onClick={() => {
+              if (disabled) return;
+              onChange(seg.key);
+            }}
+            style={{
+              appearance: 'none',
+              cursor: disabled ? 'not-allowed' : 'pointer',
+              minWidth: 52,
+              height: 32,
+              padding: '0 var(--jnj-space-3)',
+              borderRadius: 'var(--jnj-radius-pill)',
+              fontFamily: 'var(--jnj-font-text-medium)',
+              fontWeight: 600,
+              fontSize: 'var(--jnj-size-btn-sm)',
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              background: on ? c.bg : 'transparent',
+              color: on ? c.fg : 'var(--jnj-text-secondary)',
+              border: `1px solid ${on ? c.border : 'transparent'}`,
+              transition:
+                'background var(--jnj-transition), color var(--jnj-transition), border-color var(--jnj-transition)',
+            }}
+          >
+            {seg.label}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 

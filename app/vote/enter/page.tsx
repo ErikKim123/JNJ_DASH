@@ -116,6 +116,8 @@ function EnterPageInner() {
       name: judge.name,
       maxPrelimVotes: judge.maxPrelimVotes,
       maxSemiVotes: judge.maxSemiVotes,
+      maxPrelimMayVotes: judge.maxPrelimMayVotes,
+      maxSemiMayVotes: judge.maxSemiMayVotes,
       voteTarget: judge.voteTarget,
     });
     router.push('/vote/event');

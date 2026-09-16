@@ -100,7 +100,8 @@ export async function GET(req: Request) {
   const out: Contestant[] = participants.map((c) => {
     let outcome: RoundStatus = roundJudgeId ? 'fail' : 'ready';
     if (judgeId && (round === 'prelim' || round === 'semi')) {
-      outcome = voteMarkByNum.get(c.num) === 'O' ? 'pass' : 'fail';
+      const mk = voteMarkByNum.get(c.num);
+      outcome = mk === 'O' ? 'pass' : mk === 'M' ? 'may' : 'fail';
     }
     const finalScores = round === 'final' && roundJudgeId
       ? scoresByNum.get(c.num) ?? {}

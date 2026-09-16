@@ -85,7 +85,7 @@ type VoteRow = {
   id?: string | null;
   judge_id: string;
   participant_num: string;
-  vote_mark?: 'O' | 'X' | null;
+  vote_mark?: 'O' | 'M' | 'X' | null;
   basic_score?: number | null;
   connectivity_score?: number | null;
   musicality_score?: number | null;

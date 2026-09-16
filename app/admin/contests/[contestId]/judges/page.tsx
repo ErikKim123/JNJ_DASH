@@ -42,9 +42,11 @@ export default async function JudgesPage({
         rows[0];
       const idsByRound: Partial<Record<JudgingRound, string>> = {};
       const maxVotesByRound: Partial<Record<JudgingRound, number | null>> = {};
+      const maxMayVotesByRound: Partial<Record<JudgingRound, number | null>> = {};
       for (const r of rows) {
         idsByRound[r.round] = r.id;
         maxVotesByRound[r.round] = r.max_votes ?? null;
+        maxMayVotesByRound[r.round] = r.max_may_votes ?? null;
       }
       return {
         display_order: order,
@@ -52,6 +54,7 @@ export default async function JudgesPage({
         ids: rows.map((r) => r.id),
         idsByRound,
         maxVotesByRound,
+        maxMayVotesByRound,
       };
     });
 
@@ -59,6 +62,9 @@ export default async function JudgesPage({
   // prelim/semi : O 표 개수만 카운트 (X 는 통과 정원과 무관).
   // final       : 채점 항목 중 하나라도 입력된 row 수 (= 채점한 참가자 수).
   const voteCounts: Record<string, number> = {};
+  // M(0.5표)은 O 와 예산이 달라 따로 센다 — 한 칸에 합쳐 놓으면
+  // '몇 장을 더 줄 수 있는지' 를 운영자가 계산해야 한다.
+  const mayCounts: Record<string, number> = {};
   const allScoreCols = SCORING_ITEMS.map((s) => s.column);
   for (let i = 0; i < rounds.length; i++) {
     const r = rounds[i];
@@ -71,6 +77,7 @@ export default async function JudgesPage({
       } else {
         // 예선/본선: O 표만 카운트.
         if (v.vote_mark === 'O') n = 1;
+        else if (v.vote_mark === 'M') mayCounts[v.judge_id] = (mayCounts[v.judge_id] ?? 0) + 1;
       }
       if (n > 0) voteCounts[v.judge_id] = (voteCounts[v.judge_id] ?? 0) + n;
     }
@@ -93,6 +100,7 @@ export default async function JudgesPage({
         contestId={contestId}
         initial={groups}
         voteCounts={voteCounts}
+        mayCounts={mayCounts}
         prelimQuotaPerRole={contest.prelim_pass_per_role}
         semiQuotaPerRole={contest.semi_pass_per_role}
       />

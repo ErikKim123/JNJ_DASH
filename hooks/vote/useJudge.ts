@@ -17,6 +17,9 @@ export type StoredJudge = {
   // localStorage entries; round pages treat undefined as "no cap".
   maxPrelimVotes?: number;
   maxSemiVotes?: number;
+  // M(0.5표) 상한 — O 예산과 별개. legacy localStorage 항목에는 없으므로 optional.
+  maxPrelimMayVotes?: number;
+  maxSemiMayVotes?: number;
   // 본인이 채점할 참가자 역할 필터 — `2.심사위원` 시트의 `대상` 컬럼.
   // 빈값/legacy localStorage → 'all' 로 폴백.
   voteTarget?: JudgeVoteTarget;

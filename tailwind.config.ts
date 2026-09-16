@@ -18,6 +18,9 @@ const config: Config = {
         accent: '#FFD56B',
         accent2: '#C68F3C',
         ok: '#4ADE80',
+        // MAY(0.5표) 전용 노랑. accent 와 색은 비슷하지만 뜻이 다르다 —
+        // accent 는 '지금 보고 있는 것', may 는 '반 표' 다.
+        may: '#FACC15',
         danger: '#F87171',
         info: '#60A5FA',
       },

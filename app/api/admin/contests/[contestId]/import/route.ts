@@ -42,7 +42,7 @@ const CHUNK = 500;
 
 const NULLABLE_BY_TABLE: Record<string, readonly string[]> = {
   contests: ['period_start', 'period_end', 'legacy_spreadsheet_id'],
-  judges: ['max_votes'],
+  judges: ['max_votes', 'max_may_votes'],
   judge_votes: [
     'vote_mark',
     'basic_score', 'connectivity_score', 'musicality_score',
