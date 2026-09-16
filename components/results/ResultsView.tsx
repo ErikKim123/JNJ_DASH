@@ -5,7 +5,7 @@
 // 탭을 나눈 이유: 대부분의 사람은 '누가 1등이야?' 만 보고 나가고, 참가자와 코치는
 // 자기 번호를 라운드별로 되짚어 본다. 한 장에 다 쌓으면 앞의 사람은 스크롤을
 // 많이 하고 뒤의 사람은 찾기 어렵다.
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { SaveImageButton, EXPORT_HIDE } from './SaveImageButton';
 import type {
   PublicResults,
@@ -14,8 +14,6 @@ import type {
   PublicQualifierRow,
   PublicRoundBlock,
 } from '@/lib/results/public';
-
-type Tab = 'champion' | 'results';
 
 function fmt(n: number | null, dp = 2): string {
   if (n == null) return '—';
@@ -212,10 +210,8 @@ function RoundSection<T>({
 }
 
 export function ResultsView({ data }: { data: PublicResults }) {
-  // 시상대가 비어 있으면(순위 미입력) 표부터 보여 준다 — 빈 시상대가 첫 화면이면
-  // '결과가 없는 대회' 로 읽힌다.
+  // 시상대가 비어 있으면(순위 미입력·결승 전) 그 덩어리만 빠지고 표부터 시작한다.
   const hasPodium = data.podium.leaders.length > 0 || data.podium.followers.length > 0;
-  const [tab, setTab] = useState<Tab>(hasPodium ? 'champion' : 'results');
 
   const period = dateRange(data.periodStart, data.periodEnd);
 
@@ -249,68 +245,43 @@ export function ResultsView({ data }: { data: PublicResults }) {
         </p>
       </header>
 
-      {/* 탭 줄은 그림에 담지 않는다 — 눌리지 않는 버튼이 찍혀 봐야 읽는 사람을 헷갈리게 한다. */}
+      {/* 저장 버튼만 그림에서 뺀다 — 정지된 그림에 눌리지 않는 버튼이 남으면 안 된다. */}
       <div className="res-toolbar" {...{ [EXPORT_HIDE]: '' }}>
-        {/* 시상대가 없으면 CHAMPION 탭 자체를 내린다 — 결승 전 대회에서 눌러 봐야
-            '아직 발표 전' 만 나오는 빈 탭이고, 참가자 명단만 돌리는 화면에는 방해가 된다.
-            남는 탭이 하나뿐이면 탭 줄도 통째로 숨긴다(고를 게 없는 고르기 줄). */}
-        {hasPodium && (
-          <div className="res-tabs" role="tablist" aria-label="Results sections">
-            <button
-              type="button" role="tab" className="res-tab"
-              aria-selected={tab === 'champion'}
-              onClick={() => setTab('champion')}
-            >
-              CHAMPION
-            </button>
-            <button
-              type="button" role="tab" className="res-tab"
-              aria-selected={tab === 'results'}
-              onClick={() => setTab('results')}
-            >
-              RESULTS
-            </button>
-          </div>
-        )}
-        <SaveImageButton
-          targetRef={captureRef}
-          fileName={`${data.contestId}-${tab}`}
-        />
+        <SaveImageButton targetRef={captureRef} fileName={`${data.contestId}-results`} />
       </div>
 
-      {tab === 'champion' ? (
-        hasPodium ? (
-          <div className="res-podium-band">
-            <Podium title="LEADERS" rows={data.podium.leaders} />
-            <Podium title="FOLLOWERS" rows={data.podium.followers} />
-          </div>
-        ) : (
-          <p className="res-empty" style={{ textAlign: 'center' }}>Champions have not been announced yet.</p>
-        )
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--jnj-space-7)' }}>
-          <RoundSection
-            title="FINALS"
-            block={data.final}
-            render={(t, rows) => <FinalTable key={t} title={t} rows={rows} />}
-          />
-          <RoundSection
-            title="SEMI-FINALS"
-            block={data.semi}
-            render={(t, rows) => <QualifierTable key={t} title={t} rows={rows} />}
-          />
-          <RoundSection
-            title="PRELIMS"
-            block={data.prelim}
-            render={(t, rows) => <QualifierTable key={t} title={t} rows={rows} />}
-          />
-          <RoundSection
-            title="PARTICIPANTS"
-            block={data.participants}
-            render={(t, rows) => <ParticipantTable key={t} title={t} rows={rows} />}
-          />
+      {/* 시상대와 라운드별 표를 한 장에 잇는다. 나눠 두면 인스타에 올릴 때 두 번 저장해
+          두 번 올려야 하고, 보는 사람도 우승자와 그 근거를 따로 찾아야 한다.
+          시상대가 없는 대회(결승 전·명단만 공개)는 그 덩어리만 빠지고 표부터 시작한다. */}
+      {hasPodium && (
+        <div className="res-podium-band">
+          <Podium title="LEADERS" rows={data.podium.leaders} />
+          <Podium title="FOLLOWERS" rows={data.podium.followers} />
         </div>
       )}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--jnj-space-7)' }}>
+        <RoundSection
+          title="FINALS"
+          block={data.final}
+          render={(t, rows) => <FinalTable key={t} title={t} rows={rows} />}
+        />
+        <RoundSection
+          title="SEMI-FINALS"
+          block={data.semi}
+          render={(t, rows) => <QualifierTable key={t} title={t} rows={rows} />}
+        />
+        <RoundSection
+          title="PRELIMS"
+          block={data.prelim}
+          render={(t, rows) => <QualifierTable key={t} title={t} rows={rows} />}
+        />
+        <RoundSection
+          title="PARTICIPANTS"
+          block={data.participants}
+          render={(t, rows) => <ParticipantTable key={t} title={t} rows={rows} />}
+        />
+      </div>
 
       <footer className="res-foot">
         {data.publishedAt
