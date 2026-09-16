@@ -12,6 +12,7 @@
 // normalizePhotoUrl / NO_IMAGE_URL / replace 범위는 모두 Wolf 쪽 구현을 그대로 옮긴 것이다.
 //   참고: wolf/apps/admin/src/lib/queries/jnj-import.ts
 import { getSupabaseAdmin } from '@/lib/db/client';
+import { computeFinalScores, exportScore } from '@/lib/judging/final-score';
 import { toCountryCode } from './country';
 
 /** 시상대는 1~3위까지만. 4위 이하 전체 성적표는 Wolf 의 'J&J 점수관리'(jnj_scores)가 맡는다. */
@@ -60,19 +61,6 @@ export function normalizePhotoUrl(raw: string | null | undefined): string {
     if (m) return `https://lh3.googleusercontent.com/d/${m[1]}`;
   }
   return /^https?:\/\//i.test(v) ? v : '';
-}
-
-/**
- * 관리자 결승 표에 찍히는 '최종(가중)' 점수.
- *
- * final_results.total_score 는 심사위원 전원 × 항목 전부의 합계(raw)라 심사위원 수에 따라
- * 자릿수가 달라진다(같은 9점대 연기가 148 이 되기도 372 가 되기도 한다). 화면이 보여 주는
- * 값은 '항목 평균 × 항목 수' = 심사위원 1인분 점수이고, 고객몰도 이 값을 써야 숫자가 같다.
- * 평균이 없으면(옛 데이터) raw 합계를 그대로 쓴다.
- */
-export function weightedTotal(total: number | null, average: number | null, itemCount: number): number | null {
-  if (average != null && itemCount > 0) return Number((average * itemCount).toFixed(2));
-  return total;
 }
 
 /** Wolf 에디션 목록 — 게시 대상 대회(연도 행사)를 고르는 드롭다운용. */
@@ -124,7 +112,7 @@ export async function scoringItems(contestId: string): Promise<string[]> {
 /** 이 대회의 시상대(리더·팔로워 1~3위) — Wolf 에 넣기 전 미리보기와 실제 게시가 같은 값을 쓴다. */
 export async function buildPodiumEntries(contestId: string): Promise<WinnerEntry[]> {
   const sb = getSupabaseAdmin();
-  const [fin, parts, itemCount] = await Promise.all([
+  const [fin, parts, scores] = await Promise.all([
     sb
       .from('final_results')
       .select('participant_num, team_name, role, final_rank, total_score, average, photo_url')
@@ -134,7 +122,9 @@ export async function buildPodiumEntries(contestId: string): Promise<WinnerEntry
       .order('role', { ascending: true })
       .order('final_rank', { ascending: true }),
     sb.from('participants').select('num, team_name, representative, photo_url').eq('contest_id', contestId),
-    scoringItems(contestId).then((it) => it.length),
+    // 관리 화면의 '최종(가중)' 과 같은 산출 — 저장된 스냅샷을 그대로 믿으면 확정 후
+    // 점수를 고쳤을 때 화면과 다른 숫자가 고객몰로 나간다.
+    computeFinalScores(contestId),
   ]);
   if (fin.error) throw new Error(`buildPodiumEntries: ${fin.error.message}`);
 
@@ -149,8 +139,11 @@ export async function buildPodiumEntries(contestId: string): Promise<WinnerEntry
   return ((fin.data ?? []) as F[]).map((r) => {
     const p = byNum.get(r.participant_num);
     const countryRaw = (p?.representative ?? '').trim();
-    const total = weightedTotal(r.total_score, r.average, itemCount);
-    const avg = r.average != null ? Number(Number(r.average).toFixed(2)) : null;
+    const { totalScore, avgScore } = exportScore(
+      scores.breakdown[r.participant_num],
+      { total_score: r.total_score, average: r.average },
+      scores.itemCount,
+    );
     return {
       key: `${r.role}-${r.participant_num}`,
       role: r.role,
@@ -160,8 +153,8 @@ export async function buildPodiumEntries(contestId: string): Promise<WinnerEntry
       country: toCountryCode(countryRaw),
       countryRaw,
       photoUrl: normalizePhotoUrl(r.photo_url) || normalizePhotoUrl(p?.photo_url),
-      totalScore: total,
-      avgScore: avg,
+      totalScore,
+      avgScore,
     };
   });
 }
