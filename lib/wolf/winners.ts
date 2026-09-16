@@ -52,7 +52,7 @@ export interface WinnerEntry {
  * Google Drive 공유 링크는 hotlink 가 막혀 lh3 CDN 으로 바꿔야 고객몰에서 뜬다.
  * (Wolf 가져오기와 같은 규칙 — 한쪽만 바꾸면 사진이 한쪽에서만 깨진다.)
  */
-function normalizePhotoUrl(raw: string | null | undefined): string {
+export function normalizePhotoUrl(raw: string | null | undefined): string {
   const v = (raw ?? '').trim();
   if (!v) return '';
   if (v.includes('drive.google.com')) {
@@ -70,7 +70,7 @@ function normalizePhotoUrl(raw: string | null | undefined): string {
  * 값은 '항목 평균 × 항목 수' = 심사위원 1인분 점수이고, 고객몰도 이 값을 써야 숫자가 같다.
  * 평균이 없으면(옛 데이터) raw 합계를 그대로 쓴다.
  */
-function weightedTotal(total: number | null, average: number | null, itemCount: number): number | null {
+export function weightedTotal(total: number | null, average: number | null, itemCount: number): number | null {
   if (average != null && itemCount > 0) return Number((average * itemCount).toFixed(2));
   return total;
 }
@@ -105,16 +105,20 @@ export async function listWolfDivisions(): Promise<WolfDivision[]> {
   });
 }
 
-/** 대회의 채점 항목 수 — '최종(가중)' 환산의 분모. 못 읽으면 0(= 환산 없이 raw 사용). */
-async function scoringItemCount(contestId: string): Promise<number> {
+/**
+ * 대회의 채점 항목 코드 목록(contests.scoring_items) — 대회마다 다르다.
+ * '최종(가중)' 환산의 항목 수이자, 결승 채점 상세(criteria)의 열 순서다.
+ * 못 읽으면 빈 배열(= 환산 없이 raw 사용 · 상세 없음).
+ */
+export async function scoringItems(contestId: string): Promise<string[]> {
   const sb = getSupabaseAdmin();
   const { data } = await sb
     .from('contests')
     .select('scoring_items')
     .eq('id', contestId)
     .maybeSingle();
-  const items = (data?.scoring_items ?? []) as unknown[];
-  return Array.isArray(items) ? items.length : 0;
+  const items = (data?.scoring_items ?? []) as unknown;
+  return Array.isArray(items) ? items.filter((v): v is string => typeof v === 'string') : [];
 }
 
 /** 이 대회의 시상대(리더·팔로워 1~3위) — Wolf 에 넣기 전 미리보기와 실제 게시가 같은 값을 쓴다. */
@@ -130,7 +134,7 @@ export async function buildPodiumEntries(contestId: string): Promise<WinnerEntry
       .order('role', { ascending: true })
       .order('final_rank', { ascending: true }),
     sb.from('participants').select('num, team_name, representative, photo_url').eq('contest_id', contestId),
-    scoringItemCount(contestId),
+    scoringItems(contestId).then((it) => it.length),
   ]);
   if (fin.error) throw new Error(`buildPodiumEntries: ${fin.error.message}`);
 
