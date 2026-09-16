@@ -3,7 +3,9 @@
 //   editionId/division 을 쿼리로 주면 그 자리에 이미 들어 있는 행 수도 같이 센다.
 //
 // POST /api/admin/contests/[contestId]/publish-wolf
-//   { editionId, division, replace, keys? } → Wolf jnj_winners 에 시상대를 넣는다.
+//   { editionId, division, target, replace, keys? }
+//     target='winners' → jnj_winners 에 시상대(1~3위)
+//     target='scores'  → jnj_scores 에 전 라운드 성적표(예선 탈락자까지 전부)
 //
 // 넣을 항목은 요청 본문의 값이 아니라 여기서 DB 를 다시 읽어 만든다(keys 는 '어느 줄을
 // 넣을지' 고르는 데만 쓴다). 화면이 보낸 점수를 그대로 믿으면 미리보기를 띄워 둔 사이
@@ -18,6 +20,12 @@ import {
   listWolfEditions,
   publishWinnersToWolf,
 } from '@/lib/wolf/winners';
+import {
+  buildScoreEntries,
+  countExistingScores,
+  hasHalfVotes,
+  publishScoresToWolf,
+} from '@/lib/wolf/scores';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -33,15 +41,25 @@ export async function GET(req: Request, ctx: RouteCtx) {
   const editionId = url.searchParams.get('editionId') ?? '';
   const division = url.searchParams.get('division') ?? '';
 
-  const [editions, divisions, entries] = await Promise.all([
+  const [editions, divisions, entries, scores] = await Promise.all([
     listWolfEditions(),
     listWolfDivisions(),
     buildPodiumEntries(contestId),
+    buildScoreEntries(contestId),
   ]);
-  const existing = editionId && division ? await countExistingWinners(editionId, division) : 0;
+  const [existing, existingScores] = editionId && division
+    ? await Promise.all([
+        countExistingWinners(editionId, division),
+        countExistingScores(editionId, division),
+      ])
+    : [0, 0];
 
   return NextResponse.json({
-    data: { contestName: contest.name, editions, divisions, entries, existing },
+    data: {
+      contestName: contest.name, editions, divisions,
+      entries, existing,
+      scores, existingScores, halfVotes: hasHalfVotes(scores),
+    },
   });
 }
 
@@ -49,8 +67,13 @@ const PostSchema = z.object({
   editionId: z.string().uuid(),
   division: z.string().min(1).max(100),
   replace: z.boolean().default(true),
-  /** 넣을 줄만 고를 때 쓰는 key 목록(`역할-참가번호`). 없으면 시상대 전체. */
-  keys: z.array(z.string().max(100)).max(100).optional(),
+  /**
+   * 무엇을 넣을지 — 'winners' 는 시상대 1~3위(jnj_winners),
+   * 'scores' 는 전 라운드 성적표(jnj_scores). 둘은 Wolf 에서도 다른 화면이다.
+   */
+  target: z.enum(['winners', 'scores']).default('winners'),
+  /** 넣을 줄만 고를 때 쓰는 key 목록. 없으면 대상 전체. */
+  keys: z.array(z.string().max(100)).max(2000).optional(),
 });
 
 export async function POST(req: Request, ctx: RouteCtx) {
@@ -64,17 +87,24 @@ export async function POST(req: Request, ctx: RouteCtx) {
   if (!parsed.success) {
     return NextResponse.json({ error: 'VALIDATION', issues: parsed.error.issues }, { status: 400 });
   }
-  const { editionId, division, replace, keys } = parsed.data;
+  const { editionId, division, replace, target, keys } = parsed.data;
 
-  const all = await buildPodiumEntries(contestId);
-  const entries = keys ? all.filter((e) => keys.includes(e.key)) : all;
-  if (entries.length === 0) {
-    // 지울 것만 있고 넣을 것이 없는 요청은 사고일 가능성이 높다 — 시상대를 비우고 싶다면
-    // Wolf 우승자관리에서 지우는 쪽이 의도가 분명하다.
-    return NextResponse.json({ error: 'NO_ENTRIES' }, { status: 400 });
-  }
+  // key 목록은 '어느 줄' 만 고른다. 값은 언제나 여기서 DB 를 다시 읽어 만든다.
+  const pick = <T extends { key: string }>(all: T[]) =>
+    keys ? all.filter((e) => keys.includes(e.key)) : all;
 
   try {
+    if (target === 'scores') {
+      const entries = pick(await buildScoreEntries(contestId));
+      if (entries.length === 0) return NextResponse.json({ error: 'NO_ENTRIES' }, { status: 400 });
+      return NextResponse.json({ data: await publishScoresToWolf({ editionId, division, entries, replace }) });
+    }
+    const entries = pick(await buildPodiumEntries(contestId));
+    if (entries.length === 0) {
+      // 지울 것만 있고 넣을 것이 없는 요청은 사고일 가능성이 높다 — 비우고 싶다면
+      // Wolf 어드민에서 지우는 쪽이 의도가 분명하다.
+      return NextResponse.json({ error: 'NO_ENTRIES' }, { status: 400 });
+    }
     const res = await publishWinnersToWolf({ editionId, division, entries, replace });
     return NextResponse.json({ data: res });
   } catch (e) {
