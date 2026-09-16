@@ -7,7 +7,7 @@
 //     (빈 강조 카드가 서 있으면 "뭔가 빠진 화면"으로 읽힌다).
 // 카드 값은 모두 카드 안쪽 폭(좌우 30px 여백)에 맞춰 자동으로 줄어든다 — fit.ts.
 import {
-  shell, topBar, footBar, waveCard, label, strong, accentNumber, accentRule, fadeUp, lightRays,
+  shell, topBar, footBar, waveCard, label, strong, accentNumber, accentRule, fadeUp,
   SOFT, ACCENT, CX, MX, RX, f,
 } from '../common';
 
@@ -62,7 +62,6 @@ export function prepSvg(final = false, withEntries = true): string {
   });
 
   return shell(`
-    ${final ? lightRays(CX, 286) : ''}
     ${topBar()}
 
     ${label(CX + 5, 196, final ? 'THE GRAND FINAL' : 'WELCOME TO THE STAGE', { size: 15, tracking: 10 })}

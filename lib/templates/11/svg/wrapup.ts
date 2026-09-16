@@ -2,7 +2,7 @@
 // 무대 띠 안에 슬롯머신처럼 굴러가는 강조 숫자 릴 7개 — "점수를 계산하는 중"을 글자 없이 보여준다.
 // 릴마다 속도·시작 위치가 달라 기계적으로 똑같이 돌지 않는다.
 import {
-  shell, topBar, footBar, stageBand, panelCard, label, strong, clipBox, lightRays, seeded,
+  shell, topBar, footBar, stageBand, panelCard, label, strong, clipBox, seeded,
   DISPLAY, SOFT, ACCENT, CX, MX, RX, f,
 } from '../common';
 
@@ -71,7 +71,6 @@ export function wrapupSvg(final = false): string {
 
   return shell(`
     ${REEL_DEFS}
-    ${final ? lightRays(CX, 250) : ''}
     ${topBar()}
 
     ${label(CX + 4, 182, '{{stage_label}}', { size: 15, tracking: 8, fit: 1100 })}
