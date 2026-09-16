@@ -8,15 +8,10 @@ import type { FinalResultRow, FinalRole, QualifierRow } from '@/lib/db/types';
 
 const ROLE_LABEL: Record<FinalRole, string> = { leader: 'Leader', follower: 'Follower' };
 
-/** 참가자별 판정단 / 온라인 / 최종(가중) 점수 — avg(0-10) + total(avg×항목수). */
-export interface ScoreBreakdown {
-  panelAvg: number | null;
-  onlineAvg: number | null;
-  finalAvg: number | null;
-  panelTotal: number | null;
-  onlineTotal: number | null;
-  finalTotal: number | null;
-}
+// 산출은 서버(lib/judging/final-score.ts)에서 한다 — Wolf 게시와 같은 값을 쓰기 위해서다.
+// 타입만 여기서 다시 내보내 기존 import 를 깨지 않는다.
+export type { ScoreBreakdown } from '@/lib/judging/final-score';
+import type { ScoreBreakdown } from '@/lib/judging/final-score';
 
 function fmt(n: number | null | undefined, dp = 2): string {
   if (n == null) return '—';

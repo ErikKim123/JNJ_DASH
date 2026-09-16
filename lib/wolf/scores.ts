@@ -12,7 +12,8 @@
 // 달라지면 안 된다. 참고: wolf/apps/admin/src/lib/queries/jnj-import.ts
 import { getSupabaseAdmin } from '@/lib/db/client';
 import { toCountryCode } from './country';
-import { normalizePhotoUrl, weightedTotal, scoringItems } from './winners';
+import { computeFinalScores, exportScore } from '@/lib/judging/final-score';
+import { normalizePhotoUrl, scoringItems } from './winners';
 
 export type WolfRound = 'prelim' | 'semi' | 'final';
 
@@ -132,7 +133,7 @@ async function finalCriteria(contestId: string, items: string[]): Promise<Map<st
 export async function buildScoreEntries(contestId: string): Promise<ScoreEntry[]> {
   const sb = getSupabaseAdmin();
   const items = await scoringItems(contestId);
-  const [qual, fin, parts, criteria] = await Promise.all([
+  const [qual, fin, parts, criteria, scores] = await Promise.all([
     sb
       .from('qualifiers')
       .select('round, participant_num, team_name, representative, role, passed, votes, photo_url')
@@ -143,8 +144,9 @@ export async function buildScoreEntries(contestId: string): Promise<ScoreEntry[]
       .eq('contest_id', contestId),
     sb.from('participants').select('num, team_name, representative, photo_url').eq('contest_id', contestId),
     finalCriteria(contestId, items),
+    // 결승 점수는 관리 화면과 같은 산출을 쓴다(lib/judging/final-score.ts).
+    computeFinalScores(contestId),
   ]);
-  const itemCount = items.length;
 
   type P = { num: string; team_name: string | null; representative: string | null; photo_url: string | null };
   const byNum = new Map(((parts.data ?? []) as P[]).map((p) => [p.num, p]));
@@ -200,8 +202,11 @@ export async function buildScoreEntries(contestId: string): Promise<ScoreEntry[]
       votes: null,
       passed: null,
       rank: r.final_rank,
-      totalScore: weightedTotal(r.total_score, r.average, itemCount),
-      avgScore: r.average != null ? Number(Number(r.average).toFixed(2)) : null,
+      ...exportScore(
+        scores.breakdown[r.participant_num],
+        { total_score: r.total_score, average: r.average },
+        scores.itemCount,
+      ),
       criteria: criteria.get(r.participant_num) ?? null,
     });
   }
