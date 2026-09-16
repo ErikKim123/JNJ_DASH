@@ -40,6 +40,36 @@
   color: var(--jnj-text-inverse);
 }
 
+/* ── 도구 줄 (탭 + 이미지 저장) ──────────────────────────── */
+/* 탭은 가운데를 지키고 저장 버튼만 오른쪽에 둔다. 좁은 화면에서는 저장이 아래로 내려온다. */
+.res-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--jnj-space-3);
+  flex-wrap: wrap;
+  position: relative;
+}
+@media (min-width: 720px) {
+  .res-toolbar > span { position: absolute; right: 0; }
+}
+.res-save {
+  appearance: none;
+  border: 1px solid var(--jnj-border-secondary);
+  background: transparent;
+  color: var(--jnj-text-secondary);
+  border-radius: var(--jnj-radius-pill);
+  padding: 9px 18px;
+  letter-spacing: 0.08em;
+  font-family: var(--jnj-font-display);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.res-save:hover:not(:disabled) { border-color: var(--jnj-border-active); color: var(--jnj-text-primary); }
+.res-save:disabled { opacity: 0.55; cursor: progress; }
+.res-save-err { color: var(--jnj-red); font-size: 12px; }
+
 /* ── 시상대 ─────────────────────────────────────────────── */
 .res-podium-band {
   background: var(--jnj-grey-900);

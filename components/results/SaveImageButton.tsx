@@ -1,0 +1,75 @@
+'use client';
+
+// 보고 있는 결과 화면을 PNG 한 장으로 내려받는 버튼.
+//
+// 대회가 끝나면 운영팀이 결과를 인스타·카카오톡에 올린다. 지금까지는 화면을 스크린샷으로
+// 찍어 잘라 붙였고, 그 과정에서 아래쪽 순위가 잘리거나 브라우저 주소창이 같이 찍혔다.
+// 화면 그대로를 한 장으로 떠 주면 그 손질이 사라진다.
+//
+// 캡처에서 빼는 것: 탭 버튼과 이 버튼 자신(data-export-hide). 정지된 그림에 눌리지 않는
+// 버튼이 남아 있으면 '왜 안 눌리지' 하는 그림이 된다.
+import { useState } from 'react';
+
+/** 캡처에서 제외할 표시 — 이 속성이 붙은 요소와 그 아래는 그림에 담기지 않는다. */
+export const EXPORT_HIDE = 'data-export-hide';
+
+export function SaveImageButton({
+  targetRef,
+  fileName,
+  label = 'SAVE IMAGE',
+}: {
+  targetRef: React.RefObject<HTMLElement | null>;
+  /** 확장자를 뺀 파일 이름. 예: 'JNJ-Cebu2026-champion' */
+  fileName: string;
+  label?: string;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function save() {
+    const node = targetRef.current;
+    if (!node || busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      // 무거운 라이브러리라 누를 때 가져온다 — 결과만 보고 가는 사람에게는 받게 하지 않는다.
+      const { toPng } = await import('html-to-image');
+
+      const opts = {
+        // 배경이 없으면 투명으로 떠서 어두운 앱에 올렸을 때 글자가 안 보인다.
+        backgroundColor: '#ffffff',
+        // 화면 두 배 해상도 — 휴대폰에서 받아 키워 봐도 글자가 뭉개지지 않는다.
+        pixelRatio: 2,
+        // 탭·버튼처럼 그림에 남으면 안 되는 것들을 걸러낸다.
+        // 글자 노드에는 getAttribute 가 없으므로 Element 일 때만 본다(빼면 본문이 통째로 사라진다).
+        filter: (node: HTMLElement) =>
+          !(node instanceof Element) || node.getAttribute(EXPORT_HIDE) === null,
+      };
+
+      // Safari 는 첫 호출이 글꼴·이미지를 다 못 싣고 돌아오는 일이 있다(알려진 문제).
+      // 결과가 눈에 띄게 작으면 한 번 더 뜬다 — 두 번째는 캐시가 채워져 있어 제대로 나온다.
+      let url = await toPng(node, opts);
+      if (url.length < 5000) url = await toPng(node, opts);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${fileName}.png`;
+      a.click();
+    } catch {
+      setError('이미지를 만들지 못했습니다. 다시 시도해 주세요.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <span {...{ [EXPORT_HIDE]: '' }} style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--jnj-space-2)' }}>
+      <button type="button" className="res-save" onClick={save} disabled={busy}>
+        {busy ? 'SAVING…' : label}
+      </button>
+      {error && (
+        <span className="res-save-err" role="alert">{error}</span>
+      )}
+    </span>
+  );
+}
