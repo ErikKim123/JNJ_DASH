@@ -82,7 +82,9 @@ const SEG_STYLE: Record<
   },
   may: {
     bg: 'var(--jnj-yellow)',
-    fg: 'var(--jnj-black)',
+    // 노랑 위 글자는 항상 어두워야 읽힌다. --jnj-black 은 다크 모드에서 흰색으로
+    // 뒤집히는 토큰이라(강조 배경용) 여기 쓰면 노랑 위 흰 글자가 되어 안 보인다.
+    fg: '#111111',
     border: 'var(--jnj-yellow)',
   },
   pass: {
