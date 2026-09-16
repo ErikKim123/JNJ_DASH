@@ -456,7 +456,7 @@ function PassFailBody({
     ) {
       push(
         'error',
-        `MAY cap (${mayCap}) exceeded — set another contestant's MAY to OFF first.`,
+        `1/2 cap (${mayCap}) exceeded — set another contestant's 1/2 to OFF first.`,
       );
       return;
     }
@@ -1452,7 +1452,7 @@ function VoteCounter({
             color: 'var(--jnj-text-secondary)',
           }}
         >
-          May{Number.isFinite(mayCap) ? ` · ${mayUsed}/${mayCap}` : ''}
+          1/2{Number.isFinite(mayCap) ? ` · ${mayUsed}/${mayCap}` : ''}
         </span>
         {!Number.isFinite(mayCap) && (
           <span
