@@ -13,6 +13,32 @@ import { useState } from 'react';
 /** 캡처에서 제외할 표시 — 이 속성이 붙은 요소와 그 아래는 그림에 담기지 않는다. */
 export const EXPORT_HIDE = 'data-export-hide';
 
+/** 투명하지 않은(= 실제로 칠해진) 배경색인지. */
+function isPainted(color: string): boolean {
+  if (!color || color === 'transparent') return false;
+  // rgba(...,0) 처럼 완전 투명이면 칠해지지 않은 것으로 본다.
+  const m = /^rgba?\(([^)]+)\)$/.exec(color.trim());
+  if (!m) return true;
+  const parts = m[1].split(',').map((v) => Number(v.trim()));
+  return !(parts.length === 4 && parts[3] === 0);
+}
+
+/** 캡처 배경색 — 화면에 실제로 보이는 배경을 그대로 쓴다.
+ *  대상에서 위로 올라가며 처음 칠해진 배경을 찾고, 없으면 body/html, 그래도 없으면 검정.
+ *  (고정값 흰색으로 뜨면 다크 화면의 밝은 글자가 흰 바탕에 묻혀 안 보인다.) */
+function captureBackground(node: HTMLElement): string {
+  for (let el: Element | null = node; el; el = el.parentElement) {
+    const bg = getComputedStyle(el).backgroundColor;
+    if (isPainted(bg)) return bg;
+  }
+  for (const el of [document.body, document.documentElement]) {
+    if (!el) continue;
+    const bg = getComputedStyle(el).backgroundColor;
+    if (isPainted(bg)) return bg;
+  }
+  return '#000000';
+}
+
 export function SaveImageButton({
   targetRef,
   fileName,
@@ -37,7 +63,8 @@ export function SaveImageButton({
 
       const opts = {
         // 배경이 없으면 투명으로 떠서 어두운 앱에 올렸을 때 글자가 안 보인다.
-        backgroundColor: '#ffffff',
+        // 화면에 보이는 배경(다크 화면이면 검정)을 그대로 써야 게시 화면과 같은 그림이 된다.
+        backgroundColor: captureBackground(node),
         // 화면 두 배 해상도 — 휴대폰에서 받아 키워 봐도 글자가 뭉개지지 않는다.
         pixelRatio: 2,
         // 탭·버튼처럼 그림에 남으면 안 되는 것들을 걸러낸다.
