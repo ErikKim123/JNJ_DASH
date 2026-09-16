@@ -89,6 +89,7 @@ export default async function FinalsPage({
         trailing={
           <PublishResultsControl
             contestId={contestId}
+            contestName={contest.name}
             published={contest.results_published === true}
           />
         }
