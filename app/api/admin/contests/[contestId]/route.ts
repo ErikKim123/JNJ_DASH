@@ -81,6 +81,10 @@ const PatchSchema = z.object({
   audience_listed: z.boolean().optional(),
   // 결승 결과 웹게시 on/off. 게시 시각은 본문으로 받지 않고 서버가 찍는다(아래 PATCH).
   results_published: z.boolean().optional(),
+  // 섹션별 웹게시 on/off — 참가자 명단 / 예선 통과자 / 본선 통과자.
+  participants_published: z.boolean().optional(),
+  prelim_published: z.boolean().optional(),
+  semi_published: z.boolean().optional(),
   panel_judge_weight: z.number().min(0).max(9999).optional(),
   online_judge_weight: z.number().min(0).max(9999).optional(),
   online_judge_rounds: z.array(z.enum(['prelim', 'semi', 'final'])).optional(),
@@ -113,9 +117,11 @@ export async function PATCH(req: Request, ctx: RouteCtx) {
   // 내릴 때는 지우지 않는다: 다시 켜면 그때 값으로 덮이고, 내려간 동안에도
   // '마지막으로 언제 공개했었는지' 가 남아 있어야 운영 기록으로 쓸모가 있다.
   const patch: Record<string, unknown> = { ...parsed.data };
-  if (parsed.data.results_published === true) {
-    patch.results_published_at = new Date().toISOString();
-  }
+  const now = new Date().toISOString();
+  if (parsed.data.results_published === true) patch.results_published_at = now;
+  if (parsed.data.participants_published === true) patch.participants_published_at = now;
+  if (parsed.data.prelim_published === true) patch.prelim_published_at = now;
+  if (parsed.data.semi_published === true) patch.semi_published_at = now;
 
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
