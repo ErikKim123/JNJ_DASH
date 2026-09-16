@@ -456,7 +456,7 @@ function PassFailBody({
     ) {
       push(
         'error',
-        `1/2 cap (${mayCap}) exceeded — set another contestant's 1/2 to OFF first.`,
+        `½ cap (${mayCap}) exceeded — set another contestant's ½ to OFF first.`,
       );
       return;
     }
@@ -1291,13 +1291,13 @@ function sortContestants(list: Contestant[], key: SortKey): Contestant[] {
 /** 순서 / 역할 2단 토글. */
 function SortToggle({ value, onChange }: { value: SortKey; onChange: (k: SortKey) => void }) {
   const options: { key: SortKey; label: string }[] = [
-    { key: 'order', label: '순서' },
-    { key: 'role', label: '역할' },
+    { key: 'order', label: 'ORDER' },
+    { key: 'role', label: 'ROLE' },
   ];
   return (
     <div
       role="group"
-      aria-label="정렬 기준"
+      aria-label="Sort by"
       style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}
     >
       {options.map((o) => {
@@ -1452,7 +1452,7 @@ function VoteCounter({
             color: 'var(--jnj-text-secondary)',
           }}
         >
-          1/2{Number.isFinite(mayCap) ? ` · ${mayUsed}/${mayCap}` : ''}
+          ½{Number.isFinite(mayCap) ? ` · ${mayUsed}/${mayCap}` : ''}
         </span>
         {!Number.isFinite(mayCap) && (
           <span

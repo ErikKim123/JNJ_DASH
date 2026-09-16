@@ -4,7 +4,7 @@ import * as React from 'react';
 
 /**
  * 판정 세 갈래.
- *   fail = OFF(0표) · may = 1/2(0.5표, 노랑) · pass = ON(1표, 초록)
+ *   fail = OFF(0표) · may = ½(0.5표, 노랑) · pass = ON(1표, 초록)
  * 'absent'(불참)는 운영자가 따로 처리하므로 심사위원 화면에는 없다.
  */
 type Verdict = 'pass' | 'may' | 'fail' | null;
@@ -66,11 +66,11 @@ export function PassFailToggle({
 // 초기 null 은 OFF 로 보이고, 실제 제출 시에도 X 로 기록된다(종전과 동일).
 const SEGMENTS: { key: Exclude<Verdict, null>; label: string }[] = [
   { key: 'fail', label: 'OFF' },
-  { key: 'may', label: '1/2' },
+  { key: 'may', label: '½' },
   { key: 'pass', label: 'ON' },
 ];
 
-/** 칸별 선택 색 — 1/2 은 노랑(검은 글자라야 읽힌다), ON 은 초록. */
+/** 칸별 선택 색 — ½ 은 노랑(검은 글자라야 읽힌다), ON 은 초록. */
 const SEG_STYLE: Record<
   Exclude<Verdict, null>,
   { bg: string; fg: string; border: string }
