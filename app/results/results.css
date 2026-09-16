@@ -3,13 +3,70 @@
    인라인 스타일로는 감당이 안 된다(미디어 쿼리·hover·표 스크롤).
    토큰은 vote/styles/colors_and_type.css 것을 그대로 쓴다. */
 
+/* 인스타에 올릴 것을 전제로 한 폭·여백.
+   1040px 는 인스타 권장 가로(1080px)보다 살짝 좁아, 2배로 떠도 규격 안에 들어온다.
+   좌우 여백을 넉넉히 둔 이유: 피드 미리보기에서 카드 모서리가 잘려도 글자는 안 잘린다. */
 .res-page {
   max-width: 1040px;
   margin: 0 auto;
-  padding: var(--jnj-space-7) var(--jnj-space-5) var(--jnj-space-10);
+  padding: var(--jnj-space-8) var(--jnj-space-7) var(--jnj-space-9);
   display: flex;
   flex-direction: column;
   gap: var(--jnj-space-6);
+}
+
+/* ── WOLF 브랜드 머리 ────────────────────────────────────
+   이 화면은 저장돼 그대로 인스타에 올라간다. 피드에서 위아래가 잘려도 누가 낸
+   결과인지 남도록 맨 위에 로고와 출처를 둔다.
+   색은 로고의 빨강·주황을 그대로 쓴다(토큰의 --jnj-red / --jnj-orange-flash). */
+.res-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--jnj-space-3);
+}
+.res-brand-mark {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--jnj-radius-full);
+  object-fit: cover;
+  flex-shrink: 0;
+  /* 어두운 바탕에서 로고가 떠 보이게 하는 얇은 테. 그림자는 캡처에서도 살아남는다. */
+  box-shadow: 0 0 0 2px rgba(255, 80, 0, 0.55);
+}
+.res-brand-text { text-align: left; }
+.res-brand-name {
+  margin: 0;
+  font-family: var(--jnj-font-display);
+  font-size: 30px;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  color: var(--jnj-text-primary);
+}
+.res-brand-tag {
+  margin: 3px 0 0;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: var(--jnj-text-secondary);
+}
+
+/* 출처 한 줄 — 양옆 실선으로 가운데 문구를 물린다. */
+.res-brand-by {
+  display: flex;
+  align-items: center;
+  gap: var(--jnj-space-3);
+  margin: 0;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-align: center;
+  color: var(--jnj-orange-flash);
+}
+.res-brand-by::before,
+.res-brand-by::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 80, 0, 0.5), transparent);
 }
 
 /* ── 머리말 ─────────────────────────────────────────────── */
@@ -202,4 +259,13 @@
   color: var(--jnj-text-secondary);
   font-size: 12px;
   text-align: center;
+}
+/* 맨 아래 주소 — 이미지를 저장해 퍼 나를 때 '어디서 봤는지' 가 같이 간다. */
+.res-foot-site {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--jnj-font-display);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--jnj-orange-flash);
 }

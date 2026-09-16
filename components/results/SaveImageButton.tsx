@@ -13,6 +13,9 @@ import { useState } from 'react';
 /** 캡처에서 제외할 표시 — 이 속성이 붙은 요소와 그 아래는 그림에 담기지 않는다. */
 export const EXPORT_HIDE = 'data-export-hide';
 
+/** 인스타그램 권장 가로. 이보다 좁게 올리면 피드에서 늘려 보여 주며 흐려진다. */
+const IG_MIN_WIDTH = 1080;
+
 /** 투명하지 않은(= 실제로 칠해진) 배경색인지. */
 function isPainted(color: string): boolean {
   if (!color || color === 'transparent') return false;
@@ -65,8 +68,10 @@ export function SaveImageButton({
         // 배경이 없으면 투명으로 떠서 어두운 앱에 올렸을 때 글자가 안 보인다.
         // 화면에 보이는 배경(다크 화면이면 검정)을 그대로 써야 게시 화면과 같은 그림이 된다.
         backgroundColor: captureBackground(node),
-        // 화면 두 배 해상도 — 휴대폰에서 받아 키워 봐도 글자가 뭉개지지 않는다.
-        pixelRatio: 2,
+        // 인스타 권장 가로(1080px)를 밑돌지 않게 배율을 잡는다. 최소 2배는 유지 —
+        // 데스크톱(1040px)에서는 2배로 충분하고, 폰(약 390px)에서는 3배까지 올라가야
+        // 1080 을 넘긴다. 이게 없으면 폰에서 저장한 그림이 피드에서 흐릿하게 뜬다.
+        pixelRatio: Math.max(2, Math.ceil(IG_MIN_WIDTH / Math.max(1, node.offsetWidth))),
         // 탭·버튼처럼 그림에 남으면 안 되는 것들을 걸러낸다.
         // 글자 노드에는 getAttribute 가 없으므로 Element 일 때만 본다(빼면 본문이 통째로 사라진다).
         filter: (node: HTMLElement) =>

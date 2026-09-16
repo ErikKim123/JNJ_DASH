@@ -225,6 +225,18 @@ export function ResultsView({ data }: { data: PublicResults }) {
 
   return (
     <main className="res-page" ref={captureRef}>
+      {/* 브랜드 머리 — 이 화면은 그대로 인스타에 올라간다. 피드에서 잘려 나가도 누가 낸
+          결과인지 남도록 맨 위에 둔다(로고는 앱 안에 두어 캡처에서 빠지지 않게 했다). */}
+      <header className="res-brand">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="res-brand-mark" src="/wolf-mark.png" alt="WOLF" />
+        <div className="res-brand-text">
+          <p className="res-brand-name">WOLF</p>
+          <p className="res-brand-tag">WORLD OF LATIN FESTIVALS</p>
+        </div>
+      </header>
+      <p className="res-brand-by">OFFICIAL RESULTS PROVIDED BY WOLF</p>
+
       <header className="res-head">
         {data.iconUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -239,22 +251,27 @@ export function ResultsView({ data }: { data: PublicResults }) {
 
       {/* 탭 줄은 그림에 담지 않는다 — 눌리지 않는 버튼이 찍혀 봐야 읽는 사람을 헷갈리게 한다. */}
       <div className="res-toolbar" {...{ [EXPORT_HIDE]: '' }}>
-        <div className="res-tabs" role="tablist" aria-label="Results sections">
-          <button
-            type="button" role="tab" className="res-tab"
-            aria-selected={tab === 'champion'}
-            onClick={() => setTab('champion')}
-          >
-            CHAMPION
-          </button>
-          <button
-            type="button" role="tab" className="res-tab"
-            aria-selected={tab === 'results'}
-            onClick={() => setTab('results')}
-          >
-            RESULTS
-          </button>
-        </div>
+        {/* 시상대가 없으면 CHAMPION 탭 자체를 내린다 — 결승 전 대회에서 눌러 봐야
+            '아직 발표 전' 만 나오는 빈 탭이고, 참가자 명단만 돌리는 화면에는 방해가 된다.
+            남는 탭이 하나뿐이면 탭 줄도 통째로 숨긴다(고를 게 없는 고르기 줄). */}
+        {hasPodium && (
+          <div className="res-tabs" role="tablist" aria-label="Results sections">
+            <button
+              type="button" role="tab" className="res-tab"
+              aria-selected={tab === 'champion'}
+              onClick={() => setTab('champion')}
+            >
+              CHAMPION
+            </button>
+            <button
+              type="button" role="tab" className="res-tab"
+              aria-selected={tab === 'results'}
+              onClick={() => setTab('results')}
+            >
+              RESULTS
+            </button>
+          </div>
+        )}
         <SaveImageButton
           targetRef={captureRef}
           fileName={`${data.contestId}-${tab}`}
@@ -299,6 +316,7 @@ export function ResultsView({ data }: { data: PublicResults }) {
         {data.publishedAt
           ? `Published ${new Date(data.publishedAt).toLocaleString()}`
           : 'Official results'}
+        <span className="res-foot-site">WORLDOFLATINFESTIVALS.COM</span>
       </footer>
     </main>
   );
