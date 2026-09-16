@@ -32,6 +32,14 @@ export interface PublicQualifierRow {
   passed: boolean;
 }
 
+/** 참가자 명단 한 줄 — 결과가 아니라 '누가 나오는지' 만 밝힌다. */
+export interface PublicParticipantRow {
+  num: string;
+  name: string;
+  country: string;
+  photoUrl: string;
+}
+
 export interface PublicRoundBlock<T> {
   leaders: T[];
   followers: T[];
@@ -48,6 +56,14 @@ export interface PublicResults {
   periodEnd: string | null;
   iconUrl: string;
   publishedAt: string | null;
+  /** 섹션별 게시 여부 — 꺼진 섹션은 아래 블록이 비어 있고 화면에도 나오지 않는다. */
+  sections: {
+    participants: boolean;
+    prelim: boolean;
+    semi: boolean;
+    final: boolean;
+  };
+  participants: PublicRoundBlock<PublicParticipantRow>;
   final: PublicRoundBlock<PublicFinalRow>;
   semi: PublicRoundBlock<PublicQualifierRow>;
   prelim: PublicRoundBlock<PublicQualifierRow>;
@@ -74,7 +90,16 @@ function num(x: unknown): number | null {
  */
 export async function getPublicResults(contestId: string): Promise<PublicResults | null> {
   const contest = await getContest(contestId);
-  if (!contest || contest.results_published !== true) return null;
+  if (!contest) return null;
+
+  const sections = {
+    participants: contest.participants_published === true,
+    prelim: contest.prelim_published === true,
+    semi: contest.semi_published === true,
+    final: contest.results_published === true,
+  };
+  // 네 섹션이 모두 꺼져 있으면 주소 자체를 닫는다 — 채점 중 링크가 새도 아무것도 보이지 않는다.
+  if (!sections.participants && !sections.prelim && !sections.semi && !sections.final) return null;
 
   const [finals, semi, prelim, participants] = await Promise.all([
     listFinalResults(contestId),
@@ -137,6 +162,33 @@ export async function getPublicResults(contestId: string): Promise<PublicResults
 
   const top3 = (rows: PublicFinalRow[]) => rows.filter((r) => r.rank != null && r.rank <= 3).slice(0, 3);
 
+  // 참가자 명단 — 헬퍼(운영 보조)는 빼고 리더/팔로워만. 번호순.
+  const participantRow = (p: (typeof participants)[number]): PublicParticipantRow => ({
+    num: p.num,
+    name: p.team_name || p.last_name || p.num,
+    country: p.representative ?? '',
+    photoUrl: p.photo_url ?? '',
+  });
+  const dancers = participants.filter((p) => !p.role.startsWith('helper'));
+  const participantBlock: PublicRoundBlock<PublicParticipantRow> = {
+    leaders: dancers.filter((p) => p.role === 'leader').map(participantRow),
+    followers: dancers.filter((p) => p.role === 'follower').map(participantRow),
+  };
+
+  const empty = <T,>(): PublicRoundBlock<T> => ({ leaders: [], followers: [] });
+
+  // 게시 시각 — 켜져 있는 섹션 중 가장 최근에 켠 시각을 쓴다.
+  const publishedAt =
+    [
+      sections.participants ? contest.participants_published_at : null,
+      sections.prelim ? contest.prelim_published_at : null,
+      sections.semi ? contest.semi_published_at : null,
+      sections.final ? contest.results_published_at : null,
+    ]
+      .filter((v): v is string => typeof v === 'string' && v.length > 0)
+      .sort()
+      .pop() ?? null;
+
   return {
     contestId: contest.id,
     contestName: contest.name,
@@ -146,10 +198,14 @@ export async function getPublicResults(contestId: string): Promise<PublicResults
     periodStart: contest.period_start,
     periodEnd: contest.period_end,
     iconUrl: contest.icon_image ?? '',
-    publishedAt: contest.results_published_at,
-    final: finalBlock,
-    semi: qualBlock(semi),
-    prelim: qualBlock(prelim),
-    podium: { leaders: top3(finalBlock.leaders), followers: top3(finalBlock.followers) },
+    publishedAt,
+    sections,
+    participants: sections.participants ? participantBlock : empty<PublicParticipantRow>(),
+    final: sections.final ? finalBlock : empty<PublicFinalRow>(),
+    semi: sections.semi ? qualBlock(semi) : empty<PublicQualifierRow>(),
+    prelim: sections.prelim ? qualBlock(prelim) : empty<PublicQualifierRow>(),
+    podium: sections.final
+      ? { leaders: top3(finalBlock.leaders), followers: top3(finalBlock.followers) }
+      : empty<PublicFinalRow>(),
   };
 }

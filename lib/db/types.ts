@@ -113,6 +113,15 @@ export interface ContestRow {
   results_published: boolean;
   /** 마지막으로 게시를 켠 시각(ISO). 공개 페이지 하단 '게시 시각' 표기용. null=게시한 적 없음. */
   results_published_at: string | null;
+  /** 공개 페이지의 참가자 명단 노출 여부. */
+  participants_published: boolean;
+  participants_published_at: string | null;
+  /** 공개 페이지의 예선 통과자 표 노출 여부. */
+  prelim_published: boolean;
+  prelim_published_at: string | null;
+  /** 공개 페이지의 본선 통과자 표 노출 여부. */
+  semi_published: boolean;
+  semi_published_at: string | null;
   /** MC 표출 포인터 — MC 폰이 기록, 프로젝터(대시보드)가 폴링해 따라감. null=미설정. */
   display_round: RoundKey | null;
   /** MC 표출 포인터 — 현재 스텝(StepKey). null=미설정. */

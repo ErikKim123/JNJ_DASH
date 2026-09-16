@@ -10,6 +10,7 @@ import { SaveImageButton, EXPORT_HIDE } from './SaveImageButton';
 import type {
   PublicResults,
   PublicFinalRow,
+  PublicParticipantRow,
   PublicQualifierRow,
   PublicRoundBlock,
 } from '@/lib/results/public';
@@ -160,6 +161,34 @@ function QualifierTable({ title, rows }: { title: string; rows: PublicQualifierR
   );
 }
 
+/** 참가자 명단 표 — 순위가 없는 라운드이므로 번호와 댄서만 싣는다. */
+function ParticipantTable({ title, rows }: { title: string; rows: PublicParticipantRow[] }) {
+  return (
+    <div>
+      <p className="res-col-title">{title} <span className="res-count">{rows.length}</span></p>
+      {rows.length === 0 ? (
+        <p className="res-empty">No entries.</p>
+      ) : (
+        <div className="res-table-wrap">
+          <table className="res-table">
+            <thead>
+              <tr><th>NO</th><th>DANCER</th></tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.num}>
+                  <td className="res-num">{r.num}</td>
+                  <td><Dancer name={r.name} country={r.country} photoUrl={r.photoUrl} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** 라운드 한 덩어리 — 리더/팔로워를 나란히. 표가 비면 통째로 숨긴다. */
 function RoundSection<T>({
   title,
@@ -257,6 +286,11 @@ export function ResultsView({ data }: { data: PublicResults }) {
             title="PRELIMS"
             block={data.prelim}
             render={(t, rows) => <QualifierTable key={t} title={t} rows={rows} />}
+          />
+          <RoundSection
+            title="PARTICIPANTS"
+            block={data.participants}
+            render={(t, rows) => <ParticipantTable key={t} title={t} rows={rows} />}
           />
         </div>
       )}

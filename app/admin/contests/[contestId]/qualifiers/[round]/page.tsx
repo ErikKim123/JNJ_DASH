@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { getContest, listParticipants, listQualifiersWithLiveVotes } from '@/lib/db/queries';
 import { QualifiersPanel } from '@/components/admin/QualifiersPanel';
 import { ContestTabs } from '@/components/admin/ContestTabs';
+import { PublishSectionControl } from '@/components/admin/PublishSectionControl';
 import { PageHeader } from '@/components/admin/ui';
 
 export const dynamic = 'force-dynamic';
@@ -48,7 +49,20 @@ export default async function QualifiersPage({
         }
         subtitle={`Capacity: ${maxPerRole} per role · Only judging-scored candidates are listed`}
       />
-      <ContestTabs contestId={contestId} current={`${base}/qualifiers/${round}`} />
+      <ContestTabs
+        contestId={contestId}
+        current={`${base}/qualifiers/${round}`}
+        trailing={
+          <PublishSectionControl
+            contestId={contestId}
+            field={round === 'prelim' ? 'prelim_published' : 'semi_published'}
+            published={
+              (round === 'prelim' ? contest.prelim_published : contest.semi_published) === true
+            }
+            sectionLabel={round === 'prelim' ? '예선 통과자' : '본선 통과자'}
+          />
+        }
+      />
       <QualifiersPanel
         contestId={contestId}
         round={round}

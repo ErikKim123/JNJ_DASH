@@ -181,6 +181,13 @@
 .res-avatar { width: 28px; height: 28px; border-radius: var(--jnj-radius-full); object-fit: cover; background: var(--jnj-grey-200); flex-shrink: 0; }
 .res-dancer-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .res-country { color: var(--jnj-text-secondary); font-size: 12px; }
+
+/* 섹션 제목 옆 인원수 — 참가자 명단처럼 '몇 명인지' 가 먼저 궁금한 표에 붙인다. */
+.res-count {
+  color: var(--jnj-text-secondary);
+  font-size: 11px;
+  margin-left: 6px;
+}
 .res-total { font-family: var(--jnj-font-display); text-align: right; white-space: nowrap; }
 .res-avg { color: var(--jnj-text-secondary); text-align: right; white-space: nowrap; }
 .res-rank { font-family: var(--jnj-font-display); width: 28px; }
