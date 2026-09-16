@@ -9,6 +9,7 @@ import {
 import { resolveActiveDefs } from '@/lib/db/scoring';
 import { FinalsPanel, type ScoreBreakdown } from '@/components/admin/FinalsPanel';
 import { ContestTabs } from '@/components/admin/ContestTabs';
+import { PublishResultsControl } from '@/components/admin/PublishResultsControl';
 import { PageHeader } from '@/components/admin/ui';
 
 export const dynamic = 'force-dynamic';
@@ -82,7 +83,16 @@ export default async function FinalsPage({
           </>
         }
       />
-      <ContestTabs contestId={contestId} current={`${base}/finals`} />
+      <ContestTabs
+        contestId={contestId}
+        current={`${base}/finals`}
+        trailing={
+          <PublishResultsControl
+            contestId={contestId}
+            published={contest.results_published === true}
+          />
+        }
+      />
       <FinalsPanel
         contestId={contestId}
         initial={finals}

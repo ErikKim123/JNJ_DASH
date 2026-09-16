@@ -79,6 +79,8 @@ const PatchSchema = z.object({
   panel_judges_enabled: z.boolean().optional(),
   online_judges_enabled: z.boolean().optional(),
   audience_listed: z.boolean().optional(),
+  // 결승 결과 웹게시 on/off. 게시 시각은 본문으로 받지 않고 서버가 찍는다(아래 PATCH).
+  results_published: z.boolean().optional(),
   panel_judge_weight: z.number().min(0).max(9999).optional(),
   online_judge_weight: z.number().min(0).max(9999).optional(),
   online_judge_rounds: z.array(z.enum(['prelim', 'semi', 'final'])).optional(),
@@ -107,10 +109,18 @@ export async function PATCH(req: Request, ctx: RouteCtx) {
   if (Object.keys(parsed.data).length === 0) {
     return NextResponse.json({ error: 'NO_FIELDS' }, { status: 400 });
   }
+  // 게시 시각은 운영자가 보내는 값이 아니라 '켠 순간' 이다 — 여기서 찍는다.
+  // 내릴 때는 지우지 않는다: 다시 켜면 그때 값으로 덮이고, 내려간 동안에도
+  // '마지막으로 언제 공개했었는지' 가 남아 있어야 운영 기록으로 쓸모가 있다.
+  const patch: Record<string, unknown> = { ...parsed.data };
+  if (parsed.data.results_published === true) {
+    patch.results_published_at = new Date().toISOString();
+  }
+
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
     .from('contests')
-    .update(parsed.data)
+    .update(patch)
     .eq('id', contestId)
     .select('*')
     .maybeSingle();

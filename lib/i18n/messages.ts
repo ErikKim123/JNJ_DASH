@@ -42,6 +42,21 @@ export const MESSAGES_EN = {
   'tab.onlineFinalJudging': 'Audience Final Judging',
   'tab.finalResults': 'Final Results',
 
+  // ── Publish results to the web ─────────────────────────────────
+  'publish.label': 'Web publish',
+  'publish.on': 'Published',
+  'publish.off': 'Not published',
+  'publish.publishAction': 'Publish',
+  'publish.unpublishAction': 'Unpublish',
+  'publish.copyLink': 'Copy link',
+  'publish.copied': 'Link copied',
+  'publish.open': 'Open',
+  'publish.confirmOn':
+    'Publish the final results to the web?\n\nAnyone with the link will see the rankings and scores — no login required.',
+  'publish.confirmOff':
+    'Take the published results down?\n\nThe link stops working immediately. You can publish again at any time.',
+  'publish.failed': 'Could not change publishing. Please try again.',
+
   // ── Round names ────────────────────────────────────────────────
   'round.prelim': 'Preliminary',
   'round.semi': 'Semi-Final',
@@ -420,6 +435,21 @@ export const MESSAGES_KO: Record<MessageKey, string> = {
   'tab.finalJudging': '결승 심사',
   'tab.onlineFinalJudging': '관객 결승 심사',
   'tab.finalResults': '결승 결과',
+
+  // ── Publish results to the web ─────────────────────────────────
+  'publish.label': '웹게시',
+  'publish.on': '게시 중',
+  'publish.off': '비공개',
+  'publish.publishAction': '게시',
+  'publish.unpublishAction': '내리기',
+  'publish.copyLink': '링크 복사',
+  'publish.copied': '링크 복사됨',
+  'publish.open': '열기',
+  'publish.confirmOn':
+    '결승 결과를 웹에 게시할까요?\n\n링크를 아는 사람은 로그인 없이 순위와 점수를 볼 수 있습니다.',
+  'publish.confirmOff':
+    '게시된 결과를 내릴까요?\n\n링크가 곧바로 막힙니다. 언제든 다시 게시할 수 있습니다.',
+  'publish.failed': '게시 상태를 바꾸지 못했습니다. 다시 시도해 주세요.',
 
   // ── Round names ────────────────────────────────────────────────
   'round.prelim': '예선',
