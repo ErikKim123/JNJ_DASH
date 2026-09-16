@@ -383,6 +383,13 @@ function PassFailBody({
     });
   }, [contestants, setDraft]);
 
+  // 표시 순서만 바꾸는 정렬 — 저장/전송은 원본 contestants 순서를 그대로 쓴다.
+  const [sortKey, setSortKey] = useState<SortKey>('order');
+  const sortedContestants = useMemo(
+    () => sortContestants(contestants, sortKey),
+    [contestants, sortKey],
+  );
+
   const total = contestants.length;
   const votableContestants = useMemo(
     () => contestants.filter((c) => c.outcome !== 'absent'),
@@ -466,7 +473,18 @@ function PassFailBody({
         cap={cap}
         round={round}
       />
-      <ProgressLine done={voteOnCount} total={total} />
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 'var(--jnj-space-2)',
+          flexWrap: 'wrap',
+        }}
+      >
+        <ProgressLine done={voteOnCount} total={total} />
+        <SortToggle value={sortKey} onChange={setSortKey} />
+      </div>
 
       <ul
         style={{
@@ -478,7 +496,7 @@ function PassFailBody({
           gap: 'var(--jnj-space-2)',
         }}
       >
-        {contestants.map((c, i) => {
+        {sortedContestants.map((c, i) => {
           const verdict = draft[c.id];
           const isAbsent = c.outcome === 'absent';
           // While locked (post-submit), reflect the just-submitted verdict in
@@ -698,6 +716,13 @@ function FinalBody({
     () => contestants.filter((c) => entryComplete(draft[c.id])).length,
     [contestants, draft, criteria],
   );
+  // 표시 순서만 바꾸는 정렬 — 저장/전송은 원본 contestants 순서를 그대로 쓴다.
+  const [sortKey, setSortKey] = useState<SortKey>('order');
+  const sortedContestants = useMemo(
+    () => sortContestants(contestants, sortKey),
+    [contestants, sortKey],
+  );
+
   const total = contestants.length;
   const locked = submitState.kind === 'locked';
   const submitting = submitState.kind === 'submitting';
@@ -794,7 +819,18 @@ function FinalBody({
 
   return (
     <>
-      <ProgressLine done={validCount} total={total} />
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 'var(--jnj-space-2)',
+          flexWrap: 'wrap',
+        }}
+      >
+        <ProgressLine done={validCount} total={total} />
+        <SortToggle value={sortKey} onChange={setSortKey} />
+      </div>
 
       <ul
         style={{
@@ -806,7 +842,7 @@ function FinalBody({
           gap: 'var(--jnj-space-5)',
         }}
       >
-        {contestants.map((c) => {
+        {sortedContestants.map((c) => {
           const entry: Partial<Record<FinalCriterion, number | null>> = draft[c.id] ?? {};
           // For sum / totalFinalScore: build a FinalEntry over active criteria.
           const sumEntry: FinalEntry = { contestantId: c.id };
@@ -1175,6 +1211,77 @@ function StatusBadge({ value }: { value: RoundStatus }) {
     >
       {ROUND_STATUS_LABEL[value]}
     </span>
+  );
+}
+
+// ─── 정렬 ──────────────────────────────────────────────────────────
+// 심사 중 참가자를 찾는 두 가지 방식: 번호 순(기본) · 역할(리더 먼저)별 묶음.
+// 정렬은 화면 표시 순서만 바꾼다 — 저장/전송은 원본 순서를 그대로 쓴다.
+type SortKey = 'order' | 'role';
+
+/** '#001' · '12' 등에서 숫자만 뽑아 비교. 숫자가 없으면 문자열 비교로 폴백. */
+function numberOf(v: string): number {
+  const m = /\d+/.exec(String(v ?? ''));
+  return m ? Number(m[0]) : Number.POSITIVE_INFINITY;
+}
+
+/** 리더 → 팔로워 → 그 외(솔로·헬퍼) 순. */
+function roleRank(role?: string): number {
+  const r = String(role ?? '').trim().toLowerCase();
+  if (r === '리더' || r === 'leader') return 0;
+  if (r === '팔로워' || r === 'follower') return 1;
+  return 2;
+}
+
+function sortContestants(list: Contestant[], key: SortKey): Contestant[] {
+  const byNumber = (a: Contestant, b: Contestant) => {
+    const d = numberOf(a.number) - numberOf(b.number);
+    return d !== 0 ? d : String(a.number).localeCompare(String(b.number));
+  };
+  const sorted = [...list];
+  sorted.sort((a, b) =>
+    key === 'role' ? roleRank(a.role) - roleRank(b.role) || byNumber(a, b) : byNumber(a, b),
+  );
+  return sorted;
+}
+
+/** 순서 / 역할 2단 토글. */
+function SortToggle({ value, onChange }: { value: SortKey; onChange: (k: SortKey) => void }) {
+  const options: { key: SortKey; label: string }[] = [
+    { key: 'order', label: '순서' },
+    { key: 'role', label: '역할' },
+  ];
+  return (
+    <div
+      role="group"
+      aria-label="정렬 기준"
+      style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}
+    >
+      {options.map((o) => {
+        const active = o.key === value;
+        return (
+          <button
+            key={o.key}
+            type="button"
+            onClick={() => onChange(o.key)}
+            aria-pressed={active}
+            style={{
+              padding: '6px 14px',
+              borderRadius: 999,
+              cursor: 'pointer',
+              fontFamily: 'var(--jnj-font-text-medium)',
+              fontSize: 12,
+              letterSpacing: '0.04em',
+              background: active ? 'var(--jnj-text-primary)' : 'transparent',
+              color: active ? 'var(--jnj-white)' : 'var(--jnj-text-secondary)',
+              border: `1px solid ${active ? 'var(--jnj-text-primary)' : 'var(--jnj-grey-200)'}`,
+            }}
+          >
+            {o.label}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
