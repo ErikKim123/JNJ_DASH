@@ -23,13 +23,16 @@ export const ROUND_ORDER: WolfRound[] = ['prelim', 'semi', 'final'];
 /**
  * 성적 1줄에 붙는 결승 채점 상세. items 와 scores 는 같은 순서·같은 길이다.
  *
- * 심사위원 이름은 담지 않는다 — jnj_scores 는 비로그인도 읽을 수 있어(RLS 공개 읽기)
- * 여기 적는 순간 '누가 누구에게 몇 점' 이 그대로 공개 API 가 된다. 순서(심사석 순번)만
- * 지켜서 '심사위원 1·2·3' 이 표마다 같은 사람을 가리키게 한다.
+ * 심사위원 이름을 함께 싣는다(운영 요청). jnj_scores 는 비로그인도 읽을 수 있으므로
+ * — RLS 공개 읽기 — 이 표는 '누가 누구에게 몇 점' 을 공개한다는 뜻이다. 채점을 드러내는
+ * 것이 이 표의 목적이라 그렇게 둔다.
+ *
+ * name 이 비어 있을 수 있다(이름이 빈 심사위원, 또는 이름을 싣기 전에 게시한 옛 스냅샷).
+ * 그때는 화면이 '심사위원 1·2·3' 으로 되돌아간다 — 줄 순서는 언제나 심사석 순번이다.
  */
 export interface ScoreCriteria {
   items: string[];
-  judges: { scores: (number | null)[] }[];
+  judges: { name?: string; scores: (number | null)[] }[];
 }
 
 export interface ScoreEntry {
@@ -88,12 +91,11 @@ async function finalCriteria(contestId: string, items: string[]): Promise<Map<st
 
   const judges = await sb
     .from('judges')
-    // 이름은 안 읽는다 — 저장하지 않을 값이다.
-    .select('id, display_order')
+    .select('id, display_order, name')
     .eq('contest_id', contestId)
     .eq('round', 'final')
     .order('display_order', { ascending: true });
-  const panel = (judges.data ?? []) as { id: string; display_order: number }[];
+  const panel = (judges.data ?? []) as { id: string; display_order: number; name: string | null }[];
   if (judges.error || panel.length === 0) return out;
 
   const columns = items.map((it) => CRITERIA_COLUMN[it] ?? null);
@@ -108,6 +110,7 @@ async function finalCriteria(contestId: string, items: string[]): Promise<Map<st
   // 이름 없이 줄만 남기므로 순서가 곧 신원이다 — 표시 순번으로 자리를 정해 두고 그 자리에 넣는다
   // (투표 행이 오는 순서는 보장되지 않는다).
   const seat = new Map(panel.map((j, i) => [j.id, i]));
+  const seatName = panel.map((j) => (j.name ?? '').trim());
   const rows = new Map<string, ((number | null)[] | null)[]>();
   for (const row of ((votes.data ?? []) as unknown as Record<string, unknown>[])) {
     const at = seat.get(String(row.judge_id));
@@ -120,7 +123,13 @@ async function finalCriteria(contestId: string, items: string[]): Promise<Map<st
     rows.set(String(row.participant_num), seats);
   }
   for (const [participantNum, seats] of rows) {
-    const list = seats.filter((s): s is (number | null)[] => s !== null).map((scores) => ({ scores }));
+    // 채점을 건너뛴 심사위원 줄은 빠지므로, 이름은 자리(index)를 버리기 전에 붙여야 한다.
+    const list: ScoreCriteria['judges'] = [];
+    seats.forEach((scores, at) => {
+      if (scores === null) return;
+      const name = seatName[at];
+      list.push(name ? { name, scores } : { scores });
+    });
     if (list.length > 0) out.set(participantNum, { items, judges: list });
   }
   return out;
