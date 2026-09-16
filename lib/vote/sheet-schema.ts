@@ -26,6 +26,9 @@ export type Judge = {
   // Optional for back-compat with sheets that don't have these columns.
   maxPrelimVotes?: number;
   maxSemiVotes?: number;
+  /** M(0.5표) 상한 — O 상한과 별개 예산. undefined = 제한 없음. */
+  maxPrelimMayVotes?: number;
+  maxSemiMayVotes?: number;
   // `2.심사위원` 의 `대상` 컬럼 — 화면에 표출/투표할 참가자 역할 필터.
   voteTarget?: JudgeVoteTarget;
 };
@@ -165,11 +168,13 @@ export type Competition = {
   masterFileName?: string;
 };
 
-export type RoundStatus = 'ready' | 'pass' | 'fail' | 'absent';
+// 'may' = MAY(0.5표) — O/X 만으로는 정원 경계에 동점자가 쌓여, 반 표로 가른다.
+export type RoundStatus = 'ready' | 'pass' | 'may' | 'fail' | 'absent';
 
 export const ROUND_STATUS_LABEL: Record<RoundStatus, string> = {
   ready: 'READY',
   pass: 'PASS',
+  may: 'MAY',
   fail: 'FAIL',
   absent: 'ABSENT',
 };
@@ -179,6 +184,7 @@ export const ROUND_STATUS_LABEL: Record<RoundStatus, string> = {
 export const ROUND_STATUS_SHEET_VALUE: Record<RoundStatus, string> = {
   ready: 'READY',
   pass: 'TRUE',
+  may: 'MAY',
   fail: 'FALSE',
   absent: 'Non',
 };
@@ -203,7 +209,7 @@ export type Contestant = {
 
 export type PassFailEntry = {
   contestantId: string;
-  status: 'pass' | 'fail' | 'absent';
+  status: 'pass' | 'may' | 'fail' | 'absent';
 };
 
 // Final-round submit payload. Each active criterion gets a

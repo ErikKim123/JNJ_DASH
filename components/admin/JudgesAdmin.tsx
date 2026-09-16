@@ -35,18 +35,23 @@ export interface JudgeGroup {
   idsByRound: RoundIdMap;
   /** 라운드별 max_votes — 라운드마다 다른 정원에 맞춰 분리 편집. */
   maxVotesByRound: Partial<Record<JudgingRound, number | null>>;
+  /** 라운드별 max_may_votes — M(0.5표) 상한. O 상한과 별개 예산이라 따로 둔다. */
+  maxMayVotesByRound: Partial<Record<JudgingRound, number | null>>;
 }
 
 export function JudgesAdmin({
   contestId,
   initial,
   voteCounts,
+  mayCounts,
   prelimQuotaPerRole,
   semiQuotaPerRole,
 }: {
   contestId: string;
   initial: JudgeGroup[];
   voteCounts: VoteCount;
+  /** judge_id → M(0.5표) 개수. O 와 예산이 달라 따로 받는다. */
+  mayCounts: VoteCount;
   /** 대회 정보의 prelim_pass_per_role — 예선 O 표 정원 표시용. */
   prelimQuotaPerRole: number;
   /** 대회 정보의 semi_pass_per_role — 본선 O 표 정원 표시용. */
@@ -66,6 +71,8 @@ export function JudgesAdmin({
   const [savedTargets, setSavedTargets] = useState<Record<string, JudgeTargetRole> | null>(null);
   const [bulkPrelim, setBulkPrelim] = useState('');
   const [bulkSemi, setBulkSemi] = useState('');
+  const [bulkPrelimMay, setBulkPrelimMay] = useState('');
+  const [bulkSemiMay, setBulkSemiMay] = useState('');
   const [bulkBusy, setBulkBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [rev, setRev] = useState(0);
@@ -143,10 +150,15 @@ export function JudgesAdmin({
     } finally { setBulkBusy(false); }
   }
 
-  // 예선/본선 Max O 를 전 심사위원에 일괄 적용. 빈 칸인 라운드는 변경하지 않음.
-  async function bulkApplyMaxVotes() {
+  // 예선/본선 상한을 전 심사위원에 일괄 적용. 빈 칸인 라운드는 변경하지 않음.
+  // field 로 O 상한(max_votes)과 M 상한(max_may_votes)을 갈라 쓴다 — 두 예산의
+  // 적용 절차가 똑같아서 함수를 둘로 복제하면 한쪽만 고치는 실수가 난다.
+  async function bulkApplyCaps(field: 'max_votes' | 'max_may_votes') {
     if (bulkBusy) return;
-    const pStr = bulkPrelim.trim(), sStr = bulkSemi.trim();
+    const isMay = field === 'max_may_votes';
+    const label = isMay ? 'Max M' : 'Max O';
+    const [pRaw, sRaw] = isMay ? [bulkPrelimMay, bulkSemiMay] : [bulkPrelim, bulkSemi];
+    const pStr = pRaw.trim(), sStr = sRaw.trim();
     if (pStr === '' && sStr === '') return;
     const clamp = (n: number) => Math.max(0, Math.min(999, Math.round(n)));
     const p = pStr === '' ? undefined : clamp(Number(pStr));
@@ -160,32 +172,37 @@ export function JudgesAdmin({
       for (const g of groups) {
         if (p !== undefined && g.idsByRound.prelim) {
           reqs.push(fetch(perRoundUrl('prelim', g.idsByRound.prelim), {
-            method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ max_votes: p }),
+            method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ [field]: p }),
           }));
         }
         if (sm !== undefined && g.idsByRound.semi) {
           reqs.push(fetch(perRoundUrl('semi', g.idsByRound.semi), {
-            method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ max_votes: sm }),
+            method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ [field]: sm }),
           }));
         }
       }
       const results = await Promise.all(reqs);
       const bad = results.find((r) => !r.ok);
-      if (bad) { setError(`Max O 일괄 적용 실패 (${bad.status})`); router.refresh(); return; }
-      setGroups((st) => st.map((g) => ({
-        ...g,
-        maxVotesByRound: {
-          ...g.maxVotesByRound,
+      if (bad) { setError(`${label} 일괄 적용 실패 (${bad.status})`); router.refresh(); return; }
+      setGroups((st) => st.map((g) => {
+        const patched = {
+          ...(isMay ? g.maxMayVotesByRound : g.maxVotesByRound),
           ...(p !== undefined ? { prelim: p } : {}),
           ...(sm !== undefined ? { semi: sm } : {}),
-        },
-        canonical: p !== undefined ? { ...g.canonical, max_votes: p } : g.canonical,
-      })));
+        };
+        return isMay
+          ? { ...g, maxMayVotesByRound: patched }
+          : {
+              ...g,
+              maxVotesByRound: patched,
+              canonical: p !== undefined ? { ...g.canonical, max_votes: p } : g.canonical,
+            };
+      }));
       setRev((v) => v + 1);
       const parts = [p !== undefined ? `예선 ${p}` : '', sm !== undefined ? `본선 ${sm}` : ''].filter(Boolean);
-      setNotice(`Max O 일괄 적용 — ${parts.join(' · ')} (${groups.length}명)`);
+      setNotice(`${label} 일괄 적용 — ${parts.join(' · ')} (${groups.length}명)`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'bulk max votes failed');
+      setError(e instanceof Error ? e.message : 'bulk caps failed');
     } finally { setBulkBusy(false); }
   }
 
@@ -256,9 +273,15 @@ export function JudgesAdmin({
     });
   }
 
-  // 라운드별 max_votes 패치 — mirror 가 아닌 per-round endpoint 사용.
+  // 라운드별 상한 패치 — mirror 가 아닌 per-round endpoint 사용.
   // 같은 심사위원이라도 예선/본선 정원이 달라 라운드별로 다른 cap 을 둘 수 있어야 한다.
-  function patchMaxVotes(group: JudgeGroup, round: JudgingRound, value: number | null) {
+  // field 로 O 상한과 M 상한을 갈라 쓴다(일괄 적용과 같은 이유).
+  function patchMaxVotes(
+    group: JudgeGroup,
+    round: JudgingRound,
+    value: number | null,
+    field: 'max_votes' | 'max_may_votes' = 'max_votes',
+  ) {
     const judgeId = group.idsByRound[round];
     if (!judgeId) {
       setError(`No judge row for round=${round}`);
@@ -270,7 +293,7 @@ export function JudgesAdmin({
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ max_votes: value }),
+          body: JSON.stringify({ [field]: value }),
         }
       );
       if (!res.ok) {
@@ -281,6 +304,9 @@ export function JudgesAdmin({
       }
       setGroups((s) => s.map((g) => {
         if (g.display_order !== group.display_order) return g;
+        if (field === 'max_may_votes') {
+          return { ...g, maxMayVotesByRound: { ...g.maxMayVotesByRound, [round]: value } };
+        }
         return {
           ...g,
           maxVotesByRound: { ...g.maxVotesByRound, [round]: value },
@@ -339,8 +365,28 @@ export function JudgesAdmin({
                   onChange={(e) => setBulkSemi(e.target.value)}
                   placeholder="—" className="w-14 font-mono text-center" />
               </label>
-              <Button variant="primary" onClick={bulkApplyMaxVotes}
+              <Button variant="primary" onClick={() => bulkApplyCaps('max_votes')}
                 disabled={bulkBusy || pending || groups.length === 0 || (bulkPrelim.trim() === '' && bulkSemi.trim() === '')}>
+                적용
+              </Button>
+            </div>
+            {/* MAX M 일괄 — 노란 표(0.5) 상한. O 와 예산이 달라 입력란을 따로 둔다. */}
+            <div className="flex items-center gap-1.5 rounded border border-may/40 bg-may/5 px-2 py-1">
+              <span className="text-[11px] uppercase tracking-wide text-may mr-0.5">Max&nbsp;M</span>
+              <label className="flex items-center gap-1 text-[11px] text-ink2">
+                <span>예선</span>
+                <Input type="number" min={0} max={999} value={bulkPrelimMay}
+                  onChange={(e) => setBulkPrelimMay(e.target.value)}
+                  placeholder="—" className="w-14 font-mono text-center" />
+              </label>
+              <label className="flex items-center gap-1 text-[11px] text-ink2">
+                <span>본선</span>
+                <Input type="number" min={0} max={999} value={bulkSemiMay}
+                  onChange={(e) => setBulkSemiMay(e.target.value)}
+                  placeholder="—" className="w-14 font-mono text-center" />
+              </label>
+              <Button variant="primary" onClick={() => bulkApplyCaps('max_may_votes')}
+                disabled={bulkBusy || pending || groups.length === 0 || (bulkPrelimMay.trim() === '' && bulkSemiMay.trim() === '')}>
                 적용
               </Button>
             </div>
@@ -370,6 +416,7 @@ export function JudgesAdmin({
                 <th className="text-left px-3 py-2 min-w-[10rem]">Specialty</th>
                 <th className="text-left px-3 py-2 w-24">Target</th>
                 <th className="text-left px-3 py-2 w-28">Max&nbsp;O</th>
+                <th className="text-left px-3 py-2 w-28 text-may">Max&nbsp;M</th>
                 <th className="text-left px-3 py-2 w-32">Activity</th>
                 <th className="text-right px-3 py-2 w-32">Actions</th>
               </tr>
@@ -386,12 +433,15 @@ export function JudgesAdmin({
                 const prelimVotes = voteCounts[g.idsByRound.prelim ?? ''] ?? 0;
                 const semiVotes = voteCounts[g.idsByRound.semi ?? ''] ?? 0;
                 const finalVotes = voteCounts[g.idsByRound.final ?? ''] ?? 0;
+                const prelimMay = mayCounts[g.idsByRound.prelim ?? ''] ?? 0;
+                const semiMay = mayCounts[g.idsByRound.semi ?? ''] ?? 0;
                 return (
                   <JudgeRowEditor
                     key={`${g.display_order}-${rev}`}
                     contestId={contestId}
                     group={g}
                     voteCounts={{ prelim: prelimVotes, semi: semiVotes, final: finalVotes }}
+                    mayCounts={{ prelim: prelimMay, semi: semiMay }}
                     prelimQuota={prelimQuotaPerRole}
                     semiQuota={semiQuotaPerRole}
                     pending={pending}
@@ -423,7 +473,7 @@ export function JudgesAdmin({
                     className="w-full"
                   />
                 </td>
-                <td className="px-3 py-3 text-xs text-ink2" colSpan={5}>
+                <td className="px-3 py-3 text-xs text-ink2" colSpan={6}>
                   Order auto-assigned to {(groups.at(-1)?.display_order ?? 0) + 1}. 한 번 추가하면 예선·본선·결승에 동시 등록됩니다. 사진은 추가 후 업로드.
                 </td>
                 <td className="px-3 py-3 text-right">
@@ -440,7 +490,9 @@ export function JudgesAdmin({
       <p className="text-xs text-ink2">
         💡 한 명의 심사위원이 예선·본선·결승을 모두 심사합니다. 이름·별칭·전문·연락처·Max O 등 모든 프로필 편집은
         세 라운드에 자동 동기화되며, 삭제 시에도 세 라운드의 모든 vote 와 함께 제거됩니다.
-        Activity 는 라운드별 O 표 수 / 통과 정원(대회 정보의 prelim/semi pass-per-role) 으로 표시됩니다.
+        Activity 는 라운드별 O 표 수 / 통과 정원(대회 정보의 prelim/semi pass-per-role) 으로 표시되며,
+        노란 <span className="text-may">+M</span> 은 그 라운드에서 준 MAY(0.5표) 개수입니다.
+        Max&nbsp;M 은 O 상한과 별개 예산이라 한쪽을 다 써도 다른 쪽은 남습니다.
       </p>
     </div>
   );
@@ -450,6 +502,7 @@ function JudgeRowEditor({
   contestId,
   group,
   voteCounts,
+  mayCounts,
   prelimQuota,
   semiQuota,
   pending,
@@ -464,13 +517,18 @@ function JudgeRowEditor({
   contestId: string;
   group: JudgeGroup;
   voteCounts: { prelim: number; semi: number; final: number };
+  mayCounts: { prelim: number; semi: number };
   prelimQuota: number;
   semiQuota: number;
   pending: boolean;
   expanded: boolean;
   onToggle: () => void;
   onPatch: (patch: Partial<JudgeRow>) => void;
-  onPatchMaxVotes: (round: JudgingRound, value: number | null) => void;
+  onPatchMaxVotes: (
+    round: JudgingRound,
+    value: number | null,
+    field?: 'max_votes' | 'max_may_votes',
+  ) => void;
   onSetHead: () => void;
   onDelete: () => void;
   onPhotoUploaded: (url: string) => void;
@@ -491,6 +549,11 @@ function JudgeRowEditor({
   const [maxVotes, setMaxVotes] = useState<{ prelim: number | null; semi: number | null }>({
     prelim: group.maxVotesByRound.prelim ?? null,
     semi: group.maxVotesByRound.semi ?? null,
+  });
+  // M(0.5표) 상한 — O 와 별개 예산이라 입력도 따로 받는다.
+  const [maxMay, setMaxMay] = useState<{ prelim: number | null; semi: number | null }>({
+    prelim: group.maxMayVotesByRound.prelim ?? null,
+    semi: group.maxMayVotesByRound.semi ?? null,
   });
 
   // 사진 업로드 상태
@@ -681,22 +744,59 @@ function JudgeRowEditor({
             </label>
           </div>
         </td>
+        <td className="px-2 py-2">
+          {/* M(0.5표) 상한 — 비우면 무제한. O 예산과 따로 소진된다. */}
+          <div className="flex flex-col gap-1">
+            <label className="flex items-center gap-1 text-[10px] text-may/70" title="예선 M(0.5표) 상한 — 비우면 무제한">
+              <span className="w-6 shrink-0">예선</span>
+              <Input
+                type="number" min={0} max={999}
+                value={maxMay.prelim ?? ''}
+                onChange={(e) => setMaxMay((s) => ({ ...s, prelim: e.target.value === '' ? null : Number(e.target.value) }))}
+                onBlur={() => {
+                  if (maxMay.prelim !== (group.maxMayVotesByRound.prelim ?? null)) {
+                    onPatchMaxVotes('prelim', maxMay.prelim, 'max_may_votes');
+                  }
+                }}
+                placeholder="∞"
+                className="w-14 font-mono text-center"
+              />
+            </label>
+            <label className="flex items-center gap-1 text-[10px] text-may/70" title="본선 M(0.5표) 상한 — 비우면 무제한">
+              <span className="w-6 shrink-0">본선</span>
+              <Input
+                type="number" min={0} max={999}
+                value={maxMay.semi ?? ''}
+                onChange={(e) => setMaxMay((s) => ({ ...s, semi: e.target.value === '' ? null : Number(e.target.value) }))}
+                onBlur={() => {
+                  if (maxMay.semi !== (group.maxMayVotesByRound.semi ?? null)) {
+                    onPatchMaxVotes('semi', maxMay.semi, 'max_may_votes');
+                  }
+                }}
+                placeholder="∞"
+                className="w-14 font-mono text-center"
+              />
+            </label>
+          </div>
+        </td>
         <td className="px-3 py-2 text-xs">
           {/* 예선/본선 = O 표 X/정원 · 결승 = 채점한 참가자 수 */}
           <div className="space-y-0.5 font-mono leading-tight">
-            <div title="예선 O 표 / 통과 정원">
+            <div title="예선 O 표 / 통과 정원 · M 은 0.5표">
               <span className="text-ink2/60 mr-1">예선</span>
               <span className={voteCounts.prelim > 0 ? 'text-ok' : 'text-ink2/40'}>
                 {voteCounts.prelim}
               </span>
               <span className="text-ink2/40"> / {prelimQuota}</span>
+              {mayCounts.prelim > 0 && <span className="text-may ml-1">+M{mayCounts.prelim}</span>}
             </div>
-            <div title="본선 O 표 / 통과 정원">
+            <div title="본선 O 표 / 통과 정원 · M 은 0.5표">
               <span className="text-ink2/60 mr-1">본선</span>
               <span className={voteCounts.semi > 0 ? 'text-ok' : 'text-ink2/40'}>
                 {voteCounts.semi}
               </span>
               <span className="text-ink2/40"> / {semiQuota}</span>
+              {mayCounts.semi > 0 && <span className="text-may ml-1">+M{mayCounts.semi}</span>}
             </div>
             {voteCounts.final > 0 && (
               <div title="결승 채점 참가자 수">

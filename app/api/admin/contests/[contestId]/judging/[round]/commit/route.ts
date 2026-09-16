@@ -10,7 +10,8 @@ import { z } from 'zod';
 import { getSupabaseAdmin } from '@/lib/db/client';
 import { selectJudgeVotesAll } from '@/lib/db/queries';
 import { resolveActiveDefs } from '@/lib/db/scoring';
-import type { ScoringItemKey, ContestRow } from '@/lib/db/types';
+import type { ScoringItemKey, ContestRow, VoteMark } from '@/lib/db/types';
+import { markValue, roundVotes } from '@/lib/vote/mark';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -70,11 +71,15 @@ export async function POST(req: Request, ctx: RouteCtx) {
   if (judgeIds.length > 0) {
     // 1000행 제한 회피 — 전체 votes 페이지네이션.
     const votes = await selectJudgeVotesAll(sb, judgeIds, 'participant_num, vote_mark');
-    for (const v of votes as unknown as { participant_num: string; vote_mark: 'O' | 'X' | null }[]) {
-      if (v.vote_mark === 'O') {
-        voteCount.set(v.participant_num, (voteCount.get(v.participant_num) ?? 0) + 1);
+    // O=1 · M=0.5 — 값 환산은 lib/vote/mark.ts 한 곳에서만 한다.
+    for (const v of votes as unknown as { participant_num: string; vote_mark: VoteMark | null }[]) {
+      const val = markValue(v.vote_mark);
+      if (val > 0) {
+        voteCount.set(v.participant_num, (voteCount.get(v.participant_num) ?? 0) + val);
       }
     }
+    // 0.5 합산에 붙는 부동소수 오차를 여기서 한 번 털어 낸다.
+    for (const [k, n] of voteCount) voteCount.set(k, roundVotes(n));
   }
 
   // 3) Eligible pool — prelim: all leader/follower participants

@@ -10,7 +10,8 @@ import { getSupabaseAdmin } from '@/lib/db/client';
 import { selectJudgeVotesAll } from '@/lib/db/queries';
 import { resolveActiveDefs } from '@/lib/db/scoring';
 import { computeStandings, type StandingInput } from '@/lib/judging/standings';
-import type { ScoringItemKey } from '@/lib/db/types';
+import type { ScoringItemKey, VoteMark } from '@/lib/db/types';
+import { markValue, roundVotes } from '@/lib/vote/mark';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -93,12 +94,15 @@ export async function GET(_req: Request, ctx: RouteCtx) {
   } else {
     if (judgeIds.length) {
       const votes = await selectJudgeVotesAll(sb, judgeIds, 'judge_id, participant_num, vote_mark');
-      for (const v of votes as Array<{ judge_id: string; participant_num: string; vote_mark: 'O' | 'X' | null }>) {
-        if (v.vote_mark !== 'O') continue;
+      for (const v of votes as Array<{ judge_id: string; participant_num: string; vote_mark: VoteMark | null }>) {
+        const val = markValue(v.vote_mark);
+        if (val <= 0) continue;
         const num = v.participant_num;
-        valueByNum.set(num, (valueByNum.get(num) ?? 0) + 1);
+        valueByNum.set(num, roundVotes((valueByNum.get(num) ?? 0) + val));
         scoredNums.add(num);
-        if (headIds.has(v.judge_id)) headONums.add(num);
+        // 헤드 타이브레이크는 종전대로 O(1표)만 본다 — 반 표까지 넣으면
+        // '헤드가 밀어 준 사람' 의 뜻이 흐려진다.
+        if (headIds.has(v.judge_id) && v.vote_mark === 'O') headONums.add(num);
       }
     }
   }

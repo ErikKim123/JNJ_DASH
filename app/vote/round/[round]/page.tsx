@@ -83,6 +83,12 @@ export default function RoundPage() {
   const [maxPrelimVotes, setMaxPrelimVotes] = useState<number | undefined>(
     judge?.maxPrelimVotes,
   );
+  const [maxPrelimMayVotes, setMaxPrelimMayVotes] = useState<number | undefined>(
+    judge?.maxPrelimMayVotes,
+  );
+  const [maxSemiMayVotes, setMaxSemiMayVotes] = useState<number | undefined>(
+    judge?.maxSemiMayVotes,
+  );
   const [maxSemiVotes, setMaxSemiVotes] = useState<number | undefined>(
     judge?.maxSemiVotes,
   );
@@ -118,6 +124,8 @@ export default function RoundPage() {
             // round 별 cap 도 fresh — localStorage 의 옛 값을 덮어쓴다.
             setMaxPrelimVotes(me.maxPrelimVotes);
             setMaxSemiVotes(me.maxSemiVotes);
+            setMaxPrelimMayVotes(me.maxPrelimMayVotes);
+            setMaxSemiMayVotes(me.maxSemiMayVotes);
           }
         }
         setLoaded({ kind: 'ready', contestants: cs });
@@ -215,6 +223,8 @@ export default function RoundPage() {
             sheetId={competition?.id}
             maxPrelimVotes={maxPrelimVotes}
             maxSemiVotes={maxSemiVotes}
+            maxPrelimMayVotes={maxPrelimMayVotes}
+            maxSemiMayVotes={maxSemiMayVotes}
             voteTarget={voteTarget}
             lifecycle={lifecycle}
             finalCriteria={finalCriteria}
@@ -262,6 +272,8 @@ function RoundBody({
   sheetId,
   maxPrelimVotes,
   maxSemiVotes,
+  maxPrelimMayVotes,
+  maxSemiMayVotes,
   voteTarget,
   lifecycle,
   finalCriteria,
@@ -272,6 +284,8 @@ function RoundBody({
   sheetId?: string;
   maxPrelimVotes?: number;
   maxSemiVotes?: number;
+  maxPrelimMayVotes?: number;
+  maxSemiMayVotes?: number;
   voteTarget: JudgeVoteTarget;
   lifecycle: RoundLifecycle;
   finalCriteria: FinalCriterion[];
@@ -303,6 +317,7 @@ function RoundBody({
     );
   }
   const maxVotes = round === 'prelim' ? maxPrelimVotes : maxSemiVotes;
+  const maxMayVotes = round === 'prelim' ? maxPrelimMayVotes : maxSemiMayVotes;
   return (
     <PassFailBody
       round={round}
@@ -310,6 +325,7 @@ function RoundBody({
       judgeId={judgeId}
       sheetId={sheetId}
       maxVotes={maxVotes}
+      maxMayVotes={maxMayVotes}
       lifecycle={lifecycle}
       {...toastApi}
     />
@@ -322,7 +338,7 @@ function RoundBody({
 
 // 'absent' is a sheet-side status only — judges set pass/fail via UI; absent
 // (Non) is recorded externally and shown via the read-only StatusBadge.
-type Verdict = 'pass' | 'fail';
+type Verdict = 'pass' | 'may' | 'fail';
 type PassFailDraft = Record<string, Verdict | null>;
 
 function PassFailBody({
@@ -331,6 +347,7 @@ function PassFailBody({
   judgeId,
   sheetId,
   maxVotes,
+  maxMayVotes,
   lifecycle,
   toasts,
   push,
@@ -341,6 +358,7 @@ function PassFailBody({
   judgeId: string;
   sheetId?: string;
   maxVotes?: number;
+  maxMayVotes?: number;
   lifecycle: RoundLifecycle;
   toasts: ReturnType<typeof useToasts>['toasts'];
   push: ReturnType<typeof useToasts>['push'];
@@ -400,9 +418,16 @@ function PassFailBody({
       votableContestants.filter((c) => draft[c.id] === 'pass').length,
     [votableContestants, draft],
   );
+  // MAY(0.5표)는 O 와 예산이 따로다 — 노란 표를 몇 장 줄지는 O 를 몇 장 줄지와
+  // 다른 결정이라, 한쪽을 다 써도 다른 쪽은 남아 있어야 한다.
+  const mayCount = useMemo(
+    () => votableContestants.filter((c) => draft[c.id] === 'may').length,
+    [votableContestants, draft],
+  );
   // Vote-cap accounting. When `maxVotes` is undefined (legacy judge in
   // localStorage), treat as unlimited — Infinity remaining, gating disabled.
   const cap = typeof maxVotes === 'number' ? maxVotes : Infinity;
+  const mayCap = typeof maxMayVotes === 'number' ? maxMayVotes : Infinity;
   const remaining = cap - voteOnCount;
   const capExhausted = remaining <= 0 && Number.isFinite(cap);
 
@@ -418,6 +443,20 @@ function PassFailBody({
       push(
         'error',
         `Vote cap (${cap}) exceeded — turn OFF another contestant's vote first.`,
+      );
+      return;
+    }
+    // MAY 도 같은 방식으로 막는다. 메시지를 따로 두는 이유는 '어느 쪽 예산이
+    // 찼는지' 가 바로 읽혀야 심사위원이 무엇을 내릴지 판단하기 때문이다.
+    if (
+      next === 'may' &&
+      current !== 'may' &&
+      Number.isFinite(mayCap) &&
+      mayCount >= mayCap
+    ) {
+      push(
+        'error',
+        `MAY cap (${mayCap}) exceeded — set another contestant's MAY to OFF first.`,
       );
       return;
     }
@@ -471,6 +510,8 @@ function PassFailBody({
       <VoteCounter
         used={voteOnCount}
         cap={cap}
+        mayUsed={mayCount}
+        mayCap={mayCap}
         round={round}
       />
       <div
@@ -1023,7 +1064,7 @@ function criteriaCols(n: number): number {
 }
 
 function outcomeToVerdict(o: RoundStatus | null | undefined): Verdict | null {
-  if (o === 'pass' || o === 'fail') return o;
+  if (o === 'pass' || o === 'may' || o === 'fail') return o;
   // READY (or absent / unknown) defaults the VOTE switch to OFF (= 'fail');
   // the judge explicitly flips to ON (= 'pass') to cast a vote.
   return 'fail';
@@ -1189,6 +1230,8 @@ function StatusBadge({ value }: { value: RoundStatus }) {
   const palette: Record<RoundStatus, { bg: string; fg: string }> = {
     ready: { bg: 'var(--jnj-grey-100)', fg: 'var(--jnj-grey-600)' },
     pass: { bg: 'var(--jnj-green)', fg: 'var(--jnj-white)' },
+    // MAY 는 노랑 — 밝은 바탕이라 글자는 검정이어야 읽힌다.
+    may: { bg: 'var(--jnj-yellow)', fg: 'var(--jnj-black)' },
     fail: { bg: 'var(--jnj-red)', fg: 'var(--jnj-white)' },
     absent: { bg: 'var(--jnj-grey-500)', fg: 'var(--jnj-white)' },
   };
@@ -1302,16 +1345,22 @@ function ProgressLine({ done, total }: { done: number; total: number }) {
 function VoteCounter({
   used,
   cap,
+  mayUsed,
+  mayCap,
   round,
 }: {
   used: number;
   cap: number;
+  mayUsed: number;
+  mayCap: number;
   round: Exclude<Round, 'final'>;
 }) {
   // No cap configured for this judge → hide counter (legacy / missing column).
-  if (!Number.isFinite(cap)) return null;
-  const remaining = Math.max(0, cap - used);
-  const exhausted = remaining === 0;
+  // O 상한이 없어도 MAY 상한만 걸려 있으면 보여 준다 — 둘은 별개 예산이다.
+  if (!Number.isFinite(cap) && !Number.isFinite(mayCap)) return null;
+  const hasCap = Number.isFinite(cap);
+  const remaining = hasCap ? Math.max(0, cap - used) : used;
+  const exhausted = hasCap && remaining === 0;
   return (
     <section
       aria-label="VOTE budget"
@@ -1336,7 +1385,7 @@ function VoteCounter({
             color: 'var(--jnj-text-secondary)',
           }}
         >
-          {round === 'prelim' ? 'Prelim' : 'Semi'} · Votes Left
+          {round === 'prelim' ? 'Prelim' : 'Semi'} · {hasCap ? 'Votes Left' : 'Votes'}
         </span>
         <span
           style={{
@@ -1360,7 +1409,7 @@ function VoteCounter({
               color: 'var(--jnj-text-secondary)',
             }}
           >
-            / {cap}
+            {hasCap ? `/ ${cap}` : 'CAST'}
           </span>
         </span>
       </div>
@@ -1395,6 +1444,29 @@ function VoteCounter({
         >
           {used}
         </span>
+        <span
+          className="jnj-small"
+          style={{
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            color: 'var(--jnj-text-secondary)',
+          }}
+        >
+          May{Number.isFinite(mayCap) ? ` · ${mayUsed}/${mayCap}` : ''}
+        </span>
+        {!Number.isFinite(mayCap) && (
+          <span
+            style={{
+              fontFamily: 'var(--jnj-font-text-medium)',
+              fontSize: 'var(--jnj-size-h3)',
+              fontWeight: 500,
+              color: 'var(--jnj-yellow-500, #FCA600)',
+              fontVariantNumeric: 'tabular-nums',
+            }}
+          >
+            {mayUsed}
+          </span>
+        )}
         {exhausted && (
           <span
             className="jnj-small"

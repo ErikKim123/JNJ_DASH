@@ -10,6 +10,7 @@ import { Fragment, useEffect, useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Badge, Button, Input, Select } from './ui';
 import type { ParticipantRow, ParticipantRole, QualifierRow } from '@/lib/db/types';
+import { formatVotes } from '@/lib/vote/mark';
 
 const ROLE_LABEL: Record<ParticipantRole, string> = {
   leader: 'Leader',
@@ -290,7 +291,7 @@ export function QualifiersPanel({
                     </td>
                     <td className="px-3 py-2 text-sm">
                       <span className={`font-mono ${inQuota ? 'text-accent font-semibold' : 'text-ink2'}`}>
-                        {r.votes}
+                        {formatVotes(r.votes)}
                       </span>
                       <span className="text-ink2/50 text-xs ml-1">#{rank}</span>
                     </td>

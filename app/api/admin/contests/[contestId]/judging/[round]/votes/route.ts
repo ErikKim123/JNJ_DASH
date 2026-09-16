@@ -11,7 +11,7 @@ export const runtime = 'nodejs';
 const Body = z.object({
   judge_id: z.string().uuid(),
   participant_num: z.string().min(1).max(32),
-  vote_mark: z.enum(['O', 'X']).nullable().optional(),
+  vote_mark: z.enum(['O', 'M', 'X']).nullable().optional(),
   basic_score: z.number().min(0).max(999).nullable().optional(),
   connectivity_score: z.number().min(0).max(999).nullable().optional(),
   musicality_score: z.number().min(0).max(999).nullable().optional(),

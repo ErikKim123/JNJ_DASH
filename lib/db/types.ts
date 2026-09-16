@@ -19,7 +19,12 @@ export type PairingStatus = 'draft' | 'confirmed';
 export type QualifierRoundDb = 'prelim' | 'semi';
 export type FinalRole = 'leader' | 'follower';
 export type JudgingRound = 'prelim' | 'semi' | 'final';
-export type VoteMark = 'O' | 'X';
+/**
+ * 예선/본선 판정 마크.
+ *   O = 1표(통과) · M = 0.5표(MAY — 동점을 가르기 위한 중간 판정) · X = 0표
+ * 표 값 환산은 lib/vote/mark.ts 의 MARK_VALUE 한 곳에서만 한다.
+ */
+export type VoteMark = 'O' | 'M' | 'X';
 
 export interface ContestRow {
   id: string;
@@ -209,6 +214,8 @@ export interface JudgeRow {
   memo: string;
   /** 이 라운드에서 줄 수 있는 최대 O 표 수. null = 제한 없음. */
   max_votes: number | null;
+  /** 이 라운드에서 줄 수 있는 최대 M(0.5표) 수. null = 제한 없음. O 상한과 별개로 센다. */
+  max_may_votes: number | null;
   /** 심사위원 프로필 사진 URL (Supabase Storage public CDN). 비어있으면 미등록. */
   photo_url: string;
   /** 헤드(타이브레이커) 심사위원 여부 — 경계 동점 시 이 심사위원의 O 표로 진출자 우선 선택. 대회당 1명. */

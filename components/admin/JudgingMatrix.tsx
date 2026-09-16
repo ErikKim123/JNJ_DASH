@@ -19,6 +19,7 @@ import type {
   VoteMark,
   RoundStatus,
 } from '@/lib/db/types';
+import { MARK_VALUE, roundVotes, formatVotes } from '@/lib/vote/mark';
 import {
   resolveActiveDefs,
   aggregateScores,
@@ -138,20 +139,22 @@ export function JudgingMatrix({
 
   // Aggregates per participant — totals for display
   const totals = useMemo(() => {
-    const t = new Map<string, { o: number; x: number; total: number; avg: number | null }>();
+    const t = new Map<string, { o: number; m: number; x: number; score: number; total: number; avg: number | null }>();
     for (const e of eligible) {
-      let o = 0, x = 0, sum = 0, cnt = 0;
+      let o = 0, m = 0, x = 0, sum = 0, cnt = 0;
       for (const j of judges) {
         const v = voteMap.get(`${j.id}:${e.num}`);
         if (!v) continue;
         if (v.vote_mark === 'O') o++;
+        else if (v.vote_mark === 'M') m++;
         else if (v.vote_mark === 'X') x++;
         if (isFinal) {
           const agg = aggregateScores(v, activeKeys);
           sum += agg.sum; cnt += agg.cnt;
         }
       }
-      t.set(e.num, { o, x, total: sum, avg: cnt > 0 ? sum / cnt : null });
+      // score = 실제 득표(O 1표 + M 0.5표). 순위는 이 값으로 매긴다.
+      t.set(e.num, { o, m, x, score: roundVotes(o + m * MARK_VALUE.M), total: sum, avg: cnt > 0 ? sum / cnt : null });
     }
     return t;
   }, [judges, voteMap, eligible, isFinal, activeKeys]);
@@ -163,16 +166,17 @@ export function JudgingMatrix({
     return s;
   }, [eligible]);
 
-  // 점수 평가 — prelim/semi 는 O 카운트, final 은 total(없으면 avg). rank + boundary tie 공용.
+  // 점수 평가 — prelim/semi 는 득표(O 1 + M 0.5), final 은 total(없으면 avg). rank + boundary tie 공용.
   // 헬퍼는 -Infinity 로 처리 → 정렬·rank 대상에서 자동 배제 (commit 로직과 일치).
   const scoreOf = useMemo(() => (num: string): number => {
     if (helperSet.has(num)) return -Infinity;
     const t = totals.get(num);
     if (!t) return -Infinity;
     if (isFinal) return t.total > 0 ? t.total : (t.avg ?? -Infinity);
-    // prelim/semi : O가 0이면 ranking 대상이 아님 (commit 로직과 일치 — "No O vote → not in qualifiers list").
+    // prelim/semi : 득표가 0이면 ranking 대상이 아님 (commit 로직과 일치 — "표 없음 → 통과자 목록에 없음").
     // 그렇지 않으면 0표 동점자가 정원 안으로 흘러들어와 통과 인원이 부풀려진다.
-    return t.o > 0 ? t.o : -Infinity;
+    // M 만 받은 사람도 0.5표라 대상에 들어온다 — 그게 반 표를 만든 이유다.
+    return t.score > 0 ? t.score : -Infinity;
   }, [totals, isFinal, helperSet]);
 
   // 정원 경계 동점자 — rank == maxPerRole 의 점수와 rank == maxPerRole+1 의 점수가 같으면
@@ -630,9 +634,12 @@ export function JudgingMatrix({
     });
   }
 
+  // 클릭 순환: · → O → M → X → · — 가장 자주 쓰는 O 가 첫 클릭에 오고,
+  // 그 다음이 반 표(M), 마지막이 명시적 탈락(X)이다.
   function cycleMark(judgeId: string, num: string) {
     const cur = voteMap.get(`${judgeId}:${num}`)?.vote_mark ?? null;
-    const next: VoteMark | null = cur == null ? 'O' : cur === 'O' ? 'X' : null;
+    const next: VoteMark | null =
+      cur == null ? 'O' : cur === 'O' ? 'M' : cur === 'M' ? 'X' : null;
     // O 투표 개수 제한 — 각 심사위원의 'O'(통과) 표를 역할별 통과 정원(maxPerRole)까지만 허용.
     // prelim/semi 에서만 적용(final 은 점수제), 헬퍼는 정원 비대상이라 제외.
     if (!isFinal && next === 'O') {
@@ -699,7 +706,9 @@ export function JudgingMatrix({
           row['AVG'] = tot?.avg != null ? Number(tot.avg.toFixed(2)) : '';
         } else {
           row['O'] = tot?.o ?? 0;
+          row['M'] = tot?.m ?? 0;
           row['X'] = tot?.x ?? 0;
+          row['표'] = tot?.score ?? 0;
         }
         row['RANK'] = e.isHelper ? '' : (rank ?? '');
         const inQuota = !e.isHelper && rank != null && rank <= maxPerRole;
@@ -712,7 +721,9 @@ export function JudgingMatrix({
         return row;
       });
 
-      const tailCols = isFinal ? ['TOTAL', 'AVG', 'RANK', 'RESULT'] : ['O', 'X', 'RANK', 'RESULT'];
+      const tailCols = isFinal
+        ? ['TOTAL', 'AVG', 'RANK', 'RESULT']
+        : ['O', 'M', 'X', '표', 'RANK', 'RESULT'];
       const header = ['#', 'TEAM', 'ROLE', ...judgeNames, ...tailCols];
       const ws = XLSX.utils.json_to_sheet(data, { header });
       ws['!cols'] = [
@@ -966,10 +977,15 @@ export function JudgingMatrix({
                           )}
                         </span>
                       ) : (
-                        <span>
+                        <span title="O / M / X · 괄호는 득표 합계(O 1표 + M 0.5표)">
                           <span className="text-ok">{agg?.o ?? 0}</span>
                           <span className="mx-1">/</span>
+                          <span className="text-may">{agg?.m ?? 0}</span>
+                          <span className="mx-1">/</span>
                           <span className="text-danger">{agg?.x ?? 0}</span>
+                          {(agg?.m ?? 0) > 0 && (
+                            <span className="text-ink2/60 ml-1">({formatVotes(agg?.score)})</span>
+                          )}
                         </span>
                       )}
                     </td>
@@ -1185,7 +1201,7 @@ export function JudgingMatrix({
                   <div key={g.role} className="rounded border border-border bg-bg2/40 p-3">
                     <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
                       <span className="text-sm font-semibold">
-                        {roleLabel} · {t('matrix.tieScore')} {g.tieScore} {isFinal ? t('matrix.tiePts') : 'O'}
+                        {roleLabel} · {t('matrix.tieScore')} {isFinal ? g.tieScore : formatVotes(g.tieScore)} {isFinal ? t('matrix.tiePts') : '표'}
                       </span>
                       <span className={`text-xs font-mono ${selected === g.slots ? 'text-ok' : 'text-danger'}`}>
                         {t('matrix.tieAdvance')} {selected} / {g.slots}
@@ -1450,6 +1466,7 @@ function JudgeHeader({
 function MarkCell({ mark, onClick }: { mark: VoteMark | null; onClick: () => void }) {
   const tone =
     mark === 'O' ? 'bg-ok/15 text-ok border-ok/40' :
+    mark === 'M' ? 'bg-may/15 text-may border-may/40' :
     mark === 'X' ? 'bg-danger/15 text-danger border-danger/40' :
     'bg-bg2/40 text-ink2/40 border-border hover:border-accent';
   return (
