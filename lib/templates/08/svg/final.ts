@@ -3,7 +3,7 @@ import { prepSvg } from './prep';
 import { wrapupSvg } from './wrapup';
 import {
   shell, topBar, footBar, heading, neonCard, label, accentNumber, strong, rolePill, rankMark, photoFrame,
-  clipBox, lightRays, sparkle, accentRule, fadeUp,
+  clipBox, sparkle, accentRule, fadeUp,
   SOFT, ACCENT, FRAME, CX, MX, RX, f, type Role,
 } from '../common';
 
@@ -153,7 +153,6 @@ export function finalPairingSvg(): string {
   ).join('');
 
   return shell(`
-    ${lightRays(CX, 318)}
     ${topBar()}
     ${twinkles}
     ${label(CX + 7, 196, 'INVITATIONAL', { size: 16, tracking: 14 })}

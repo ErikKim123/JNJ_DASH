@@ -528,33 +528,6 @@ export function fadeUp(delay: number, inner: string, dy = 16): string {
     </g>`;
 }
 
-/** 제목 뒤에서 천천히 도는 조명 방사선 (웜 앰버). */
-export function lightRays(cx: number, cy: number, count = 18, len = 820): string {
-  const id = svgId('t11ray', cx, cy);
-  let body = '';
-  for (let i = 0; i < count; i++) {
-    const a = (i / count) * Math.PI * 2;
-    const spread = 0.055;
-    const x1 = cx + Math.cos(a - spread) * len;
-    const y1 = cy + Math.sin(a - spread) * len;
-    const x2 = cx + Math.cos(a + spread) * len;
-    const y2 = cy + Math.sin(a + spread) * len;
-    body += `<polygon points="${f(cx)},${f(cy)} ${f(x1)},${f(y1)} ${f(x2)},${f(y2)}"/>`;
-  }
-  return `
-    <defs>
-      <radialGradient id="${id}" gradientUnits="userSpaceOnUse" cx="${f(cx)}" cy="${f(cy)}" r="${len}">
-        <stop offset="0" stop-color="#FFD9A0" stop-opacity="0.14"/>
-        <stop offset="0.55" stop-color="#FFD9A0" stop-opacity="0.03"/>
-        <stop offset="1" stop-color="#FFD9A0" stop-opacity="0"/>
-      </radialGradient>
-    </defs>
-    <g fill="url(#${id})">
-      <animateTransform attributeName="transform" type="rotate" from="0 ${f(cx)} ${f(cy)}" to="360 ${f(cx)} ${f(cy)}" dur="120s" repeatCount="indefinite"/>
-      ${body}
-    </g>`;
-}
-
 /** 4갈래 반짝이 — 불꽃. */
 export function sparkle(cx: number, cy: number, r: number, fill = ACCENT_PALE): string {
   const k = r * 0.22;
