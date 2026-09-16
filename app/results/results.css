@@ -75,40 +75,14 @@
 .res-title { font-size: clamp(32px, 8vw, 64px); margin: 0; line-height: 1.02; }
 .res-sub { color: var(--jnj-text-secondary); margin: 0; }
 
-/* ── 탭 (CHAMPION / RESULTS) ────────────────────────────── */
-.res-tabs { display: flex; justify-content: center; gap: var(--jnj-space-2); flex-wrap: wrap; }
-.res-tab {
-  appearance: none;
-  border: 1px solid var(--jnj-border-secondary);
-  background: transparent;
-  color: var(--jnj-text-secondary);
-  border-radius: var(--jnj-radius-pill);
-  padding: 10px 22px;
-  letter-spacing: 0.08em;
-  font-family: var(--jnj-font-display);
-  font-size: 14px;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-}
-.res-tab:hover { border-color: var(--jnj-border-active); color: var(--jnj-text-primary); }
-.res-tab[aria-selected='true'] {
-  background: var(--jnj-black);
-  border-color: var(--jnj-black);
-  color: var(--jnj-text-inverse);
-}
-
-/* ── 도구 줄 (탭 + 이미지 저장) ──────────────────────────── */
-/* 탭은 가운데를 지키고 저장 버튼만 오른쪽에 둔다. 좁은 화면에서는 저장이 아래로 내려온다. */
+/* ── 도구 줄 (이미지 저장) ───────────────────────────────── */
+/* 시상대와 표를 한 장에 잇고 나서는 고를 것이 없다 — 저장 버튼 하나만 가운데 둔다. */
 .res-toolbar {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--jnj-space-3);
   flex-wrap: wrap;
-  position: relative;
-}
-@media (min-width: 720px) {
-  .res-toolbar > span { position: absolute; right: 0; }
 }
 .res-save {
   appearance: none;
