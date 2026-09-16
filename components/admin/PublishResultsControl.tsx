@@ -10,13 +10,16 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from './ui';
+import { PublishWolfDialog } from './PublishWolfDialog';
 import { useT } from '@/lib/i18n/LocaleContext';
 
 export function PublishResultsControl({
   contestId,
+  contestName,
   published,
 }: {
   contestId: string;
+  contestName: string;
   published: boolean;
 }) {
   const t = useT();
@@ -24,6 +27,9 @@ export function PublishResultsControl({
   const [pending, startTransition] = useTransition();
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+  // Wolf 게시는 공개 페이지와 따로 간다 — 공개 링크를 안 열고 고객몰 시상대만
+  // 올리는 경우가 있고, 그 반대도 있다.
+  const [wolfOpen, setWolfOpen] = useState(false);
 
   const path = `/results/${encodeURIComponent(contestId)}`;
   // 절대 주소는 브라우저에서만 만든다 — 서버 렌더 시점의 host 추측보다 정확하고,
@@ -99,6 +105,19 @@ export function PublishResultsControl({
       >
         {published ? t('publish.unpublishAction') : t('publish.publishAction')}
       </Button>
+
+      <span aria-hidden className="mx-1 h-4 w-px bg-border" />
+
+      <Button onClick={() => setWolfOpen(true)} disabled={disabled} title="결승 1~3위를 Wolf 우승자관리에 넣습니다">
+        WOLF 게시 ↗
+      </Button>
+      {wolfOpen && (
+        <PublishWolfDialog
+          contestId={contestId}
+          contestName={contestName}
+          onClose={() => setWolfOpen(false)}
+        />
+      )}
     </div>
   );
 }

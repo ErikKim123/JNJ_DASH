@@ -174,7 +174,8 @@ export type RoundStatus = 'ready' | 'pass' | 'may' | 'fail' | 'absent';
 export const ROUND_STATUS_LABEL: Record<RoundStatus, string> = {
   ready: 'READY',
   pass: 'PASS',
-  may: 'MAY',
+  // 화면 표기는 '1/2' — 심사위원이 '반 표' 로 바로 읽는다. 저장값(M)은 그대로다.
+  may: '1/2',
   fail: 'FAIL',
   absent: 'ABSENT',
 };
